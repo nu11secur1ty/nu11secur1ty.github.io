@@ -1,5 +1,5 @@
 const emotes = ["𐐘", "𐑀", "𐐿", "𐐃", "𐐫"];
-const seperator = "ඞ";
+const seperator = "ꓛ";
 const ee = {
 	0: "𐐘𐐘𐐘",
 	1: "𐐿𐐫𐐘",
