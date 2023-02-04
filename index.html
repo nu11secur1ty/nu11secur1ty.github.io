@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	  <link rel="icon" type="image/png" href="./assets/favicon.ico"/>
+    <title>nu11secur1ty link lengthener</title>
+    <meta name="description" content="a tiny website that lets you build long, confusing links without any backend hassle. With just a few clicks, you can turn a boring old link into a lengthy, confusing masterpiece. Give it a try today and see how your short links can become long and interesting!" />
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/gh/lmssieh/discord.css/dist/styles.css"
+		/>
+
+		<style>
+			*,
+			*::after,
+			*::before {
+				box-sizing: border-box;
+				font-family: inherit;
+			}
+			body {
+				margin: 0 auto;
+				padding: 0;
+				text-align: center;
+				min-height: 100vh;
+				min-width: 100vw;
+			}
+			.container {
+				max-width: 800px;
+        min-width: 300px;
+				width: auto;
+				margin: auto;
+			}
+      #formCode {
+        gap: 6px;
+      }
+      #codeResult {
+        width: 100%;
+        min-height: 150px;
+      }
+			.flex {
+				display: flex;
+				align-items: center;
+				justify-items: center;
+			}
+			.result-wrapper {
+				overflow: hidden;
+				line-break: auto;
+			}
+			.result {
+				line-break: anywhere;
+			}
+
+			.flex-1 {
+				flex: 1;
+			}
+
+			.hidden {
+				display: none;
+			}
+			.invisible {
+				visibility: hidden;
+			}
+
+			#app {
+				display: flex;
+				flex-direction: column;
+				min-height: 100vh;
+				min-width: 100vw;
+			}
+
+			.footer {
+				padding: 0.5em 0;
+				font-size: 1.2em;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<div class="container">
+				<div id="main-page" class="hidden">
+					<h1 style="opacity: 100">nu11secur1ty Link Lengthener</h1>
+					<form id="formCode" class="flex">
+						<input
+							id="codeLinkInput"
+							class="flex-1"
+							type="text"
+							autocomplete="off"
+							place="paste the link here"
+						/>
+						<button type="submit">generate</button>
+					</form>
+
+					<div class="result-wrapper">
+						<p class="result">
+							<textarea id="codeResult"></textarea>
+						</p>
+						<button id="copyText">click to copy</button>
+					</div>
+
+					<div class="result-wrapper">
+						<p id="decodeResult" class="result"></p>
+					</div>
+				</div>
+
+				<div id="redirect-area" class="hidden">
+					<p>
+						Are you sure you want to visit
+						<a id="redirectURL" href="#">{{URL}}</a> ?
+					</p>
+					<div style="font-size: 1.6em; font-weight: bold">
+						<a href="#" id="redirectBtn">YES!</a>
+					</div>
+					<p>
+						Automatically redirecting in
+						<span id="countdownTimer">6</span> seconds...
+					</p>
+				</div>
+			</div>
+			<div class="footer">
+				Made by <a href="https://www.nu11secur1ty.com/">nu11secur1ty.</a>
+				<a href="https://github.com/nu11secur1ty">Source code</a>
+			</div>
+		</div>
+		<script src="app.js"></script>
+	</body>
+</html>
