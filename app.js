@@ -1,16 +1,16 @@
-const emotes = ["𐑋", "𐑍", "𐑃", "𐑁", "𐐼"];
-const seperator = "ෲ";
+const emotes = ["𐐘", "𐑀", "𐐿", "𐐃", "𐐫"];
+const seperator = "ඞ";
 const ee = {
-	0: "𐑈𐑈𐑈",
-	1: "𐐥𐐩𐑈",
-	2: "𐐬𐐬𐐥",
-	3: "𐑍𐑋𐐹",
-	4: "𐐟𐐣𐐬",
-	5: "𐐩𐐠𐐟",
-	6: "𐐢𐐢𐐢",
-	7: "𐐬𐐬𐐬",
-	8: "𐑃𐑃𐑃",
-	9: "𐑊𐑈𐑇",
+	0: "𐐘𐐘𐐘",
+	1: "𐐿𐐫𐐘",
+	2: "𐑀𐐿𐐿",
+	3: "𐐘𐐫𐐿",
+	4: "𐐘𐑀𐐃",
+	5: "𐑀𐐫𐐘",
+	6: "𐐃𐐃𐑀",
+	7: "𐐫𐐃𐐘",
+	8: "𐐃𐐃𐐃",
+	9: "𐑀𐐘𐐫",
 };
 
 window.onhashchange = () => window.location.reload();
@@ -64,7 +64,7 @@ function code(link) {
 	linkCharCode.forEach((c) => {
 		const charArr = Array.from(c.toString());
 		charArr.forEach((c) => result.push(ee[c] + seperator));
-		result.push("𐑍");
+		result.push("𐐗");
 	});
 	return result.join("");
 }
@@ -76,10 +76,10 @@ function decode(code) {
 	let result = "";
 	arr.forEach((item) => {
 		let c = item;
-		if (c.includes("𐑍")) {
+		if (c.includes("𐐗")) {
 			const char = String.fromCharCode(temp.join(""));
 			result += char;
-			c = c.replace("𐑍", "");
+			c = c.replace("𐐗", "");
 			temp = [];
 		}
 		const charCode = keys.find((key) => ee[key] === c);
