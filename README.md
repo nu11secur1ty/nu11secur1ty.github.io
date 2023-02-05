@@ -11,3 +11,6 @@ inspired by [A(x56) - URL Lengthener](https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/
 ```
 is not working at this moment...
+
+## WARNING!
+- If you use the software for malicious purposes, you are responsible for it!
