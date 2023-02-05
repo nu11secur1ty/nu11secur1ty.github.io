@@ -13,4 +13,4 @@ https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/
 is not working at this moment...
 
 ## WARNING!
-- If you use this software for malicious purposes, you are responsible for it!
+- If you use this software for malicious purposes, you will be responsible for this action! 
