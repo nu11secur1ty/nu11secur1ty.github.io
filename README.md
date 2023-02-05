@@ -2,7 +2,7 @@
 
 - L0cal server + 0nline server
 
-![](https://github.com/nu11secur1ty/nu11secur1ty.github.io/blob/master/docs/preview.png)
+[![](https://github.com/nu11secur1ty/nu11secur1ty.github.io/blob/master/docs/preview.png)](https://nu11secur1ty.github.io/)
 
 inspired by [A(x56) - URL Lengthener](https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/)
 
