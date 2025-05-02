@@ -8,7 +8,7 @@ With this tool you can directly download or create download link to any GitHub *
 
 ### Website
 
-[DownGit ↑](https://minhaskamal.github.io/DownGit)
+[DownGit ↑](https://nu11secur1ty.github.io/DownGit/#/home)
 
 ### How to Use?
 
