@@ -1,8 +1,9 @@
-/***********************************************************
-* Developer: Minhas Kamal (minhaskamal024@gmail.com)       *
-* Website: https://github.com/MinhasKamal/DownGit          *
-* License: MIT License                                     *
-***********************************************************/
+/**********************************************************************************
+* Developer: Minhas Kamal (minhaskamal024@gmail.com)                              *
+* Website: https://github.com/MinhasKamal/DownGit                                 *
+* https://github.com/nu11secur1ty/nu11secur1ty.github.io/tree/master/DownGit 2025 *
+* License: MIT License                                                            *
+***********************************************************************************/
 
 var siteHeaderText = {};
 
