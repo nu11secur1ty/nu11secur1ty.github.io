@@ -1,4 +1,4 @@
-<h1> <img src="https://github.com/MinhasKamal/DownGit/raw/master/res/images/downgit.png" width="20" height=auto /> DownGit </h1>
+<h1> <img src="https://raw.githubusercontent.com/nu11secur1ty/nu11secur1ty.github.io/refs/heads/master/DownGit/res/images/downgit.png" width="20" height=auto /> DownGit </h1>
 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate/?business=5KR6BA9MYTM62&no_recurring=0&currency_code=USD)
 
