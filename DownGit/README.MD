@@ -12,7 +12,7 @@ With this tool you can directly download or create download link to any GitHub *
 
 ### How to Use?
 
-<table><tr><td> <img src="DownGit/docs/Screenshot 2025-05-08 103106.png" /> </td></tr></table>
+<table><tr><td> <img src="https://raw.githubusercontent.com/nu11secur1ty/nu11secur1ty.github.io/refs/heads/master/DownGit/docs/Screenshot%202025-05-08%20103106.png" /> </td></tr></table>
 
 ##### Advanced Usage
 
