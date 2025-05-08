@@ -22,7 +22,7 @@ Now, if you want to download this directory- **`https://github.com/nu11secur1ty/
 
 In default, value of `fileName` and `rootDirectory` is set to the name of the downloading file or directory. If you do not want to add the directory itself in the zip, then set `rootDirectory=false`. Like: this link- https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/MinhasKamal/DownGit/tree/master/res/images&rootDirectory=false, will download a file named **`images.zip`**; however the root directory- `"images"`, will not be included in the zip.
 
-If you want to download file- **`https://github.com/nu11secur1ty/nu11secur1ty.github.io/tree/master/DownGit/blob/master/res/images/downgit.png`** with name- **`DownGitIcon.zip`**, then the link will be- https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/MinhasKamal/DownGit/blob/master/res/images/downgit.png&fileName=DownGitIcon
+If you want to download file- **`https://github.com/nu11secur1ty/nu11secur1ty.github.io/tree/master/DownGit/blob/master/res/images/downgit.png`** with name- **`DownGitIcon.zip`**, then the link will be- https://github.com/nu11secur1ty/nu11secur1ty.github.io/tree/master/DownGit/#/home?url=https://github.com/nu11secur1ty/nu11secur1ty.github.io/tree/master/DownGit/blob/master/res/images/downgit.png&fileName=DownGitIcon
 
 ### License
 <a rel="license" href="https://opensource.org/licenses/MIT"><img alt="MIT License" src="https://cloud.githubusercontent.com/assets/5456665/18950087/fbe0681a-865f-11e6-9552-e59d038d5913.png" width="60em" height=auto/></a><br/><a href="https://github.com/nu11secur1ty/nu11secur1ty.github.io/tree/master/DownGit">DownGit</a> is licensed under <a rel="license" href="https://opensource.org/licenses/MIT">MIT License</a>.
