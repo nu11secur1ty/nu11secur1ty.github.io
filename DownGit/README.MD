@@ -18,7 +18,7 @@ With this tool you can directly download or create download link to any GitHub *
 
 A typical download URL will look like this- `https://github.com/nu11secur1ty/nu11secur1ty.github.io/tree/master/DownGit/#/home?url=<link>&fileName=<name>&rootDirectory=<true or false or name>`
 
-Now, if you want to download this directory- **`https://github.com/MinhasKamal/DownGit/tree/master/res/images`** with this file name- **`DownGit-Images.zip`** and this root directory name- **`ImagesOfDownGit`**, then the URL will be- https://github.com/nu11secur1ty/nu11secur1ty.github.io/tree/master/DownGit#/home?url=https://github.com/nu11secur1ty/nu11secur1ty.github.io/tree/master/DownGit/tree/master/res/images&fileName=DownGit-Images&rootDirectory=ImagesOfDownGit
+Now, if you want to download this directory- **`https://github.com/nu11secur1ty/nu11secur1ty.github.io/tree/master/DownGit/tree/master/res/images`** with this file name- **`DownGit-Images.zip`** and this root directory name- **`ImagesOfDownGit`**, then the URL will be- https://github.com/nu11secur1ty/nu11secur1ty.github.io/tree/master/DownGit#/home?url=https://github.com/nu11secur1ty/nu11secur1ty.github.io/tree/master/DownGit/tree/master/res/images&fileName=DownGit-Images&rootDirectory=ImagesOfDownGit
 
 In default, value of `fileName` and `rootDirectory` is set to the name of the downloading file or directory. If you do not want to add the directory itself in the zip, then set `rootDirectory=false`. Like: this link- https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/MinhasKamal/DownGit/tree/master/res/images&rootDirectory=false, will download a file named **`images.zip`**; however the root directory- `"images"`, will not be included in the zip.
 
