@@ -278,7 +278,6 @@
   <button type="button" class="lang-current" aria-haspopup="listbox" aria-expanded="false">EN<i>&#9662;</i></button>
   <ul class="lang-list" role="listbox" aria-label="Language">
     <li><button type="button" role="option" data-lang="en">EN</button></li>
-    <li><button type="button" role="option" data-lang="bg">BG</button></li>
     <li><button type="button" role="option" data-lang="es">ES</button></li>
     <li><button type="button" role="option" data-lang="pt">PT</button></li>
     <li><button type="button" role="option" data-lang="ja">JA</button></li>
@@ -574,7 +573,6 @@ function pickLang(){
     if (l.startsWith('es')) return 'es';
     if (l.startsWith('pt')) return 'pt';
     if (l.startsWith('en')) return 'en';
-    if (l.startsWith('bg')) return 'bg';
   }
   return 'en';
 }
