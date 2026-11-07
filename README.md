@@ -16,7 +16,8 @@
 inspired by [A(x56) - URL Lengthener](https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/)
 
 
-### Sec Compass
+### Sec Compass:
+
 [Compass](https://nu11secur1ty.github.io/ControlCompass/)
 ![](https://raw.githubusercontent.com/nu11secur1ty/nu11secur1ty.github.io/refs/heads/master/docs/compass.png)
 
