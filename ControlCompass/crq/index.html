@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<!-- saved from url=(0043)https://cybersecuritycompass.github.io/crq/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Risk Quantification (CRQ) Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="./index_files/css2" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0d10;
+    --panel:#16161b;
+    --panel-edge:#26262e;
+    --ink:#f3f3f5;
+    --ink-dim:#a6a6b0;
+    --ink-faint:#6c6c78;
+    --accent:#E63A37;
+    --accent-soft:#ff8a5c;
+    --line:#6f6f7d;
+
+    /* node tiers */
+    --output:#E63A37;
+    --group:#d9d9dd;
+    --param:#c6c6cc;
+    --assess:#101014;
+    --in1:#8c8c96;
+    --in2:#6f6f79;
+    --in3:#52525c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 70% -10%, rgba(196,50,43,.10), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Inter",system-ui,sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:100%;margin:0;padding:32px 32px 64px}
+
+  /* ---------- header ---------- */
+  header{margin-bottom:30px}
+  .eyebrow{
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--accent-soft);margin:0 0 14px;
+  }
+  h1{
+    font-family:"Space Grotesk",sans-serif;
+    font-weight:700;font-size:clamp(19px,2.2vw,27px);
+    line-height:1.1;letter-spacing:-.01em;margin:0 0 14px;
+  }
+  .title-accent{color:var(--accent)}
+  .compass-links{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+  .compass-badge{
+    font-family:"JetBrains Mono",monospace;font-size:9px;font-weight:600;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--accent-soft);
+    text-decoration:none;padding:5px 11px;border:1px solid rgba(230,58,55,.45);
+    border-radius:5px;background:rgba(230,58,55,.06);transition:all .15s ease;
+    display:inline-block;
+  }
+  .compass-badge:hover{background:rgba(230,58,55,.16);border-color:var(--accent);color:#fff}
+  .lede-row{
+    display:flex;align-items:center;gap:24px;margin-top:14px;width:100%;
+  }
+  .lede{color:var(--ink-dim);font-size:16.5px;margin:0;flex:1 1 0}
+  .lede-action{
+    color:var(--ink);font-size:15px;font-weight:500;
+    margin:0;padding:10px 16px;border-radius:10px;flex:1 1 0;
+    background:rgba(255,106,44,.08);border:1px solid rgba(255,106,44,.25);
+    border-left:2px solid rgba(255,106,44,.4);
+  }
+  .lede-action a{
+    color:var(--accent-soft);font-weight:700;text-decoration:underline;
+    text-decoration-color:rgba(255,138,92,.4);text-underline-offset:3px;
+  }
+  .lede-action a:hover{text-decoration-color:var(--accent-soft)}
+  .equation{
+    display:inline-flex;align-items:center;gap:14px;margin-top:0;
+    padding:11px 20px;border:1px solid var(--panel-edge);border-radius:999px;
+    background:var(--panel);font-family:"Space Grotesk",sans-serif;
+  }
+  .equation b{color:var(--accent-soft);font-weight:600}
+  .equation .x{color:var(--ink-faint)}
+  .equations-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+  .equation.secondary{opacity:.9}
+  .equation.secondary #eq-loss{color:#F19A38;font-weight:700}
+
+  /* ---------- layout ---------- */
+  .stage{display:grid;grid-template-columns:1fr 340px;gap:24px;margin-top:34px;align-items:start}
+
+  .canvas{
+    background:linear-gradient(180deg,#101014,#0c0c0f);
+    border:1px solid var(--panel-edge);border-radius:18px;
+    padding:18px 14px;position:relative;overflow:hidden;
+  }
+  .canvas .hint{
+    position:absolute;top:14px;right:18px;
+    font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.12em;
+    color:var(--ink-faint);text-transform:uppercase;pointer-events:none;
+  }
+  svg{width:100%;height:auto;display:block}
+
+  /* node styling */
+  .node{cursor:pointer;outline:none}
+  /* ===== sequenced load-in animation ===== */
+  svg#map .node[data-step]{
+    opacity:0;
+    transform-box:fill-box;transform-origin:center;transform:scale(.72);
+    transition:opacity .8s ease, transform 1s cubic-bezier(.34,1.56,.64,1);
+  }
+  svg#map [data-step].seq-in{opacity:1}
+  svg#map .node[data-step].seq-in{transform:scale(1)}
+  svg#map .node[data-step].seq-slow{transition:opacity 1.4s ease, transform 1.7s cubic-bezier(.32,1.7,.5,1)}
+  .node rect{transition:transform .15s ease, filter .15s ease}
+  .node:hover .nbox,.node:focus-visible .nbox{filter:brightness(1.08)}
+  .node .ring{fill:none;stroke:var(--accent);stroke-width:2.5;opacity:0;transition:opacity .15s ease}
+  @keyframes ring-pulse{
+    0%{stroke-width:2.5;opacity:1}
+    50%{stroke-width:5;opacity:.45}
+    100%{stroke-width:2.5;opacity:1}
+  }
+  .node.active .ring{opacity:1;animation:ring-pulse 1.4s ease-in-out infinite}
+  .node:hover .ring{opacity:.5}
+  .nlabel{font-family:"Space Grotesk",sans-serif;font-weight:600;pointer-events:none}
+  .nsub{font-family:"Inter",sans-serif;font-weight:500;pointer-events:none}
+  .edge{fill:none;stroke:var(--line);stroke-width:1.6;pointer-events:none}
+  .edge.flow{stroke:#3a3a48;stroke-width:1.5}
+  .tree{fill:none;stroke:#7a7a88;stroke-width:1.7;pointer-events:none}
+  @keyframes dash-flow{
+    from{stroke-dashoffset:24}
+    to{stroke-dashoffset:0}
+  }
+  @keyframes dash-flow-reverse{
+    from{stroke-dashoffset:0}
+    to{stroke-dashoffset:24}
+  }
+  .aflow-rev{
+    fill:none;stroke-width:2.4;stroke-linecap:round;
+    stroke-dasharray:6 18;
+    animation:dash-flow-reverse .85s linear infinite;
+    pointer-events:none;
+  }
+  .aflow{
+    fill:none;stroke-width:2.4;stroke-linecap:round;
+    stroke-dasharray:6 18;
+    animation:dash-flow .85s linear infinite;
+    pointer-events:none;
+  }
+
+
+  /* legend */
+  .legend{display:flex;flex-wrap:wrap;gap:7px 16px;margin-top:16px;padding:0 6px}
+  .legend span{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-dim)}
+  .sw{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid rgba(255,255,255,.12)}
+
+  /* ---------- detail panel (right sidebar) ---------- */
+  .panel{
+    background:var(--panel);border:1px solid var(--panel-edge);border-radius:18px;
+    padding:24px 22px 26px;position:sticky;top:20px;
+    max-height:calc(100vh - 40px);overflow-y:auto;
+  }
+  .panel-grid{display:block}
+  @media(max-width:900px){.stage{grid-template-columns:1fr}.panel{position:static;max-height:none}}
+  @media(max-width:760px){.lede-row{flex-direction:column;align-items:flex-start}.lede,.lede-action{max-width:60ch}}
+  .tag{
+    display:inline-block;font-family:"JetBrains Mono",monospace;
+    font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 10px;border-radius:6px;margin-bottom:16px;
+    background:rgba(196,50,43,.14);color:var(--accent-soft);border:1px solid rgba(196,50,43,.3);
+  }
+  .panel h2{
+    font-family:"Space Grotesk",sans-serif;font-weight:700;
+    font-size:24px;letter-spacing:-.01em;margin:0 0 12px;line-height:1.1;
+  }
+  .panel p{color:var(--ink-dim);font-size:15px;margin:0 0 14px}
+  .panel ul{margin:0 0 14px;padding-left:18px;color:var(--ink-dim);font-size:14.5px}
+  .panel li{margin-bottom:5px}
+  .panel li::marker{color:var(--accent)}
+  .feeds{font-size:13px;color:var(--ink-faint);border-top:1px solid var(--panel-edge);padding-top:14px;margin-top:18px}
+  .feeds b{color:var(--ink-dim);font-weight:600}
+  .tuple{
+    display:flex;gap:8px;margin:4px 0 16px;flex-wrap:wrap;
+  }
+  .tuple code{
+    font-family:"JetBrains Mono",monospace;font-size:12px;
+    background:#0e0e12;border:1px solid var(--panel-edge);border-radius:6px;
+    padding:6px 10px;color:var(--accent-soft);
+  }
+  @keyframes hint-color{
+    0%{color:#E63A37}
+    33%{color:#FF6A2C}
+    66%{color:#F19A38}
+    100%{color:#E63A37}
+  }
+  @keyframes hint-move{
+    0%,100%{opacity:.7;transform:translateX(0)}
+    50%{opacity:1;transform:translateX(-3px)}
+  }
+  .placeholder{
+    font-weight:700;
+    display:inline-flex;align-items:center;gap:8px;
+    animation:hint-color 3s linear infinite, hint-move 1.4s ease-in-out infinite;
+  }
+  .placeholder::before{content:"\2190";font-size:1.15em;line-height:1}
+
+  footer{margin-top:46px;border-top:1px solid var(--panel-edge);padding-top:22px;color:var(--ink-faint);font-size:13px;max-width:78ch}
+  footer b{color:var(--ink-dim)}
+  .glossary{margin-top:40px}
+  .glossary h3{
+    font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:20px;
+    letter-spacing:-.01em;margin:0 0 22px;color:var(--ink);
+  }
+  #gl-container{display:flex;flex-wrap:wrap;gap:0 32px;align-items:flex-start}
+  .gcat{margin-bottom:28px}
+  .gcat h4{
+    font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--gc,var(--accent-soft));margin:0 0 12px;
+    padding-bottom:8px;border-bottom:1px solid var(--panel-edge);
+  }
+  .glossary-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:14px 20px;margin:0;
+  }
+  .gterm{
+    background:var(--gc-bg,var(--panel));
+    border:1px solid var(--gc-border,var(--panel-edge));
+    border-radius:12px;padding:14px 16px;
+  }
+  .gterm dt{
+    font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:14px;
+    color:var(--gc,var(--ink));margin:0 0 5px;
+  }
+  .gterm dd{
+    margin:0;font-size:13px;color:var(--ink-dim);line-height:1.5;
+  }
+  .lang-bar{position:fixed;top:18px;right:24px;z-index:999}
+  .lang-select{
+    font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;padding:7px 32px 7px 14px;border-radius:999px;cursor:pointer;
+    border:1px solid var(--panel-edge);background:var(--panel);color:var(--ink);
+    transition:all .15s ease;appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23bdbdc6' stroke-width='1.6'><path d='M6 8l4 4 4-4'/></svg>");
+    background-repeat:no-repeat;background-position:right 12px center;background-size:12px;
+  }
+  .lang-select:hover{border-color:var(--ink-faint)}
+  .lang-select:focus{outline:none;border-color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="lang-bar">
+      <select class="lang-select" id="lang-select" onchange="setLang(this.value)">
+        <option value="en">EN</option>
+        <option value="es" selected>ES</option>
+        <option value="pt">PT</option>
+        <option value="ja">JA</option>
+      </select>
+    </div>
+    <div class="compass-links">
+      <a class="compass-badge" href="https://cybersecuritycompass.github.io/" target="_blank" rel="noopener">Cybersecurity Compass</a>
+      <a class="compass-badge" href="https://cybersecuritycompass.github.io/cyberrisk/" target="_blank" rel="noopener">Cyber Risk</a>
+      <a class="compass-badge" href="https://cybersecuritycompass.github.io/cyberriskops/" target="_blank" rel="noopener">Cyber Risk Ops</a>
+      <a class="compass-badge" href="https://cybersecuritycompass.github.io/crml/" target="_blank" rel="noopener">CRML</a>
+    </div>
+    <h1 id="ui-title">Cuantificación del Ciber Riesgo (CRQ) <span class="title-accent">Explicada</span></h1>
+    <div class="lede-row">
+      <p class="lede" id="ui-lede">La Cuantificación del Ciber Riesgo pone un número al riesgo cibernético: qué tan probable es que ocurra una amenaza, cuánto costaría si sucede, y si vale la pena invertir en los controles para evitarla.</p>
+      <p class="lede-action" id="ui-lede-action">Selecciona un nodo para ver qué hace y hacia dónde fluye. Hay un <a href="https://cybersecuritycompass.github.io/crq/#glossary" id="ui-glossary-link">glosario</a> completo disponible al final de la página.</p>
+    </div>
+    <div class="equations-row">
+      <div class="equation"><span style="color:#E63A37;font-weight:700" id="eq-risk">Riesgo</span><span class="x">=</span><span id="eq-likelihood">Probabilidad</span><span class="x">×</span><span id="eq-impact">Impacto</span></div>
+      <div class="equation secondary"><span id="eq-loss">Pérdida</span><span class="x">=</span><span id="eq-eventloss">Pérdida por Evento</span><span class="x">+</span><span id="eq-peloss">Pérdida Post-Evento</span></div>
+    </div>
+  </header>
+
+  <div class="stage">
+    <div class="canvas">
+      <svg id="map" viewBox="0 0 1280 660" role="img" aria-label="Cyber risk quantification assessment model diagram">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" overflow="visible">
+            <path d="M0,0 L10,5 L0,10 z" fill="#c9c7d4" stroke="#E7E6EC" stroke-width="1" stroke-linejoin="round"></path>
+          </marker>
+          <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" overflow="visible">
+            <path d="M0,0 L10,5 L0,10 z" fill="#F19A38" stroke="#F9D2A5" stroke-width="1" stroke-linejoin="round"></path>
+          </marker>
+          <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" overflow="visible">
+            <path d="M0,0 L10,5 L0,10 z" fill="#FF6A2C" stroke="#FFBCA0" stroke-width="1" stroke-linejoin="round"></path>
+          </marker>
+          <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" overflow="visible">
+            <path d="M0,0 L10,5 L0,10 z" fill="#E63A37" stroke="#F4A6A5" stroke-width="1" stroke-linejoin="round"></path>
+          </marker>
+        </defs>
+
+        <!-- ===== HIERARCHY (plain lines) ===== -->
+        <path data-step="24" class="tree" d="M867,128 H660"></path>
+        <path data-step="24" class="tree" d="M867,128 H1075"></path>
+        <path data-step="24" class="aflow-rev" d="M867,128 H660" stroke="#FF6A2C" style="animation-delay:0.0s"></path>
+        <path data-step="24" class="aflow-rev" d="M867,128 H1075" stroke="#F19A38" style="animation-delay:0.0s"></path>
+        <path data-step="24" class="tree" d="M660,150 V128"></path>
+        <path data-step="24" class="aflow" d="M660,150 V128" stroke="#FF6A2C" style="animation-delay:0.1s"></path>
+        <path data-step="24" class="tree" d="M1075,150 V128"></path>
+        <path data-step="24" class="aflow" d="M1075,150 V128" stroke="#F19A38" style="animation-delay:0.1s"></path>
+        <path data-step="24" data-trunk="1" class="tree" marker-end="url(#arrow-red)" d="M867,128 V104"></path>
+        <path data-step="24" data-trunk="1" class="aflow" d="M867,128 V104" stroke="#E63A37" style="animation-delay:0.05s"></path>
+        <path data-step="22" class="tree" d="M575,252 H660"></path>
+        <path data-step="22" class="tree" d="M745,252 H660"></path>
+        <path data-step="22" class="aflow" d="M575,252 H660" stroke="#FF6A2C" style="animation-delay:0.2s"></path>
+        <path data-step="22" class="aflow" d="M745,252 H660" stroke="#FF6A2C" style="animation-delay:0.2s"></path>
+        <path data-step="22" class="tree" d="M575,280 V252"></path>
+        <path data-step="22" class="aflow" d="M575,280 V252" stroke="#FF6A2C" style="animation-delay:0.2s"></path>
+        <path data-step="22" class="tree" d="M745,280 V252"></path>
+        <path data-step="22" class="aflow" d="M745,280 V252" stroke="#FF6A2C" style="animation-delay:0.2s"></path>
+        <path data-step="22" data-trunk="1" class="tree" marker-end="url(#arrow-orange)" d="M660,252 V225"></path>
+        <path data-step="22" data-trunk="1" class="aflow" d="M660,252 V225" stroke="#FF6A2C" style="animation-delay:0.25s"></path>
+        <path data-step="22" class="tree" d="M990,252 H1075"></path>
+        <path data-step="22" class="tree" d="M1160,252 H1075"></path>
+        <path data-step="22" class="aflow" d="M990,252 H1075" stroke="#F19A38" style="animation-delay:0.2s"></path>
+        <path data-step="22" class="aflow" d="M1160,252 H1075" stroke="#F19A38" style="animation-delay:0.2s"></path>
+        <path data-step="22" class="tree" d="M990,280 V252"></path>
+        <path data-step="22" class="aflow" d="M990,280 V252" stroke="#F19A38" style="animation-delay:0.2s"></path>
+        <path data-step="22" class="tree" d="M1160,280 V252"></path>
+        <path data-step="22" class="aflow" d="M1160,280 V252" stroke="#F19A38" style="animation-delay:0.2s"></path>
+        <path data-step="22" data-trunk="1" class="tree" marker-end="url(#arrow-amber)" d="M1075,252 V225"></path>
+        <path data-step="22" data-trunk="1" class="aflow" d="M1075,252 V225" stroke="#F19A38" style="animation-delay:0.25s"></path>
+
+        <!-- ===== DATA FLOWS (arrowheads) ===== -->
+        <!-- animated flows -->
+        <path data-step="4" class="edge flow" d="M214,238 H255"></path>
+        <path data-step="4" class="edge flow" d="M214,320 H255"></path>
+        <path data-step="4" class="edge flow" d="M214,402 H255"></path>
+        <path data-step="4" class="edge flow" d="M255,238 V320"></path>
+        <path data-step="4" class="edge flow" d="M255,320 V402"></path>
+        <path data-step="4" data-trunk="1" class="edge flow" marker-end="url(#arrow-orange)" d="M255,320 H290"></path>
+        <path data-step="15" class="edge flow" marker-end="url(#arrow-orange)" d="M420,320 H498"></path>
+        <path data-step="15" class="edge flow" marker-end="url(#arrow-red)" d="M748,400 V360"></path>
+        <path data-step="14" class="edge flow" marker-end="url(#arrow-orange)" d="M680,438 H355 V358"></path>
+        <path data-step="13" class="edge flow" marker-end="url(#arrow-amber)" d="M820,438 H1000"></path>
+        <path data-step="19" class="edge flow" d="M1075,400 V385" stroke="#F19A38"></path>
+        <path data-step="19" class="edge flow" d="M1075,385 H990" stroke="#F19A38"></path>
+        <path data-step="19" class="edge flow" d="M1075,385 H1160" stroke="#F19A38"></path>
+        <path data-step="19" data-trunk="1" class="edge flow" marker-end="url(#arrow-amber)" d="M990,385 V360" stroke="#F19A38"></path>
+        <path data-step="19" data-trunk="1" class="edge flow" marker-end="url(#arrow-amber)" d="M1160,385 V360" stroke="#F19A38"></path>
+        <path data-step="8" class="edge flow" marker-end="url(#arrow-red)" d="M630,560 V510 H705 V476"></path>
+        <path data-step="8" class="edge flow" marker-end="url(#arrow-red)" d="M864,560 V520 H795 V476"></path>
+        <path data-step="11" class="edge flow" marker-end="url(#arrow-amber)" d="M960,560 V520 H1025 V476"></path>
+        <path data-step="11" class="edge flow" marker-end="url(#arrow-amber)" d="M1190,556 V510 H1115 V476"></path>
+
+        <!-- animated overlays (rendered first so arrowheads sit on top) -->
+        <path data-step="4" class="aflow" d="M214,238 H255" stroke="#FF6A2C" style="animation-delay:0.0s"></path>
+        <path data-step="4" class="aflow" d="M214,320 H255" stroke="#FF6A2C" style="animation-delay:0.1s"></path>
+        <path data-step="4" class="aflow" d="M214,402 H255" stroke="#FF6A2C" style="animation-delay:0.2s"></path>
+        <path data-step="4" class="aflow" d="M255,238 V320" stroke="#FF6A2C" style="animation-delay:0.0s"></path>
+        <path data-step="4" class="aflow-rev" d="M255,320 V402" stroke="#FF6A2C" style="animation-delay:0.0s"></path>
+        <path data-step="4" data-trunk="1" class="aflow" d="M255,320 H290" stroke="#FF6A2C" style="animation-delay:0.15s"></path>
+        <path data-step="15" class="aflow" d="M420,320 H498" stroke="#FF6A2C" style="animation-delay:0.1s"></path>
+        <path data-step="15" class="aflow" d="M748,400 V360" stroke="#E63A37" style="animation-delay:0.2s"></path>
+        <path data-step="14" class="aflow" d="M680,438 H355 V358" stroke="#FF6A2C" style="animation-delay:0.3s"></path>
+        <path data-step="13" class="aflow" d="M820,438 H1000" stroke="#F19A38" style="animation-delay:0.15s"></path>
+        <path data-step="19" class="aflow" d="M1075,400 V385" stroke="#F19A38" style="animation-delay:0.0s"></path>
+        <path data-step="19" class="aflow" d="M1075,385 H990" stroke="#F19A38" style="animation-delay:0.0s"></path>
+        <path data-step="19" class="aflow" d="M1075,385 H1160" stroke="#F19A38" style="animation-delay:0.0s"></path>
+        <path data-step="19" data-trunk="1" class="aflow" d="M990,385 V360" stroke="#F19A38" style="animation-delay:0.25s"></path>
+        <path data-step="19" data-trunk="1" class="aflow" d="M1160,385 V360" stroke="#F19A38" style="animation-delay:0.35s"></path>
+        <path data-step="8" class="aflow" d="M630,560 V510 H705 V476" stroke="#E63A37" style="animation-delay:0.1s"></path>
+        <path data-step="8" class="aflow" d="M864,560 V520 H795 V476" stroke="#E63A37" style="animation-delay:0.2s"></path>
+        <path data-step="11" class="aflow" d="M960,560 V520 H1025 V476" stroke="#F19A38" style="animation-delay:0.3s"></path>
+        <path data-step="11" class="aflow" d="M1190,556 V510 H1115 V476" stroke="#F19A38" style="animation-delay:0.4s"></path>
+        <!-- ===== NODES ===== -->
+        <!-- Quantified Risk -->
+        <g class="node" data-step="25" data-id="quantified-risk" tabindex="0">
+          <rect class="ring" x="746" y="26" width="242" height="82" rx="14"></rect>
+          <rect class="nbox" x="750" y="30" width="234" height="74" rx="11" fill="var(--output)"></rect>
+          <text class="nlabel" x="867" text-anchor="middle" fill="#fff" font-size="19" data-key="qcr"><tspan id="qcr-l1" x="867" y="62">Ciber Riesgo</tspan><tspan id="qcr-l2" x="867" y="86">Cuantificado</tspan></text>
+        </g>
+
+        <!-- Likelihood / Loss Impact -->
+        <g class="node" data-step="23" data-id="likelihood" tabindex="0">
+          <rect class="ring" x="496" y="146" width="328" height="83" rx="12"></rect>
+          <rect class="nbox" x="500" y="150" width="320" height="75" rx="9" fill="#FF6A2C"></rect>
+          <text class="nlabel" x="660" y="194" text-anchor="middle" fill="#16161b" font-size="19" data-key="likelihood">Probabilidad</text>
+        </g>
+        <g class="node" data-step="23" data-id="loss-impact" tabindex="0">
+          <rect class="ring" x="911" y="146" width="328" height="83" rx="12"></rect>
+          <rect class="nbox" x="915" y="150" width="320" height="75" rx="9" fill="#F19A38"></rect>
+          <text class="nlabel" x="1075" y="194" text-anchor="middle" fill="#16161b" font-size="19" data-key="loss-impact">Impacto de Pérdida</text>
+        </g>
+
+        <!-- parameters -->
+        <g class="node" data-step="16" data-id="threat-frequency" tabindex="0">
+          <rect class="ring" x="498" y="276" width="154" height="88" rx="12"></rect>
+          <rect class="nbox" x="502" y="280" width="146" height="80" rx="9" fill="#FFC0A0"></rect>
+          <text class="nlabel" x="575" y="315" text-anchor="middle" fill="#16161b" font-size="15" data-key="tf1">Frecuencia de</text>
+          <text class="nlabel" x="575" y="335" text-anchor="middle" fill="#16161b" font-size="15" data-key="tf2">Amenaza</text>
+        </g>
+        <g class="node" data-step="16" data-id="cyber-risk-exposure" tabindex="0">
+          <rect class="ring" x="668" y="276" width="154" height="88" rx="12"></rect>
+          <rect class="nbox" x="672" y="280" width="146" height="80" rx="9" fill="#FFC0A0"></rect>
+          <text class="nlabel" x="745" y="315" text-anchor="middle" fill="#16161b" font-size="15" data-key="cre1">Exposición a</text>
+          <text class="nlabel" x="745" y="335" text-anchor="middle" fill="#16161b" font-size="15" data-key="cre2">Ciber Riesgo</text>
+        </g>
+        <g class="node" data-step="20" data-id="event-loss" tabindex="0">
+          <rect class="ring" x="913" y="276" width="154" height="88" rx="12"></rect>
+          <rect class="nbox" x="917" y="280" width="146" height="80" rx="9" fill="#F8D19B"></rect>
+          <text class="nlabel" x="990" y="315" text-anchor="middle" fill="#16161b" font-size="15" data-key="el1">Pérdida por</text>
+          <text class="nlabel" x="990" y="335" text-anchor="middle" fill="#16161b" font-size="15" data-key="el2">Evento</text>
+        </g>
+        <g class="node" data-step="20" data-id="post-event-loss" tabindex="0">
+          <rect class="ring" x="1083" y="276" width="154" height="88" rx="12"></rect>
+          <rect class="nbox" x="1087" y="280" width="146" height="80" rx="9" fill="#F8D19B"></rect>
+          <text class="nlabel" x="1160" y="315" text-anchor="middle" fill="#16161b" font-size="15" data-key="pel1">Pérdida</text>
+          <text class="nlabel" x="1160" y="335" text-anchor="middle" fill="#16161b" font-size="15" data-key="pel2">Post-Evento</text>
+        </g>
+
+        <!-- assessments -->
+        <g class="node" data-step="5" data-id="attack-assessment" tabindex="0">
+          <rect class="ring" x="286" y="278" width="138" height="84" rx="13"></rect>
+          <rect class="nbox" x="290" y="282" width="130" height="76" rx="10" fill="var(--assess)" stroke="#FF6A2C" stroke-width="2"></rect>
+          <text class="nlabel" x="355" y="313" text-anchor="middle" fill="#fff" font-size="15" data-key="aa1">Evaluación de</text>
+          <text class="nlabel" x="355" y="333" text-anchor="middle" fill="#fff" font-size="15" data-key="aa2">Ataque</text>
+        </g>
+        <g class="node" data-step="9" data-id="control-assessment" tabindex="0">
+          <rect class="ring" x="676" y="396" width="148" height="84" rx="13"></rect>
+          <rect class="nbox" x="680" y="400" width="140" height="76" rx="10" fill="var(--assess)" stroke="#E63A37" stroke-width="2"></rect>
+          <text class="nlabel" x="750" y="431" text-anchor="middle" fill="#fff" font-size="15" data-key="ca1">Evaluación de</text>
+          <text class="nlabel" x="750" y="451" text-anchor="middle" fill="#fff" font-size="15" data-key="ca2">Control</text>
+        </g>
+        <g class="node" data-step="12" data-id="impact-assessment" tabindex="0">
+          <rect class="ring" x="996" y="396" width="158" height="84" rx="13"></rect>
+          <rect class="nbox" x="1000" y="400" width="150" height="76" rx="10" fill="var(--assess)" stroke="#F19A38" stroke-width="2"></rect>
+          <text class="nlabel" x="1075" y="431" text-anchor="middle" fill="#fff" font-size="15" data-key="ia1">Evaluación de</text>
+          <text class="nlabel" x="1075" y="451" text-anchor="middle" fill="#fff" font-size="15" data-key="ia2">Impacto</text>
+        </g>
+
+        <!-- left inputs -->
+        <g class="node" data-step="1" data-id="global-attack" tabindex="0">
+          <rect class="ring" x="46" y="196" width="172" height="84" rx="11"></rect>
+          <rect class="nbox" x="50" y="200" width="164" height="76" rx="8" fill="var(--in1)"></rect>
+          <text class="nlabel" x="132" y="231" text-anchor="middle" fill="#fff" font-size="15" data-key="ga-title">Global</text>
+          <text class="nsub" x="132" y="249" text-anchor="middle" fill="#ececf0" font-size="9.5" data-key="ga-sub1">Inteligencia de Amenazas</text>
+          <text class="nsub" x="132" y="263" text-anchor="middle" fill="#ececf0" font-size="10.5" data-key="ga-sub2">sobre el Ataque</text>
+        </g>
+        <g class="node" data-step="2" data-id="peer-history" tabindex="0">
+          <rect class="ring" x="46" y="278" width="172" height="84" rx="11"></rect>
+          <rect class="nbox" x="50" y="282" width="164" height="76" rx="8" fill="var(--in2)"></rect>
+          <text class="nlabel" x="132" y="309" text-anchor="middle" fill="#fff" font-size="15" data-key="peer-title">Pares / Región</text>
+          <text class="nsub" x="132" y="327" text-anchor="middle" fill="#ececf0" font-size="10.5" data-key="peer-sub1">Historial CREM</text>
+          <text class="nsub" x="132" y="341" text-anchor="middle" fill="#ececf0" font-size="10.5" data-key="peer-sub2">de Detección</text>
+        </g>
+        <g class="node" data-step="3" data-id="customer-history" tabindex="0">
+          <rect class="ring" x="46" y="360" width="172" height="84" rx="11"></rect>
+          <rect class="nbox" x="50" y="364" width="164" height="76" rx="8" fill="var(--in3)"></rect>
+          <text class="nlabel" x="132" y="391" text-anchor="middle" fill="#fff" font-size="15" data-key="cust-title">Cliente</text>
+          <text class="nsub" x="132" y="409" text-anchor="middle" fill="#ececf0" font-size="10.5" data-key="cust-sub1">Historial CREM</text>
+          <text class="nsub" x="132" y="423" text-anchor="middle" fill="#ececf0" font-size="10.5" data-key="cust-sub2">de Detección</text>
+        </g>
+
+        <!-- bottom inputs -->
+        <g class="node" data-step="7" data-id="exposure-history" tabindex="0">
+          <rect class="ring" x="553" y="556" width="154" height="86" rx="11"></rect>
+          <rect class="nbox" x="557" y="560" width="146" height="78" rx="8" fill="var(--in2)"></rect>
+          <text class="nlabel" x="630" y="584" text-anchor="middle" fill="#fff" font-size="14" data-key="crem-title">Histórico de CREM</text>
+          <text class="nsub" x="630" y="611" text-anchor="middle" fill="#ececf0" font-size="11" data-key="crem-sub" data-cx="630"><tspan x="630" y="602">Gestión de Exposición</tspan><tspan x="630" y="616">al Ciber Riesgo</tspan></text>
+        </g>
+        <g class="node" data-step="6" data-id="scenario-inputs" tabindex="0">
+          <rect class="ring" x="814" y="556" width="196" height="86" rx="11"></rect>
+          <rect class="nbox" x="818" y="560" width="92" height="40" rx="7" fill="var(--in2)"></rect>
+          <text class="nlabel" x="864" y="584" text-anchor="middle" fill="#fff" font-size="11" data-key="cr-label" data-cx="864"><tspan x="864" y="578">Relacionado</tspan><tspan x="864" y="591">al Control</tspan></text>
+          <rect class="nbox" x="914" y="560" width="92" height="40" rx="7" fill="var(--in2)"></rect>
+          <text class="nlabel" x="960" y="584" text-anchor="middle" fill="#fff" font-size="11" data-key="ir-label" data-cx="960"><tspan x="960" y="578">Relacionado</tspan><tspan x="960" y="591">al Impacto</tspan></text>
+          <rect class="nbox" x="818" y="603" width="188" height="35" rx="7" fill="var(--in3)"></rect>
+          <text class="nsub" x="912" y="625" text-anchor="middle" fill="#ececf0" font-size="11" data-key="ci-label" data-cx="912"><tspan x="912" y="619">Datos del Cliente</tspan><tspan x="912" y="632">del Escenario Seleccionado</tspan></text>
+        </g>
+        <g class="node" data-step="10" data-id="global-impact" tabindex="0">
+          <rect class="ring" x="1113" y="556" width="154" height="86" rx="11"></rect>
+          <rect class="nbox" x="1117" y="560" width="146" height="78" rx="8" fill="var(--in1)"></rect>
+          <text class="nlabel" x="1190" y="586" text-anchor="middle" fill="#fff" font-size="15" data-key="gi-title">Global</text>
+          <text class="nsub" x="1190" y="605" text-anchor="middle" fill="#ececf0" font-size="9.5" data-key="gi-sub1">Inteligencia de Amenazas</text>
+          <text class="nsub" x="1190" y="619" text-anchor="middle" fill="#ececf0" font-size="10.5" data-key="gi-sub2">sobre el Impacto</text>
+        </g>
+      </svg>
+
+      <div class="legend">
+        <span><i class="sw" style="background:#E63A37"></i><span id="lg-output">Ciber riesgo cuantificado</span></span>
+        <span><i class="sw" style="background:#FF6A2C"></i><span id="lg-like">Factor de probabilidad</span></span>
+        <span><i class="sw" style="background:#F19A38"></i><span id="lg-loss">Factor de impacto</span></span>
+        <span><i class="sw" style="background:var(--assess);border-color:#555"></i><span id="lg-engine">Motor de evaluación</span></span>
+        <span><i class="sw" style="background:var(--in2)"></i><span id="lg-input">Entrada de datos</span></span>
+      </div>
+    </div>
+
+    <aside class="panel" id="panel">
+      <span class="tag" id="p-tag">Comienza aquí</span>
+      <h2 id="p-title">El modelo de evaluación</h2>
+      <div id="p-body" data-default="1"><p>El riesgo cuantificado es el producto de la probabilidad de una amenaza y su impacto potencial. El modelo se divide en dos ramas y las resuelve con evaluaciones dedicadas, luego ejecuta los parámetros a través de decenas de miles de rondas de Monte Carlo para producir un rango financiero con intervalo de confianza.</p><p class="placeholder">Selecciona cualquier nodo en el diagrama para profundizar.</p></div>
+      <div class="feeds" id="p-feeds"><b>Consejo:</b> los tres nodos negros son los motores. Todo lo demás alimenta o resulta de ellos.</div>
+    </aside>
+  </div>
+  <section class="glossary" id="glossary">
+    <h3 id="gl-heading">Glosario</h3>
+    <div id="gl-container"><div class="gcat" style="--gc: #E63A37; --gc-bg: rgba(230,58,55,0.1); --gc-border: rgba(230,58,55,0.35);"><h4>Conceptos Centrales de Riesgo</h4><dl class="glossary-grid"><div class="gterm"><dt>Riesgo</dt><dd>El resultado cuantificado de un escenario, calculado como Probabilidad multiplicada por Impacto. Se expresa como un rango monetario con un intervalo de confianza.</dd></div><div class="gterm"><dt>Probabilidad</dt><dd>La probabilidad de que una amenaza explote con éxito una debilidad, dada la arquitectura del entorno y los controles existentes. Se evalúa mediante Frecuencia de Amenaza y Exposición al Ciber Riesgo.</dd></div><div class="gterm"><dt>Impacto</dt><dd>La magnitud del daño que puede causar un evento de riesgo. Se categoriza en Pérdida por Evento (inmediata) y Pérdida Post Evento (a largo plazo).</dd></div><div class="gterm"><dt>Escenario de Riesgo</dt><dd>Una narrativa estructurada y plausible que describe cómo un actor de amenaza podría explotar una exposición para impactar activos, operaciones o reputación.</dd></div></dl></div><div class="gcat" style="--gc: #FF6A2C; --gc-bg: rgba(255,106,44,0.1); --gc-border: rgba(255,106,44,0.35);"><h4>Parámetros del Modelo de Riesgo</h4><dl class="glossary-grid"><div class="gterm"><dt>Frecuencia de Amenaza</dt><dd>Con qué frecuencia podrían ocurrir ataques de un tipo de amenaza dado, modelado con una distribución de Poisson y expresado como una tupla de tres puntos.</dd></div><div class="gterm"><dt>Exposición al Ciber Riesgo</dt><dd>El grado de exposición a una amenaza para los activos en alcance, puntuado como un valor entre 0 y 1 según la madurez de los controles.</dd></div><div class="gterm"><dt>Pérdida por Evento</dt><dd>Daño financiero inmediato de un escenario, como interrupción del negocio, respuesta al incidente y recuperación del incidente.</dd></div><div class="gterm"><dt>Pérdida Post Evento</dt><dd>Consecuencias a largo plazo tras un evento, como sanciones regulatorias, pérdida de reputación y deserción de clientes.</dd></div></dl></div><div class="gcat" style="--gc: #F19A38; --gc-bg: rgba(241,154,56,0.1); --gc-border: rgba(241,154,56,0.35);"><h4>Estructura del Escenario de Riesgo</h4><dl class="glossary-grid"><div class="gterm"><dt>Análisis</dt><dd>Define el alcance de lo que se está analizando y establece límites que especifican activos, actores de amenaza y resultados, asegurando que los interesados estén alineados sobre qué se está cuantificando y qué no.</dd></div><div class="gterm"><dt>Evaluación</dt><dd>Permite consistencia en cómo se evalúan y comparan los riesgos, evitando la ambigüedad y permitiendo la repetibilidad entre escenarios.</dd></div><div class="gterm"><dt>Modelado</dt><dd>Proporciona estructura para la recolección de datos de modo que los escenarios sean relevantes, no genéricos, y construidos de forma única para la organización evaluada.</dd></div><div class="gterm"><dt>Toma de Decisiones</dt><dd>Evalúa y recomienda prioridades para inversiones y asignación de recursos en controles, seguros y planificación de respuesta, comparando los costos de mitigación con las pérdidas anticipadas.</dd></div></dl></div><div class="gcat" style="--gc: #4FB4A6; --gc-bg: rgba(79,180,166,0.1); --gc-border: rgba(79,180,166,0.35);"><h4>Componentes del Escenario de Riesgo</h4><dl class="glossary-grid"><div class="gterm"><dt>Activo en Riesgo</dt><dd>El sistema, dato, proceso o recurso específico que podría verse afectado, como información de clientes identificable almacenada en una base de datos en la nube.</dd></div><div class="gterm"><dt>Actor de Amenaza</dt><dd>Un individuo o grupo que podría instigar un evento de riesgo, como un cibercriminal, un estado nación o un interno, sea malicioso o no.</dd></div><div class="gterm"><dt>Exposiciones</dt><dd>Debilidades o fallas en los sistemas, procesos o comportamiento organizacional que podrían ser explotadas para causar daño, incluyendo contraseñas débiles, software sin parches o procesos incompletos.</dd></div><div class="gterm"><dt>Vector de Ataque</dt><dd>El método o vía usada para el ataque, como un correo de phishing, malware, ingeniería social o acceso físico.</dd></div><div class="gterm"><dt>Secuencia del Evento</dt><dd>Los pasos o eventos que llevan desde las acciones del actor de amenaza hasta el impacto en la organización.</dd></div><div class="gterm"><dt>Impacto en el Negocio</dt><dd>Las posibles consecuencias financieras y operativas que podría tener un evento cibernético, como pérdida monetaria o interrupción operativa.</dd></div></dl></div><div class="gcat" style="--gc: #5B8FE0; --gc-bg: rgba(91,143,224,0.1); --gc-border: rgba(91,143,224,0.35);"><h4>Elementos de la Tarea CRQ</h4><dl class="glossary-grid"><div class="gterm"><dt>Tipos de Amenaza</dt><dd>El tipo o tipos de amenazas que ocurren en un escenario de riesgo seleccionado para análisis, como ransomware o exfiltración de datos.</dd></div><div class="gterm"><dt>Técnicas de Ataque</dt><dd>Los métodos que emplean los actores durante las fases del ataque, como fuerza bruta o inyección de procesos, típicamente mapeados a una matriz de ataque conocida.</dd></div><div class="gterm"><dt>Alcance del Activo</dt><dd>Los activos incluidos en un escenario como objetivos de la evaluación, que puede ser un único activo o un grupo de dispositivos, cuentas o datos.</dd></div><div class="gterm"><dt>Controles de Seguridad</dt><dd>Las medidas de control que podrían usarse para defender contra las técnicas de ataque de un tipo de amenaza dado, típicamente mapeadas a un catálogo de controles reconocido.</dd></div><div class="gterm"><dt>Categorías de Pérdida</dt><dd>Los tipos de pérdidas o costos considerados según el tipo de amenaza reflejado, como interrupción del negocio, costo de investigación o pérdida reputacional, mostrados como parámetros de evento o post evento.</dd></div></dl></div><div class="gcat" style="--gc: #9B7FE0; --gc-bg: rgba(155,127,224,0.1); --gc-border: rgba(155,127,224,0.35);"><h4>Modelado Estadístico</h4><dl class="glossary-grid"><div class="gterm"><dt>Tupla de Tres Puntos</dt><dd>Una representación de los valores mínimo, más probable y máximo de una variable, siguiendo una distribución Beta PERT para definir un rango realista.</dd></div><div class="gterm"><dt>Distribución Beta PERT</dt><dd>Una distribución estadística usada para modelar las tuplas de tres puntos, ponderando el valor más probable mientras permite un rango realista entre el mínimo y el máximo.</dd></div><div class="gterm"><dt>Distribución de Poisson</dt><dd>Una distribución estadística usada para modelar la frecuencia de eventos discretos, como ataques, dentro de un período fijo, usada para derivar la tupla de Frecuencia de Amenaza.</dd></div><div class="gterm"><dt>Simulación de Monte Carlo</dt><dd>Una técnica computacional que procesa las tuplas de parámetros del modelo a través de decenas de miles de rondas de simulación aleatoria. En lugar de producir un único resultado, genera una distribución completa de resultados posibles, permitiendo al simulador cuantificar la variabilidad y expresar el riesgo cuantificado final junto con un intervalo de confianza. Los resultados se visualizan típicamente como histogramas de distribución de riesgo y curvas de excedencia de pérdida.</dd></div><div class="gterm"><dt>Intervalo de Confianza</dt><dd>Un rango estadístico alrededor del resultado cuantificado que indica el nivel de certeza en el resultado simulado.</dd></div><div class="gterm"><dt>Curva de Excedencia de Pérdida</dt><dd>Un gráfico que muestra la probabilidad de que una pérdida supere un umbral monetario dado, derivado de la salida de la simulación de Monte Carlo.</dd></div></dl></div><div class="gcat" style="--gc: #E07FB8; --gc-bg: rgba(224,127,184,0.1); --gc-border: rgba(224,127,184,0.35);"><h4>Marcos y Sistemas</h4><dl class="glossary-grid"><div class="gterm"><dt>FAIR</dt><dd>Factor Analysis of Information Risk, una metodología reconocida en la industria para cuantificar el riesgo de información que inspiró aspectos de la estructura de este modelo.</dd></div><div class="gterm"><dt>NIST SP 800 53</dt><dd>Un catálogo de controles de seguridad y privacidad usado para clasificar y mapear las exposiciones identificadas en categorías funcionales de control.</dd></div><div class="gterm"><dt>Matriz MITRE ATT&amp;CK</dt><dd>Una base de conocimiento de tácticas y técnicas de adversarios usada para mapear eventos de riesgo relacionados con ataques a patrones de ataque conocidos.</dd></div><div class="gterm"><dt>Categorías de Control</dt><dd>Seis grupos funcionales, Detección, Prevención, Recuperación, Mitigación, Soporte y Procedimiento, usados para clasificar controles y modelar su efecto en los parámetros de riesgo.</dd></div><div class="gterm"><dt>Índice de Ciber Riesgo</dt><dd>Una puntuación de riesgo cualitativa a nivel de toda la empresa, expresada como un número de punto flotante entre 0 y 100, obtenida a partir de las puntuaciones de riesgo de activos individuales.</dd></div><div class="gterm"><dt>Referencia de Pares</dt><dd>Datos anonimizados de detección o pérdida de organizaciones con un perfil similar de industria, tamaño, ubicación e ingresos, usados para comparar los resultados propios del cliente.</dd></div><div class="gterm"><dt>CREM</dt><dd>Gestión de Exposición al Ciber Riesgo (Cyber Risk Exposure Management), la disciplina más amplia que rastrea el estado de exposición y controles en todo el entorno. El historial y los hallazgos de CREM alimentan la Evaluación de Control y, a su vez, el parámetro de Exposición al Ciber Riesgo.</dd></div></dl></div><div class="gcat" style="--gc: #6FCF97; --gc-bg: rgba(111,207,151,0.1); --gc-border: rgba(111,207,151,0.35);"><h4>Tipos de Categoría de Control</h4><dl class="glossary-grid"><div class="gterm"><dt>Soporte</dt><dd>Controles que establecen el procedimiento o mejoran el proceso al aplicarse a otros controles o prácticas en una organización. No afecta los parámetros de riesgo directamente, pero fortalece las otras cinco categorías.</dd></div><div class="gterm"><dt>Procedimiento</dt><dd>Controles o prácticas reconocidas como el paso inicial para manejar un problema de seguridad. Igual que Soporte, fortalece las otras categorías en lugar de afectar los parámetros directamente.</dd></div><div class="gterm"><dt>Detección</dt><dd>Controles que pueden detectar intentos y comportamientos de ataque. Reduce directamente la Frecuencia de Amenaza, ya que los ataques visibles tienen más probabilidades de ser expuestos y fallar.</dd></div><div class="gterm"><dt>Prevención</dt><dd>Controles que pueden prevenir que un ataque se lance con éxito. Reduce directamente la Exposición al Ciber Riesgo.</dd></div><div class="gterm"><dt>Recuperación</dt><dd>Cuando ocurre una pérdida, controles que ayudan a la organización a volver a su estado original después del evento. Reduce directamente la Pérdida por Evento.</dd></div><div class="gterm"><dt>Mitigación</dt><dd>Cuando ocurre una pérdida, controles que mitigan el estado posterior a la pérdida. Reduce directamente la Pérdida Post Evento.</dd></div></dl></div><div class="gcat" style="--gc: #D9A94E; --gc-bg: rgba(217,169,78,0.1); --gc-border: rgba(217,169,78,0.35);"><h4>Entradas de Datos y Sistemas</h4><dl class="glossary-grid"><div class="gterm"><dt>Inteligencia Global de Ataque</dt><dd>Resultados extraídos de fuentes de inteligencia pública, usados para evaluar los parámetros de ataque con contexto del mundo real, como tasas de ataque por industria.</dd></div><div class="gterm"><dt>Historial de Autodetección de Ataques</dt><dd>El historial propio de detección de ataques y amenazas de un cliente, analizado para calcular el parámetro de ataque y reflejar el entorno específico de la organización.</dd></div><div class="gterm"><dt>Referencia de Ataque de Pares</dt><dd>Resultados de detección basados en CRQ de pares con perfiles similares, usados para informar y comparar el parámetro de ataque propio del cliente.</dd></div><div class="gterm"><dt>Perfil del Cliente</dt><dd>Datos de negocio anonimizados sobre ubicación, industria, tamaño e ingresos, usados para crear puntos de referencia para la comparación entre pares.</dd></div><div class="gterm"><dt>Biblioteca de Eventos</dt><dd>Un sistema que correlaciona el historial de detección de amenazas y exposición de un cliente dentro del análisis estadístico de la capacidad CRQ.</dd></div><div class="gterm"><dt>Centro de Inteligencia</dt><dd>Un sistema que monitorea, recopila, purifica y refina datos de fuentes de inteligencia pública.</dd></div></dl></div></div>
+  </section>
+</div>
+
+<script>
+// ─── UI STRINGS ──────────────────────────────────────────────────────────────
+const UI = {
+  en:{
+    eyebrow:"Cyber Risk Quantification · Reference Model",
+    title:'Cyber Risk Quantification (CRQ) <span class="title-accent">Explained</span>',
+    lede:"Cyber Risk Quantification puts a number on cyber risk: how likely a threat is to happen, what it would cost if it did, and whether the controls to stop it are worth the investment.",
+    ledeAction:'Select any node to see what it does and where it flows. A full <a href="#glossary" id="ui-glossary-link">glossary</a> is available at the bottom of the page.',
+    hint:"click a node →",
+    tipLabel:"Tip:",
+    tipText:"the three black nodes are the engines. Everything light feeds or results from them.",
+    defaultTag:"Start here",
+    defaultTitle:"The assessment model",
+    defaultP1:"Quantified risk is the product of how likely a threat is and how much it could cost. The model splits that into two branches and resolves each with dedicated assessments, then runs the parameters through tens of thousands of Monte Carlo rounds to produce a financial range with a confidence interval.",
+    defaultP2:"Select any node in the diagram to dig in.",
+    eqRisk:"Risk", eqLikelihood:"Likelihood", eqImpact:"Impact", eqLoss:"Loss", eqEventLoss:"Event Loss", eqPELoss:"Post-Event Loss",
+    lgOutput:"Quantified risk", lgLike:"Likelihood factor", lgLoss:"Impact factor", lgEngine:"Assessment engine", lgInput:"Data input",
+  },
+  es:{
+    eyebrow:"Cuantificación del Ciber Riesgo · Modelo de Referencia",
+    title:'Cuantificación del Ciber Riesgo (CRQ) <span class="title-accent">Explicada</span>',
+    lede:"La Cuantificación del Ciber Riesgo pone un número al riesgo cibernético: qué tan probable es que ocurra una amenaza, cuánto costaría si sucede, y si vale la pena invertir en los controles para evitarla.",
+    ledeAction:'Selecciona un nodo para ver qué hace y hacia dónde fluye. Hay un <a href="#glossary" id="ui-glossary-link">glosario</a> completo disponible al final de la página.',
+    hint:"haz clic en un nodo →",
+    tipLabel:"Consejo:",
+    tipText:"los tres nodos negros son los motores. Todo lo demás alimenta o resulta de ellos.",
+    defaultTag:"Comienza aquí",
+    defaultTitle:"El modelo de evaluación",
+    defaultP1:"El riesgo cuantificado es el producto de la probabilidad de una amenaza y su impacto potencial. El modelo se divide en dos ramas y las resuelve con evaluaciones dedicadas, luego ejecuta los parámetros a través de decenas de miles de rondas de Monte Carlo para producir un rango financiero con intervalo de confianza.",
+    defaultP2:"Selecciona cualquier nodo en el diagrama para profundizar.",
+    eqRisk:"Riesgo", eqLikelihood:"Probabilidad", eqImpact:"Impacto", eqLoss:"Pérdida", eqEventLoss:"Pérdida por Evento", eqPELoss:"Pérdida Post-Evento",
+    lgOutput:"Ciber riesgo cuantificado", lgLike:"Factor de probabilidad", lgLoss:"Factor de impacto", lgEngine:"Motor de evaluación", lgInput:"Entrada de datos",
+  },
+  pt:{
+    eyebrow:"Quantificação do Ciber Risco · Modelo de Referência",
+    title:'Quantificação do Ciber Risco (CRQ) <span class="title-accent">Explicada</span>',
+    lede:"A Quantificação do Ciber Risco coloca um número no risco cibernético: qual a probabilidade de uma ameaça ocorrer, quanto custaria se acontecesse, e se vale a pena investir nos controles para evitá-la.",
+    ledeAction:'Selecione um nó para ver o que ele faz e para onde flui. Há um <a href="#glossary" id="ui-glossary-link">glossário</a> completo disponível no final da página.',
+    hint:"clique em um nó →",
+    tipLabel:"Dica:",
+    tipText:"os três nós pretos são os motores. Tudo o mais alimenta ou resulta deles.",
+    defaultTag:"Comece aqui",
+    defaultTitle:"O modelo de avaliação",
+    defaultP1:"O risco quantificado é o produto da probabilidade de uma ameaça e do seu impacto potencial. O modelo divide-se em dois ramos, resolve cada um com avaliações dedicadas e executa os parâmetros através de dezenas de milhares de rodadas de Monte Carlo para produzir um intervalo financeiro com intervalo de confiança.",
+    defaultP2:"Selecione qualquer nó no diagrama para aprofundar.",
+    eqRisk:"Risco", eqLikelihood:"Probabilidade", eqImpact:"Impacto", eqLoss:"Perda", eqEventLoss:"Perda por Evento", eqPELoss:"Perda Pós-Evento",
+    lgOutput:"Ciber risco quantificado", lgLike:"Fator de probabilidade", lgLoss:"Fator de impacto", lgEngine:"Motor de avaliação", lgInput:"Entrada de dados",
+  },
+  ja:{
+    eyebrow:"サイバーリスク定量化・リファレンスモデル",
+    title:'サイバーリスク定量化(CRQ)の<span class="title-accent">解説</span>',
+    lede:"サイバーリスク定量化は、脅威が発生する可能性、発生した場合の損失額、そしてそれを防ぐための対策コストが見合うかどうかを、サイバーリスクに数値で示します。",
+    ledeAction:'ノードを選択すると、その役割と関連するフローを確認できます。ページ下部には完全な<a href="#glossary" id="ui-glossary-link">用語集</a>があります。',
+    hint:"ノードをクリック →",
+    tipLabel:"ヒント:",
+    tipText:"3つの黒いノードはエンジンです。それ以外の要素はすべて、そこから供給されるか、そこから導かれます。",
+    defaultTag:"ここから開始",
+    defaultTitle:"評価モデル",
+    defaultP1:"定量化されたリスクは、脅威が発生する可能性とその潜在的なコストの積です。このモデルはそれを2つの分岐に分け、それぞれを専用の評価で解決したうえで、各パラメータを数万回のモンテカルロシミュレーションに通し、信頼区間を伴う金額レンジを導き出します。",
+    defaultP2:"図中の任意のノードを選択すると詳細を確認できます。",
+    eqRisk:"リスク", eqLikelihood:"可能性", eqImpact:"影響度", eqLoss:"損失", eqEventLoss:"イベント損失", eqPELoss:"事後損失",
+    lgOutput:"定量化リスク", lgLike:"可能性要因", lgLoss:"影響度要因", lgEngine:"評価エンジン", lgInput:"データ入力",
+  }
+};
+
+// ─── NODE DATA (all 3 languages) ─────────────────────────────────────────────
+const DATA = {
+  en:{
+    "quantified-risk":{tag:"Output",title:"Quantified Cyber Risk",body:`<p>The final result: a monetary range for a given risk scenario, expressed with a confidence interval. It is the product of the two branches below it.</p><p>The simulator feeds four parameters: threat frequency, cyber risk exposure, event loss, and post-event loss, through tens of thousands of Monte Carlo rounds to produce it.</p>`,feeds:"Built from <b>Likelihood</b> × <b>Loss Impact</b>."},
+    "likelihood":{tag:"Likelihood Factor",title:"Likelihood",body:`<p>The probability that threats successfully exploit weaknesses (CVEs or misconfigurations) given the environment's architecture and existing controls.</p><p>Assessed through two parameters:</p><ul><li>Threat frequency</li><li>Cyber risk exposure</li></ul>`,feeds:"Resolved by the <b>Attack</b> and <b>Control</b> assessments."},
+    "loss-impact":{tag:"Impact Factor",title:"Loss Impact",body:`<p>The extent of damage a risk event can cause, depending on which assets are hit and how the organization is structured.</p><p>Categorized into two parameters:</p><ul><li>Event loss: immediate damage</li><li>Post-event loss: long-term consequences</li></ul>`,feeds:"Resolved by the <b>Impact</b> assessment."},
+    "threat-frequency":{tag:"Parameter for Likelihood",title:"Threat Frequency",body:`<p>How often attacks of a given threat type could occur. Derived from the attack parameter by fitting a Poisson distribution.</p><div class="tuple"><code>min</code><code>most_likely</code><code>max</code></div><p>These three numbers describe a range rather than a single guess: <b>min</b> is the optimistic case (fewest attacks expected), <b>most_likely</b> is the typical, best-estimate case, and <b>max</b> is the pessimistic case (most attacks expected). Feeding this range into the simulation, instead of one fixed number, lets the model reflect real uncertainty about the future.</p>`,feeds:"Output of the <b>Attack Assessment</b>; rolls up into Likelihood."},
+    "cyber-risk-exposure":{tag:"Parameter for Likelihood",title:"Cyber Risk Exposure",body:`<p>The degree of exposure to a threat for the assets in scope, scored as a float between 0 and 1.</p><div class="tuple"><code>min</code><code>most_likely</code><code>max</code></div><p>Mature prevention controls lower this value; disabled controls raise it. Because control status can shift and evidence is imperfect, exposure is expressed as a range: a best-case (<b>min</b>), a realistic (<b>most_likely</b>), and a worst-case (<b>max</b>) exposure level, rather than one exact number.</p>`,feeds:"Shaped by the <b>Control Assessment</b>; rolls up into Likelihood."},
+    "event-loss":{tag:"Parameter for Loss Impact",title:"Event Loss",body:`<p>Immediate damage from a scenario, summed across mapped loss categories such as:</p><ul><li>Business interruption</li><li>Incident response</li><li>Incident recovery</li><li>Lost productivity</li></ul><div class="tuple"><code>min</code><code>most_likely</code><code>max</code></div><p>Because a real incident's cost is never known in advance, each category is estimated as a range: a low, contained cost (<b>min</b>), a realistic expected cost (<b>most_likely</b>), and a severe, worst-case cost (<b>max</b>). Summing these ranges gives the overall Event Loss its own realistic spread.</p>`,feeds:"Output of the <b>Impact Assessment</b>; rolls up into Loss Impact."},
+    "post-event-loss":{tag:"Parameter for Loss Impact",title:"Post-Event Loss",body:`<p>Long-term consequences after the event, summed across categories such as:</p><ul><li>Company response &amp; customer liabilities</li><li>Regulatory penalties</li><li>Reputation &amp; market value loss</li><li>Customer attrition</li></ul><div class="tuple"><code>min</code><code>most_likely</code><code>max</code></div><p>These long-tail costs are especially uncertain, so each is captured as a range: a mild outcome (<b>min</b>), an expected outcome (<b>most_likely</b>), and a severe outcome (<b>max</b>), rather than a single number that would hide how much the real cost could vary.</p>`,feeds:"Output of the <b>Impact Assessment</b>; rolls up into Loss Impact."},
+    "attack-assessment":{tag:"Assessment Engine for Likelihood",title:"Attack Assessment",body:`<p>Estimates the attack parameter and threat frequency. It combines three data inputs, then adjusts the raw result for control maturity, especially detection efficacy, since visible attacks are more likely to fail.</p><ul><li>Global threat intelligence</li><li>Self-detection history (analysed over rolling time windows)</li><li>Peer reference from similar, anonymized profiles</li></ul>`,feeds:"Feeds <b>Threat Frequency</b> and <b>Cyber Risk Exposure</b>. Receives findings from <b>Control Assessment</b>."},
+    "control-assessment":{tag:"Assessment Engine for Attack, Impact & Exposure",title:"Control Assessment",body:`<p>Maps exposures and controls to NIST SP 800-53 items, then sorts every control into six categories and models how they interact.</p><ul><li><b>Detection</b> → Threat Frequency</li><li><b>Prevention</b> → Cyber Risk Exposure</li><li><b>Recovery</b> → Event Loss</li><li><b>Mitigation</b> → Post-Event Loss</li><li><b>Support</b> &amp; <b>Procedure</b> → indirectly strengthen the other four</li></ul>`,feeds:"Its results flow into both the <b>Attack</b> and <b>Impact</b> assessments and set <b>Cyber Risk Exposure</b>."},
+    "impact-assessment":{tag:"Assessment Engine for Loss Impact",title:"Impact Assessment",body:`<p>Evaluates event and post-event loss. It maps loss categories to the scenario, adjusts them for mitigation and recovery controls, then sums them.</p><p>Many categories are non-security (finance, legal, PR), so business data is gathered through structured questions and validated inputs.</p>`,feeds:"Produces <b>Event Loss</b> and <b>Post-Event Loss</b>. Uses <b>Control Assessment</b> findings and global impact intelligence."},
+    "global-attack":{tag:"Data input for Attack Assessment",title:"Global Threat Intelligence · Attack",body:`<p>Real-world attack data extracted from public sources, for example industry-wide attack rates from security reports, used to enhance the attack parameter.</p>`,feeds:"Feeds the <b>Attack Assessment</b>."},
+    "peer-history":{tag:"Data input for Attack Assessment",title:"Peer / Region Detection History",body:`<p>Anonymized detection results from peers with a similar industry, location, size, and revenue profile. Statistical methods blend them with your own history to benchmark attack likelihood.</p>`,feeds:"Feeds the <b>Attack Assessment</b>."},
+    "customer-history":{tag:"Data input for Attack Assessment",title:"Customer Detection History",body:`<p>Your own attack and threat detection history, analysed over a rolling <b>6-month period split into 14-day windows</b>. Each window tracks attack techniques correlated to the scenario threat type. Windows closer to the current assessment carry higher weight.</p>`,feeds:"Feeds the <b>Attack Assessment</b>."},
+    "exposure-history":{tag:"Data input for Control Assessment",title:"CREM History",body:`<p>The record of exposure and control status changes in the environment, including remediations, so improvements are reflected positively in the next assessment cycle.</p>`,feeds:"Feeds the <b>Control Assessment</b>."},
+    "scenario-inputs":{tag:"Data input for Control & Impact",title:"Scenario Inputs",body:`<p>Control-related and impact-related inputs supplied by the customer when sensor visibility alone isn't enough.</p><ul><li><b>Control related</b>: which additional controls exist and how fully they're implemented</li><li><b>Impact related</b>: revenue, business lines, legal exposure, data volumes</li></ul><p>Gathered during scenario development via questionnaires and documents.</p>`,feeds:"Feeds the <b>Control Assessment</b> (control-related) and <b>Impact Assessment</b> (impact-related)."},
+    "global-impact":{tag:"Data input for Impact Assessment",title:"Global Threat Intelligence · Impact",body:`<p>Loss-related intelligence collated from public security reports and adversary disclosures, used to model the financial side of a scenario.</p>`,feeds:"Feeds the <b>Impact Assessment</b>."}
+  },
+  es:{
+    "quantified-risk":{tag:"Resultado",title:"Ciber Riesgo Cuantificado",body:`<p>El resultado final: un rango monetario para un escenario de riesgo dado, expresado con un intervalo de confianza. Es el producto de las dos ramas que lo componen.</p><p>El simulador procesa cuatro parámetros: frecuencia de amenaza, exposición al ciber riesgo, pérdida por evento y pérdida post-evento, a través de decenas de miles de rondas de Monte Carlo.</p>`,feeds:"Construido a partir de <b>Probabilidad</b> × <b>Impacto de Pérdida</b>."},
+    "likelihood":{tag:"Factor de Probabilidad",title:"Probabilidad",body:`<p>La probabilidad de que las amenazas exploten con éxito las debilidades (CVEs o configuraciones incorrectas) dada la arquitectura del entorno y los controles existentes.</p><p>Se evalúa a través de dos parámetros:</p><ul><li>Frecuencia de amenaza</li><li>Exposición al ciber riesgo</li></ul>`,feeds:"Resuelta por las evaluaciones de <b>Ataque</b> y <b>Control</b>."},
+    "loss-impact":{tag:"Factor de Impacto",title:"Impacto de Pérdida",body:`<p>La magnitud del daño que puede causar un evento de riesgo, dependiendo de qué activos son afectados y cómo está estructurada la organización.</p><p>Categorizado en dos parámetros:</p><ul><li>Pérdida por evento: daño inmediato</li><li>Pérdida post-evento: consecuencias a largo plazo</li></ul>`,feeds:"Resuelta por la evaluación de <b>Impacto</b>."},
+    "threat-frequency":{tag:"Parámetro para Probabilidad",title:"Frecuencia de Amenaza",body:`<p>Con qué frecuencia podrían ocurrir ataques de un tipo de amenaza dado. Se deriva del parámetro de ataque ajustando una distribución de Poisson.</p><div class="tuple"><code>min</code><code>más_probable</code><code>max</code></div><p>Estos tres valores describen un rango en lugar de una única estimación: <b>min</b> es el caso optimista (menor cantidad de ataques esperados), <b>más_probable</b> es el caso típico y mejor estimado, y <b>max</b> es el caso pesimista (mayor cantidad de ataques esperados). Alimentar la simulación con este rango, en lugar de un número fijo, permite que el modelo refleje la incertidumbre real sobre el futuro.</p>`,feeds:"Salida de la <b>Evaluación de Ataque</b>; se integra en Probabilidad."},
+    "cyber-risk-exposure":{tag:"Parámetro para Probabilidad",title:"Exposición al Ciber Riesgo",body:`<p>El grado de exposición a una amenaza para los activos en alcance, puntuado como un valor entre 0 y 1.</p><div class="tuple"><code>min</code><code>más_probable</code><code>max</code></div><p>Los controles de prevención maduros reducen este valor; los controles deshabilitados lo aumentan. Como el estado de los controles puede cambiar y la evidencia no siempre es perfecta, la exposición se expresa como un rango: un nivel de exposición óptimo (<b>min</b>), uno realista (<b>más_probable</b>) y uno pesimista (<b>max</b>), en lugar de un único número exacto.</p>`,feeds:"Determinada por la <b>Evaluación de Control</b>; se integra en Probabilidad."},
+    "event-loss":{tag:"Parámetro para Impacto de Pérdida",title:"Pérdida por Evento",body:`<p>Daño inmediato de un escenario, sumado entre categorías de pérdida como:</p><ul><li>Interrupción del negocio</li><li>Respuesta al incidente</li><li>Recuperación del incidente</li><li>Pérdida de productividad</li></ul><div class="tuple"><code>min</code><code>más_probable</code><code>max</code></div><p>Como el costo real de un incidente nunca se conoce por adelantado, cada categoría se estima como un rango: un costo bajo y controlado (<b>min</b>), un costo esperado y realista (<b>más_probable</b>), y un costo severo en el peor caso (<b>max</b>). Sumar estos rangos le da a la Pérdida por Evento su propio rango realista.</p>`,feeds:"Salida de la <b>Evaluación de Impacto</b>; se integra en Impacto de Pérdida."},
+    "post-event-loss":{tag:"Parámetro para Impacto de Pérdida",title:"Pérdida Post-Evento",body:`<p>Consecuencias a largo plazo tras el evento, sumadas entre categorías como:</p><ul><li>Respuesta corporativa y responsabilidades con clientes</li><li>Sanciones regulatorias</li><li>Pérdida de reputación y valor de mercado</li><li>Deserción de clientes</li></ul><div class="tuple"><code>min</code><code>más_probable</code><code>max</code></div><p>Estos costos de largo plazo son especialmente incierto así que cada uno se captura como un rango: un resultado leve (<b>min</b>), un resultado esperado (<b>más_probable</b>) y un resultado severo (<b>max</b>), en lugar de un único número que ocultaría cuánto podría variar el costo real.</p>`,feeds:"Salida de la <b>Evaluación de Impacto</b>; se integra en Impacto de Pérdida."},
+    "attack-assessment":{tag:"Motor de Evaluación para Probabilidad",title:"Evaluación de Ataque",body:`<p>Estima el parámetro de ataque y la frecuencia de amenaza. Combina tres fuentes de datos y ajusta el resultado bruto por madurez de controles, especialmente eficacia de detección, ya que los ataques visibles tienen más probabilidades de fallar.</p><ul><li>Inteligencia global de amenazas</li><li>Historial propio de detección (analizado en ventanas de tiempo)</li><li>Referencia de pares con perfiles similares y anonimizados</li></ul>`,feeds:"Alimenta <b>Frecuencia de Amenaza</b> y <b>Exposición al Ciber Riesgo</b>. Recibe resultados de la <b>Evaluación de Control</b>."},
+    "control-assessment":{tag:"Motor de Evaluación para Ataque, Impacto y Exposición",title:"Evaluación de Control",body:`<p>Mapea exposiciones y controles a elementos NIST SP 800-53, luego clasifica cada control en seis categorías y modela sus interacciones.</p><ul><li><b>Detección</b> → Frecuencia de Amenaza</li><li><b>Prevención</b> → Exposición al Ciber Riesgo</li><li><b>Recuperación</b> → Pérdida por Evento</li><li><b>Mitigación</b> → Pérdida Post-Evento</li><li><b>Soporte</b> y <b>Procedimiento</b> → fortalecen indirectamente los otros cuatro</li></ul>`,feeds:"Sus resultados fluyen hacia las evaluaciones de <b>Ataque</b> e <b>Impacto</b> y establecen la <b>Exposición al Ciber Riesgo</b>."},
+    "impact-assessment":{tag:"Motor de Evaluación para Impacto de Pérdida",title:"Evaluación de Impacto",body:`<p>Evalúa la pérdida por evento y post-evento. Mapea categorías de pérdida al escenario, las ajusta por controles de mitigación y recuperación, y las suma.</p><p>Muchas categorías no son de seguridad (finanzas, legal, relaciones públicas), por lo que los datos de negocio se recopilan mediante preguntas estructuradas.</p>`,feeds:"Produce <b>Pérdida por Evento</b> y <b>Pérdida Post-Evento</b>. Usa resultados de la <b>Evaluación de Control</b> e inteligencia global de impacto."},
+    "global-attack":{tag:"Entrada de datos para Evaluación de Ataque",title:"Inteligencia Global de Amenazas · Ataque",body:`<p>Datos reales de ataques extraídos de fuentes públicas, por ejemplo tasas de ataque por industria de informes de seguridad, utilizados para mejorar el parámetro de ataque.</p>`,feeds:"Alimenta la <b>Evaluación de Ataque</b>."},
+    "peer-history":{tag:"Entrada de datos para Evaluación de Ataque",title:"Historial de Detección de Pares / Región",body:`<p>Resultados de detección anonimizados de pares con perfil similar en industria, ubicación, tamaño e ingresos. Métodos estadísticos los combinan con el historial propio para estimar la probabilidad de ataque.</p>`,feeds:"Alimenta la <b>Evaluación de Ataque</b>."},
+    "customer-history":{tag:"Entrada de datos para Evaluación de Ataque",title:"Historial de Detección del Cliente",body:`<p>El historial propio de detección de ataques y amenazas, analizado en un <b>período de 6 meses dividido en ventanas de 14 días</b>. Cada ventana rastrea técnicas de ataque correlacionadas con el tipo de amenaza del escenario. Las ventanas más recientes tienen mayor peso.</p>`,feeds:"Alimenta la <b>Evaluación de Ataque</b>."},
+    "exposure-history":{tag:"Entrada de datos para Evaluación de Control",title:"Histórico de CREM",body:`<p>El registro de cambios en el estado de exposición y controles del entorno, incluyendo remediaciones, para que las mejoras se reflejen positivamente en el siguiente ciclo de evaluación.</p>`,feeds:"Alimenta la <b>Evaluación de Control</b>."},
+    "scenario-inputs":{tag:"Entrada de datos para Control e Impacto",title:"Entradas del Escenario",body:`<p>Entradas relacionadas con controles e impacto proporcionadas por el cliente cuando la visibilidad de los sensores no es suficiente.</p><ul><li><b>Relacionadas al control</b>: qué controles adicionales existen y en qué medida están implementados</li><li><b>Relacionadas al impacto</b>: ingresos, líneas de negocio, exposición legal, volúmenes de datos</li></ul><p>Recopiladas durante el desarrollo del escenario mediante cuestionarios y documentos.</p>`,feeds:"Alimenta la <b>Evaluación de Control</b> (relacionado al control) y la <b>Evaluación de Impacto</b> (relacionado al impacto)."},
+    "global-impact":{tag:"Entrada de datos para Evaluación de Impacto",title:"Inteligencia Global de Amenazas · Impacto",body:`<p>Inteligencia relacionada con pérdidas recopilada de informes públicos de seguridad y divulgaciones de adversarios, utilizada para modelar el lado financiero de un escenario.</p>`,feeds:"Alimenta la <b>Evaluación de Impacto</b>."}
+  },
+  pt:{
+    "quantified-risk":{tag:"Resultado",title:"Ciber Risco Quantificado",body:`<p>O resultado final: um intervalo monetário para um cenário de risco específico, expresso com um intervalo de confiança. É o produto dos dois ramos abaixo dele.</p><p>O simulador processa quatro parâmetros: frequência de ameaça, exposição ao ciber risco, perda por evento e perda pós-evento, através de dezenas de milhares de rodadas de Monte Carlo.</p>`,feeds:"Construído a partir de <b>Probabilidade</b> × <b>Impacto de Perda</b>."},
+    "likelihood":{tag:"Fator de Probabilidade",title:"Probabilidade",body:`<p>A probabilidade de que ameaças explorem com sucesso fraquezas (CVEs ou configurações incorretas) dada a arquitetura do ambiente e os controles existentes.</p><p>Avaliada por meio de dois parâmetros:</p><ul><li>Frequência de ameaça</li><li>Exposição ao ciber risco</li></ul>`,feeds:"Resolvida pelas avaliações de <b>Ataque</b> e <b>Controle</b>."},
+    "loss-impact":{tag:"Fator de Impacto",title:"Impacto de Perda",body:`<p>A extensão do dano que um evento de risco pode causar, dependendo de quais ativos são afetados e como a organização está estruturada.</p><p>Categorizado em dois parâmetros:</p><ul><li>Perda por evento: dano imediato</li><li>Perda pós-evento: consequências de longo prazo</li></ul>`,feeds:"Resolvida pela avaliação de <b>Impacto</b>."},
+    "threat-frequency":{tag:"Parâmetro para Probabilidade",title:"Frequência de Ameaça",body:`<p>Com que frequência ataques de um determinado tipo de ameaça podem ocorrer. Derivada do parâmetro de ataque ajustando uma distribuição de Poisson.</p><div class="tuple"><code>min</code><code>mais_provável</code><code>max</code></div><p>Esses três valores descrevem um intervalo em vez de uma única estimativa: <b>min</b> é o caso otimista (menor número de ataques esperados), <b>mais_provável</b> é o caso típico e melhor estimado, e <b>max</b> é o caso pessimista (maior número de ataques esperados). Alimentar a simulação com esse intervalo, em vez de um número fixo, permite que o modelo reflita a incerteza real sobre o futuro.</p>`,feeds:"Saída da <b>Avaliação de Ataque</b>; integra-se à Probabilidade."},
+    "cyber-risk-exposure":{tag:"Parâmetro para Probabilidade",title:"Exposição ao Ciber Risco",body:`<p>O grau de exposição a uma ameaça para os ativos em escopo, pontuado como um valor entre 0 e 1.</p><div class="tuple"><code>min</code><code>mais_provável</code><code>max</code></div><p>Controles de prevenção maduros reduzem este valor; controles desabilitados o aumentam. Como o status dos controles pode mudar e a evidência nem sempre é perfeita, a exposição é expressa como um intervalo: um nível de exposição ótimo (<b>min</b>), um realista (<b>mais_provável</b>) e um pessimista (<b>max</b>), em vez de um único número exato.</p>`,feeds:"Determinada pela <b>Avaliação de Controle</b>; integra-se à Probabilidade."},
+    "event-loss":{tag:"Parâmetro para Impacto de Perda",title:"Perda por Evento",body:`<p>Dano imediato de um cenário, somado entre categorias de perda como:</p><ul><li>Interrupção de negócios</li><li>Resposta ao incidente</li><li>Recuperação do incidente</li><li>Perda de produtividade</li></ul><div class="tuple"><code>min</code><code>mais_provável</code><code>max</code></div><p>Como o custo real de um incidente nunca é conhecido de antemão, cada categoria é estimada como um intervalo: um custo baixo e controlado (<b>min</b>), um custo esperado e realista (<b>mais_provável</b>), e um custo severo no pior caso (<b>max</b>). Somar esses intervalos dá à Perda por Evento seu próprio intervalo realista.</p>`,feeds:"Saída da <b>Avaliação de Impacto</b>; integra-se ao Impacto de Perda."},
+    "post-event-loss":{tag:"Parâmetro para Impacto de Perda",title:"Perda Pós-Evento",body:`<p>Consequências de longo prazo após o evento, somadas entre categorias como:</p><ul><li>Resposta corporativa e responsabilidades com clientes</li><li>Penalidades regulatórias</li><li>Perda de reputação e valor de mercado</li><li>Deserção de clientes</li></ul><div class="tuple"><code>min</code><code>mais_provável</code><code>max</code></div><p>Esses custos de longo prazo são especialmente incertos, então cada um é capturado como um intervalo: um resultado leve (<b>min</b>), um resultado esperado (<b>mais_provável</b>) e um resultado severo (<b>max</b>), em vez de um único número que ocultaria o quanto o custo real poderia variar.</p>`,feeds:"Saída da <b>Avaliação de Impacto</b>; integra-se ao Impacto de Perda."},
+    "attack-assessment":{tag:"Motor de Avaliação para Probabilidade",title:"Avaliação de Ataque",body:`<p>Estima o parâmetro de ataque e a frequência de ameaça. Combina três fontes de dados e ajusta o resultado bruto pela maturidade dos controles, especialmente eficácia de detecção, pois ataques visíveis têm maior probabilidade de falhar.</p><ul><li>Inteligência global de ameaças</li><li>Histórico próprio de detecção (analisado em janelas de tempo)</li><li>Referência de pares com perfis similares e anonimizados</li></ul>`,feeds:"Alimenta <b>Frequência de Ameaça</b> e <b>Exposição ao Ciber Risco</b>. Recebe resultados da <b>Avaliação de Controle</b>."},
+    "control-assessment":{tag:"Motor de Avaliação para Ataque, Impacto e Exposição",title:"Avaliação de Controle",body:`<p>Mapeia exposições e controles para itens NIST SP 800-53, depois classifica cada controle em seis categorias e modela suas interações.</p><ul><li><b>Detecção</b> → Frequência de Ameaça</li><li><b>Prevenção</b> → Exposição ao Ciber Risco</li><li><b>Recuperação</b> → Perda por Evento</li><li><b>Mitigação</b> → Perda Pós-Evento</li><li><b>Suporte</b> e <b>Procedimento</b> → fortalecem indiretamente os outros quatro</li></ul>`,feeds:"Seus resultados fluem para as avaliações de <b>Ataque</b> e <b>Impacto</b> e definem a <b>Exposição ao Ciber Risco</b>."},
+    "impact-assessment":{tag:"Motor de Avaliação para Impacto de Perda",title:"Avaliação de Impacto",body:`<p>Avalia a perda por evento e pós-evento. Mapeia categorias de perda ao cenário, ajusta-as pelos controles de mitigação e recuperação, e as soma.</p><p>Muitas categorias não são de segurança (finanças, jurídico, relações públicas), portanto os dados de negócio são coletados por meio de perguntas estruturadas.</p>`,feeds:"Produz <b>Perda por Evento</b> e <b>Perda Pós-Evento</b>. Usa resultados da <b>Avaliação de Controle</b> e inteligência global de impacto."},
+    "global-attack":{tag:"Entrada de dados para Avaliação de Ataque",title:"Inteligência Global de Ameaças · Ataque",body:`<p>Dados reais de ataques extraídos de fontes públicas, por exemplo taxas de ataque por setor de relatórios de segurança, usados para aprimorar o parâmetro de ataque.</p>`,feeds:"Alimenta a <b>Avaliação de Ataque</b>."},
+    "peer-history":{tag:"Entrada de dados para Avaliação de Ataque",title:"Histórico de Detecção de Pares / Região",body:`<p>Resultados de detecção anonimizados de pares com perfil semelhante em setor, localização, tamanho e receita. Métodos estatísticos os combinam com o histórico próprio para estimar a probabilidade de ataque.</p>`,feeds:"Alimenta a <b>Avaliação de Ataque</b>."},
+    "customer-history":{tag:"Entrada de dados para Avaliação de Ataque",title:"Histórico de Detecção do Cliente",body:`<p>O histórico próprio de detecção de ataques e ameaças, analisado em um <b>período de 6 meses dividido em janelas de 14 dias</b>. Cada janela rastreia técnicas de ataque correlacionadas com o tipo de ameaça do cenário. Janelas mais recentes têm maior peso.</p>`,feeds:"Alimenta a <b>Avaliação de Ataque</b>."},
+    "exposure-history":{tag:"Entrada de dados para Avaliação de Controle",title:"Histórico de CREM",body:`<p>O registro de mudanças no estado de exposição e controles do ambiente, incluindo remediações, para que as melhorias sejam refletidas positivamente no próximo ciclo de avaliação.</p>`,feeds:"Alimenta a <b>Avaliação de Controle</b>."},
+    "scenario-inputs":{tag:"Entrada de dados para Controle e Impacto",title:"Entradas do Cenário",body:`<p>Entradas relacionadas a controles e impacto fornecidas pelo cliente quando a visibilidade dos sensores não é suficiente.</p><ul><li><b>Relacionadas a controle</b>: quais controles adicionais existem e em que grau estão implementados</li><li><b>Relacionadas a impacto</b>: receita, linhas de negócio, exposição legal, volumes de dados</li></ul><p>Coletadas durante o desenvolvimento do cenário por meio de questionários e documentos.</p>`,feeds:"Alimenta a <b>Avaliação de Controle</b> (relacionado a controle) e a <b>Avaliação de Impacto</b> (relacionado a impacto)."},
+    "global-impact":{tag:"Entrada de dados para Avaliação de Impacto",title:"Inteligência Global de Ameaças · Impacto",body:`<p>Inteligência relacionada a perdas coletada de relatórios públicos de segurança e divulgações de adversários, usada para modelar o lado financeiro de um cenário.</p>`,feeds:"Alimenta a <b>Avaliação de Impacto</b>."}
+  },
+  ja:{
+    "quantified-risk":{tag:"アウトプット",title:"定量化サイバーリスク",body:`<p>最終結果:特定のリスクシナリオに対する金額レンジを、信頼区間とともに示したもの。以下の2つの分岐の積として算出されます。</p><p>シミュレーターは、脅威頻度、サイバーリスクエクスポージャー、イベント損失、事後損失という4つのパラメータを、数万回のモンテカルロシミュレーションに通してこれを導き出します。</p>`,feeds:"<b>可能性</b> × <b>損失影響度</b> から構成されます。"},
+    "likelihood":{tag:"可能性要因",title:"可能性",body:`<p>環境のアーキテクチャと既存のコントロールを前提として、脅威が弱点(CVEや設定不備)を突いて悪用に成功する確率。</p><p>次の2つのパラメータを通じて評価されます:</p><ul><li>脅威頻度</li><li>サイバーリスクエクスポージャー</li></ul>`,feeds:"<b>攻撃評価</b>と<b>コントロール評価</b>によって算出されます。"},
+    "loss-impact":{tag:"影響度要因",title:"損失影響度",body:`<p>どの資産が影響を受け、組織がどのように構成されているかによって決まる、リスクイベントが引き起こしうる損害の程度。</p><p>2つのパラメータに分類されます:</p><ul><li>イベント損失:即時的な損害</li><li>事後損失:長期的な影響</li></ul>`,feeds:"<b>影響評価</b>によって算出されます。"},
+    "threat-frequency":{tag:"可能性のためのパラメータ",title:"脅威頻度",body:`<p>特定の脅威タイプの攻撃がどの程度の頻度で発生しうるか。攻撃パラメータから、ポアソン分布を当てはめて導出されます。</p><div class="tuple"><code>min</code><code>most_likely</code><code>max</code></div><p>この3つの数値は単一の推測値ではなく範囲を表します。<b>min</b>は楽観的なケース(想定される攻撃が最も少ない場合)、<b>most_likely</b>は典型的で最も確度の高い推定値、<b>max</b>は悲観的なケース(想定される攻撃が最も多い場合)です。固定値ではなくこの範囲をシミュレーションに投入することで、モデルは将来に関する実際の不確実性を反映できます。</p>`,feeds:"<b>攻撃評価</b>の出力であり、可能性に統合されます。"},
+    "cyber-risk-exposure":{tag:"可能性のためのパラメータ",title:"サイバーリスクエクスポージャー",body:`<p>対象範囲内の資産における脅威への曝露度を、0から1の間の値でスコア化したもの。</p><div class="tuple"><code>min</code><code>most_likely</code><code>max</code></div><p>成熟した予防コントロールはこの値を下げ、無効化されたコントロールはこの値を上げます。コントロール状況は変化しうり、また根拠情報も完全ではないため、エクスポージャーは単一の正確な数値ではなく、最良ケース(<b>min</b>)、現実的なケース(<b>most_likely</b>)、最悪ケース(<b>max</b>)という範囲で表現されます。</p>`,feeds:"<b>コントロール評価</b>によって形成され、可能性に統合されます。"},
+    "event-loss":{tag:"損失影響度のためのパラメータ",title:"イベント損失",body:`<p>シナリオによる即時的な損害を、対応する損失カテゴリごとに合算したもの:</p><ul><li>事業中断</li><li>インシデント対応</li><li>インシデント復旧</li><li>生産性の損失</li></ul><div class="tuple"><code>min</code><code>most_likely</code><code>max</code></div><p>実際のインシデントのコストは事前にはわからないため、各カテゴリは範囲として見積もられます:抑制された低いコスト(<b>min</b>)、現実的な想定コスト(<b>most_likely</b>)、深刻な最悪ケースのコスト(<b>max</b>)。これらの範囲を合算することで、イベント損失全体にも現実的な広がりが与えられます。</p>`,feeds:"<b>影響評価</b>の出力であり、損失影響度に統合されます。"},
+    "post-event-loss":{tag:"損失影響度のためのパラメータ",title:"事後損失",body:`<p>イベント発生後の長期的な影響を、対応するカテゴリごとに合算したもの:</p><ul><li>企業対応および顧客に対する賠償責任</li><li>規制上の制裁金</li><li>評判および市場価値の毀損</li><li>顧客離反</li></ul><div class="tuple"><code>min</code><code>most_likely</code><code>max</code></div><p>これらの長期的なコストは特に不確実性が高いため、それぞれ範囲として捉えられます:軽微な結果(<b>min</b>)、想定される結果(<b>most_likely</b>)、深刻な結果(<b>max</b>)。単一の数値では、実際のコストがどれほど変動しうるかを隠してしまいます。</p>`,feeds:"<b>影響評価</b>の出力であり、損失影響度に統合されます。"},
+    "attack-assessment":{tag:"可能性のための評価エンジン",title:"攻撃評価",body:`<p>攻撃パラメータと脅威頻度を推定します。3つのデータ入力を組み合わせたうえで、特に検知の有効性を中心にコントロールの成熟度に応じて生の結果を調整します。可視化された攻撃は失敗する可能性が高いためです。</p><ul><li>グローバル脅威インテリジェンス</li><li>自組織の検知履歴(一定期間の時間枠で分析)</li><li>類似の匿名化されたプロファイルからのピア参照</li></ul>`,feeds:"<b>脅威頻度</b>と<b>サイバーリスクエクスポージャー</b>に供給します。<b>コントロール評価</b>からの結果を受け取ります。"},
+    "control-assessment":{tag:"攻撃・影響・エクスポージャーのための評価エンジン",title:"コントロール評価",body:`<p>エクスポージャーとコントロールをNIST SP 800-53の項目にマッピングし、すべてのコントロールを6つのカテゴリに分類したうえで、それらの相互作用をモデル化します。</p><ul><li><b>検知</b> → 脅威頻度</li><li><b>予防</b> → サイバーリスクエクスポージャー</li><li><b>復旧</b> → イベント損失</li><li><b>緩和</b> → 事後損失</li><li><b>支援</b>と<b>手順</b> → 他の4つを間接的に強化</li></ul>`,feeds:"その結果は<b>攻撃評価</b>と<b>影響評価</b>の両方に流れ込み、<b>サイバーリスクエクスポージャー</b>を決定します。"},
+    "impact-assessment":{tag:"損失影響度のための評価エンジン",title:"影響評価",body:`<p>イベント損失および事後損失を評価します。損失カテゴリをシナリオにマッピングし、緩和・復旧コントロールに応じて調整したうえで合算します。</p><p>多くのカテゴリは財務、法務、広報などセキュリティ以外の領域にまたがるため、事業データは構造化された質問と検証済みの入力を通じて収集されます。</p>`,feeds:"<b>イベント損失</b>と<b>事後損失</b>を算出します。<b>コントロール評価</b>の結果とグローバル影響インテリジェンスを利用します。"},
+    "global-attack":{tag:"攻撃評価のためのデータ入力",title:"グローバル脅威インテリジェンス・攻撃",body:`<p>公開情報源から抽出された実際の攻撃データ。例えばセキュリティレポートに基づく業界全体の攻撃発生率などがあり、攻撃パラメータの精度向上に利用されます。</p>`,feeds:"<b>攻撃評価</b>に供給します。"},
+    "peer-history":{tag:"攻撃評価のためのデータ入力",title:"ピア/地域検知履歴",body:`<p>業界、地域、規模、収益プロファイルが類似するピアの匿名化された検知結果。統計的手法により自組織の履歴と組み合わせて、攻撃発生可能性のベンチマークに用いられます。</p>`,feeds:"<b>攻撃評価</b>に供給します。"},
+    "customer-history":{tag:"攻撃評価のためのデータ入力",title:"顧客検知履歴",body:`<p>自組織における攻撃・脅威検知の履歴で、<b>14日ごとの時間枠に分割した過去6か月間</b>にわたって分析されます。各時間枠では、シナリオの脅威タイプに対応する攻撃テクニックが追跡されます。直近の時間枠ほど重み付けが大きくなります。</p>`,feeds:"<b>攻撃評価</b>に供給します。"},
+    "exposure-history":{tag:"コントロール評価のためのデータ入力",title:"CREM 履歴",body:`<p>環境内のエクスポージャーおよびコントロール状況の変化(是正措置を含む)の記録。これにより、改善が次回の評価サイクルに適切に反映されます。</p>`,feeds:"<b>コントロール評価</b>に供給します。"},
+    "scenario-inputs":{tag:"コントロール・影響のためのデータ入力",title:"シナリオ入力",body:`<p>センサーによる可視性だけでは不十分な場合に、顧客から提供されるコントロール関連および影響関連の入力情報。</p><ul><li><b>コントロール関連</b>:どのような追加コントロールが存在し、どの程度実装されているか</li><li><b>影響関連</b>:収益、事業ライン、法的エクスポージャー、データ量</li></ul><p>シナリオ策定の過程で、質問票や文書を通じて収集されます。</p>`,feeds:"<b>コントロール評価</b>(コントロール関連)と<b>影響評価</b>(影響関連)に供給します。"},
+    "global-impact":{tag:"影響評価のためのデータ入力",title:"グローバル脅威インテリジェンス・影響",body:`<p>公開されているセキュリティレポートや攻撃者に関する開示情報から収集された、損失に関連するインテリジェンス。シナリオの財務的側面をモデル化するために利用されます。</p>`,feeds:"<b>影響評価</b>に供給します。"}
+  }
+};
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let currentLang = 'en';
+let selectedId = null;
+
+// ─── LANGUAGE DETECTION ──────────────────────────────────────────────────────
+function detectLang(){
+  const langs = navigator.languages || [navigator.language || 'en'];
+  for(const l of langs){
+    const code = l.toLowerCase().split('-')[0];
+    if(code === 'es') return 'es';
+    if(code === 'pt') return 'pt';
+    if(code === 'ja') return 'ja';
+    if(code === 'en') return 'en';
+  }
+  return 'en';
+}
+
+// ─── UI UPDATE ────────────────────────────────────────────────────────────────
+function applyLang(lang){
+  currentLang = lang;
+  const u = UI[lang];
+  document.getElementById('ui-title').innerHTML = u.title;
+  document.getElementById('ui-lede').textContent = u.lede;
+  document.getElementById('ui-lede-action').innerHTML = u.ledeAction;
+  document.getElementById('eq-risk').textContent = u.eqRisk;
+  document.getElementById('eq-likelihood').textContent = u.eqLikelihood;
+  document.getElementById('eq-impact').textContent = u.eqImpact;
+  document.getElementById('eq-loss').textContent = u.eqLoss;
+  document.getElementById('eq-eventloss').textContent = u.eqEventLoss;
+  document.getElementById('eq-peloss').textContent = u.eqPELoss;
+  document.getElementById('lg-output').textContent = u.lgOutput;
+  document.getElementById('lg-like').textContent = u.lgLike;
+  document.getElementById('lg-loss').textContent = u.lgLoss;
+  document.getElementById('lg-engine').textContent = u.lgEngine;
+  document.getElementById('lg-input').textContent = u.lgInput;
+
+  // update lang select
+  const langSelect = document.getElementById('lang-select');
+  if(langSelect) langSelect.value = lang;
+  updateSvgLabels(lang);
+  applyGlossary(lang);
+
+  // refresh panel
+  if(selectedId){
+    showPanel(selectedId);
+  } else {
+    document.getElementById('p-tag').textContent = u.defaultTag;
+    document.getElementById('p-title').textContent = u.defaultTitle;
+    document.getElementById('p-body').innerHTML =
+      `<p>${u.defaultP1}</p><p class="placeholder">${u.defaultP2}</p>`;
+    document.getElementById('p-feeds').innerHTML =
+      `<b>${u.tipLabel}</b> ${u.tipText}`;
+  }
+}
+
+function setLang(lang){ applyLang(lang); }
+
+// ─── PANEL DISPLAY ───────────────────────────────────────────────────────────
+function showPanel(id){
+  const d = DATA[currentLang][id];
+  if(!d) return;
+  selectedId = id;
+  document.getElementById('p-tag').textContent = d.tag;
+  document.getElementById('p-title').textContent = d.title;
+  document.getElementById('p-body').innerHTML = d.body;
+  document.getElementById('p-feeds').innerHTML = d.feeds;
+}
+
+// ─── NODE INTERACTION ────────────────────────────────────────────────────────
+const nodes = document.querySelectorAll('.node');
+
+// ===== sequenced load-in animation =====
+(function(){
+  const svg = document.getElementById('map');
+  if(!svg) return;
+
+  // Connector paths were authored before the node boxes in the markup, so by default they'd
+  // paint underneath the boxes wherever they overlap (e.g. an arrowhead touching a box edge).
+  // Move them after the boxes instead, so arrows and arrowheads always render on top.
+  // (pointer-events is none on these paths, so this doesn't affect box click/hover interaction.)
+  Array.from(svg.children).filter(c => c.tagName === 'path').forEach(p => svg.appendChild(p));
+  const stepEls = {};
+  svg.querySelectorAll('[data-step]').forEach(el=>{
+    const s = el.getAttribute('data-step');
+    (stepEls[s] = stepEls[s] || []).push(el);
+  });
+  const totalSteps = 27;
+  const dramaticFrom = 22;
+  let timers = [];
+  const SVGNS = 'http://www.w3.org/2000/svg';
+
+  function isFlowOverlay(el){
+    return el.classList.contains('aflow') || el.classList.contains('aflow-rev');
+  }
+
+  // ---- map each 'd' string to whether its colored overlay flows in reverse (end->start) ----
+  const reversedDSet = new Set();
+  svg.querySelectorAll('path.aflow-rev').forEach(el=>reversedDSet.add(el.getAttribute('d')));
+
+  // ---- build a reveal mask for every colored arrow, so it stays visibly dashed while it "draws" ----
+  const defs = svg.querySelector('defs');
+  const maskPathFor = new WeakMap();
+  const pathLenByOverlay = new WeakMap();
+  let maskCounter = 0;
+
+  svg.querySelectorAll('[data-step]').forEach(el=>{
+    if(el.tagName !== 'path' || !isFlowOverlay(el)) return;
+    const id = 'reveal-mask-' + (maskCounter++);
+    const maskEl = document.createElementNS(SVGNS, 'mask');
+    maskEl.setAttribute('id', id);
+    maskEl.setAttribute('maskUnits', 'userSpaceOnUse');
+    maskEl.setAttribute('x', '-2000');
+    maskEl.setAttribute('y', '-2000');
+    maskEl.setAttribute('width', '5000');
+    maskEl.setAttribute('height', '5000');
+    const maskPath = document.createElementNS(SVGNS, 'path');
+    maskPath.setAttribute('d', el.getAttribute('d'));
+    maskPath.setAttribute('stroke', '#fff');
+    maskPath.setAttribute('fill', 'none');
+    const sw = parseFloat(getComputedStyle(el).strokeWidth) || 2.4;
+    maskPath.setAttribute('stroke-width', String(sw + 8));
+    maskPath.setAttribute('stroke-linecap', 'round');
+    maskEl.appendChild(maskPath);
+    defs.appendChild(maskEl);
+    el.setAttribute('mask', 'url(#' + id + ')');
+    maskPathFor.set(el, maskPath);
+    // Measure length from the real, visibly-rendered arrow rather than its mask clone:
+    // Safari/WebKit can return an unreliable getTotalLength() for paths that only ever
+    // exist inside a <mask> and are never actually painted in the visible tree.
+    let measuredLen = el.getTotalLength();
+    if(!isFinite(measuredLen) || measuredLen <= 0) measuredLen = 2000; // safe fallback: keeps the mask fully closed rather than exposed
+    pathLenByOverlay.set(el, measuredLen);
+  });
+
+  // ---- give every arrowhead usage its own private marker clone, so it can "peek in" independently ----
+  // (the 4 marker defs are shared by several arrows each; animating the shared def directly
+  // would flash every arrow using that color, not just the one that just finished drawing)
+  let markerCloneCounter = 0;
+  svg.querySelectorAll('[data-step]').forEach(el=>{
+    if(el.tagName !== 'path' || !el.hasAttribute('marker-end')) return;
+    const ref = el.getAttribute('marker-end'); // e.g. "url(#arrow-red)"
+    const hashIdx = ref.indexOf('#');
+    if(hashIdx === -1) return;
+    const origId = ref.slice(hashIdx + 1, -1);
+    const origMarker = document.getElementById(origId);
+    if(!origMarker) return;
+    const cloneId = origId + '-inst-' + (markerCloneCounter++);
+    const clone = origMarker.cloneNode(true);
+    clone.id = cloneId;
+    const tip = clone.querySelector('path');
+    if(tip) tip.setAttribute('transform', 'scale(.15,1)'); // start "closed" toward the back edge
+    defs.appendChild(clone);
+    el.setAttribute('marker-end', 'url(#' + cloneId + ')');
+  });
+
+  // rAF-driven marker peek-in: scales the arrowhead tip out from its back edge (x=0 in its own
+  // viewBox) toward the point, in the direction the arrow is already traveling. Uses setAttribute
+  // every frame rather than a CSS transition, for the same Safari-reliability reasons as the dash reveal.
+  function peekInMarker(markerRefAttr, durationMs){
+    if(!markerRefAttr) return;
+    const hashIdx = markerRefAttr.indexOf('#');
+    if(hashIdx === -1) return;
+    const id = markerRefAttr.slice(hashIdx + 1, -1);
+    const markerDef = document.getElementById(id);
+    const tip = markerDef && markerDef.querySelector('path');
+    if(!tip) return;
+    const from = 0.15, to = 1;
+    const start = performance.now();
+    function step(now){
+      const t = Math.min(1, (now - start) / durationMs);
+      const eased = 1 - Math.pow(1 - t, 3);
+      tip.setAttribute('transform', 'scale(' + (from + (to - from) * eased) + ',1)');
+      if(t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // rAF-driven marker bounce: a continuous back-and-forth nudge along the arrowhead's own
+  // pointing direction (positive x in its 10x10 viewBox), started once the box the arrow feeds
+  // into appears, and running forever until the next replay resets it via bounceGeneration.
+  let bounceGeneration = 0;
+  function bounceMarker(markerRefAttr){
+    if(!markerRefAttr) return;
+    const hashIdx = markerRefAttr.indexOf('#');
+    if(hashIdx === -1) return;
+    const id = markerRefAttr.slice(hashIdx + 1, -1);
+    const markerDef = document.getElementById(id);
+    const tip = markerDef && markerDef.querySelector('path');
+    if(!tip) return;
+    const myGen = bounceGeneration;
+    const period = 900; // ms per full back-and-forth cycle
+    const amplitude = 1.3; // translate units within the marker's own viewBox
+    const start = performance.now();
+    function step(now){
+      if(bounceGeneration !== myGen) return; // superseded by a reset - stop looping
+      const phase = ((now - start) % period) / period;
+      const offset = amplitude * Math.sin(phase * 2 * Math.PI);
+      tip.setAttribute('transform', 'translate(' + offset + ',0)');
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // ---- manual rAF-driven animation (avoids Safari's unreliable CSS-transition-on-SVG-attribute-in-mask rendering) ----
+  function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+  const rafTokens = new WeakMap();
+  function animateDashoffset(el, from, to, durationMs, onDone){
+    const myToken = {};
+    rafTokens.set(el, myToken);
+    const start = performance.now();
+    function step(now){
+      if(rafTokens.get(el) !== myToken) return; // superseded by a newer animation on this element
+      const t = Math.min(1, (now - start) / durationMs);
+      const eased = easeOutCubic(t);
+      el.setAttribute('stroke-dashoffset', String(from + (to - from) * eased));
+      if(t < 1){
+        requestAnimationFrame(step);
+      } else if(onDone){
+        onDone();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  // ---- path draw helpers ----
+  const pathLen = new WeakMap();
+  function hidePath(el){
+    if(isFlowOverlay(el)){
+      // colored arrow: never touch its own dash pattern/animation - reveal it through a growing mask instead
+      const maskPath = maskPathFor.get(el);
+      let len = pathLenByOverlay.get(el);
+      if(len === undefined || !isFinite(len) || len <= 0) len = 2000; // safe fallback
+      rafTokens.set(maskPath, {}); // cancel any in-flight animation
+      maskPath.setAttribute('stroke-dasharray', len + ' ' + len);
+      maskPath.setAttribute('stroke-dashoffset', String(len));
+      return;
+    }
+    let len = pathLen.get(el);
+    if(len === undefined){
+      len = el.getTotalLength();
+      if(!isFinite(len) || len <= 0) len = 2000; // safe fallback: keeps it fully hidden rather than exposed
+      pathLen.set(el, len);
+    }
+    rafTokens.set(el, {}); // cancel any in-flight animation
+    el.setAttribute('stroke-dasharray', len + ' ' + len);
+    el.setAttribute('stroke-dashoffset', String(len));
+    el.style.animation = 'none';
+    if(el.hasAttribute('marker-end')){
+      el.dataset.markerEnd = el.getAttribute('marker-end');
+      el.removeAttribute('marker-end');
+    }
+  }
+  function drawPath(el, durationMs){
+    if(isFlowOverlay(el)){
+      const maskPath = maskPathFor.get(el);
+      let len = pathLenByOverlay.get(el);
+      if(len === undefined || !isFinite(len) || len <= 0) len = 2000;
+      const reversed = el.classList.contains('aflow-rev');
+      // "aflow" flows start->end, so reveal offset goes len->0 (grows from the start).
+      // "aflow-rev" flows end->start, so reveal offset goes len->2*len (grows from the end, backing toward the start).
+      animateDashoffset(maskPath, len, reversed ? len * 2 : 0, durationMs);
+      return;
+    }
+    let len = pathLen.get(el);
+    if(len === undefined || !isFinite(len) || len <= 0) len = 2000;
+    const baseReversed = reversedDSet.has(el.getAttribute('d'));
+    animateDashoffset(el, len, baseReversed ? len * 2 : 0, durationMs, ()=>{
+      if(el.dataset.markerEnd){
+        el.setAttribute('marker-end', el.dataset.markerEnd);
+        peekInMarker(el.dataset.markerEnd, 220);
+        const ref = el.dataset.markerEnd, myGen = bounceGeneration;
+        setTimeout(()=>{ if(bounceGeneration === myGen) bounceMarker(ref); }, 220);
+      }
+      el.setAttribute('stroke-dasharray', '');
+      el.setAttribute('stroke-dashoffset', '');
+      el.style.animation = '';
+    });
+  }
+
+  const allEls = Object.values(stepEls).flat();
+
+  function resetAll(){
+    bounceGeneration++; // stop any bounce loops still running from a previous play-through
+    allEls.forEach(el=>{
+      if(el.tagName === 'path'){ hidePath(el); }
+      else { el.classList.remove('seq-in','seq-slow'); }
+    });
+    void svg.getBoundingClientRect();
+  }
+
+  function playSequence(){
+    timers.forEach(t=>clearTimeout(t));
+    timers = [];
+    resetAll();
+
+    let t = 0;
+    for(let step=1; step<=totalSteps; step++){
+      const els = stepEls[String(step)];
+      if(!els) continue;
+      const dramatic = step >= dramaticFrom;
+      const pathDuration = 900;
+      const branchEls = els.filter(el=>el.getAttribute('data-trunk') !== '1');
+      const trunkEls = els.filter(el=>el.getAttribute('data-trunk') === '1');
+      const delay = t;
+
+      timers.push(setTimeout(()=>{
+        branchEls.forEach(el=>{
+          if(el.tagName === 'path'){ drawPath(el, pathDuration); }
+          else {
+            if(dramatic) el.classList.add('seq-slow');
+            el.classList.add('seq-in');
+          }
+        });
+      }, delay));
+
+      if(trunkEls.length){
+        // the merged/resulting arrow only starts drawing once its branches have finished
+        timers.push(setTimeout(()=>{
+          trunkEls.forEach(el=>drawPath(el, pathDuration));
+        }, delay + pathDuration));
+      }
+
+      // Wait for this step's arrows to fully finish - including the arrowhead peek-in that
+      // plays after the line itself is done drawing - before the next step (often a box) begins.
+      const PEEK_MS = 220;
+      const hasPaths = els.some(el => el.tagName === 'path');
+      const arrowSpan = trunkEls.length ? pathDuration * 2 : pathDuration;
+      const pause = dramatic ? 700 : 300;
+      t += hasPaths ? (arrowSpan + PEEK_MS + pause) : pause;
+    }
+  }
+
+  resetAll(); // hide everything immediately, before the observer ever fires
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting) playSequence();
+    });
+  }, {threshold:0.3});
+  io.observe(svg);
+})();
+
+function select(id){
+  nodes.forEach(n=>n.classList.toggle('active', n.dataset.id===id));
+  showPanel(id);
+}
+
+nodes.forEach(n=>{
+  n.addEventListener('click', ()=>select(n.dataset.id));
+  n.addEventListener('keydown', e=>{
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();select(n.dataset.id);}
+  });
+});
+
+
+// ─── SVG TEXT TRANSLATIONS ────────────────────────────────────────────────────
+const SVG_T = {
+  en:{
+    "qcr":"Quantified Cyber Risk","likelihood":"Likelihood","loss-impact":"Loss Impact",
+    "tf1":"Threat","tf2":"Frequency","cre1":"Cyber Risk","cre2":"Exposure",
+    "el1":"Event","el2":"Loss","pel1":"Post-Event","pel2":"Loss",
+    "aa1":"Attack","aa2":"Assessment","ca1":"Control","ca2":"Assessment","ia1":"Impact","ia2":"Assessment",
+    "ga-title":"Global","ga-sub1":"Threat Intelligence","ga-sub2":"for Attack",
+    "peer-title":"Peer / Region","peer-sub1":"CREM Threat","peer-sub2":"Detection History",
+    "cust-title":"Customer","cust-sub1":"CREM Threat","cust-sub2":"Detection History",
+    "crem-title":"CREM History","crem-sub":"Exposure History",
+    "cr-label":"Control Related","ir-label":"Impact Related","ci-label":"Customer Inputs for Scenario",
+    "gi-title":"Global","gi-sub1":"Threat Intelligence","gi-sub2":"for Impact"
+  },
+  es:{
+    "qcr":"Ciber Riesgo Cuantificado","likelihood":"Probabilidad","loss-impact":"Impacto de Pérdida",
+    "tf1":"Frecuencia de","tf2":"Amenaza","cre1":"Exposición a","cre2":"Ciber Riesgo",
+    "el1":"Pérdida por","el2":"Evento","pel1":"Pérdida","pel2":"Post-Evento",
+    "aa1":"Evaluación de","aa2":"Ataque","ca1":"Evaluación de","ca2":"Control","ia1":"Evaluación de","ia2":"Impacto",
+    "ga-title":"Global","ga-sub1":"Inteligencia de Amenazas","ga-sub2":"sobre el Ataque",
+    "peer-title":"Pares / Región","peer-sub1":"Historial CREM","peer-sub2":"de Detección",
+    "cust-title":"Cliente","cust-sub1":"Historial CREM","cust-sub2":"de Detección",
+    "crem-title":"Histórico de CREM","crem-sub":"Historial de Exposición",
+    "cr-label":"Relacionado al Control","ir-label":"Relacionado al Impacto","ci-label":"Entradas del Cliente para Escenario",
+    "gi-title":"Global","gi-sub1":"Inteligencia de Amenazas","gi-sub2":"sobre el Impacto"
+  },
+  pt:{
+    "qcr":"Ciber Risco Quantificado","likelihood":"Probabilidade","loss-impact":"Impacto de Perda",
+    "tf1":"Frequência de","tf2":"Ameaça","cre1":"Exposição a","cre2":"Ciber Risco",
+    "el1":"Perda por","el2":"Evento","pel1":"Perda","pel2":"Pós-Evento",
+    "aa1":"Avaliação de","aa2":"Ataque","ca1":"Avaliação de","ca2":"Controle","ia1":"Avaliação de","ia2":"Impacto",
+    "ga-title":"Global","ga-sub1":"Inteligência de Ameaças","ga-sub2":"sobre o Ataque",
+    "peer-title":"Pares / Região","peer-sub1":"Histórico CREM","peer-sub2":"de Detecção",
+    "cust-title":"Cliente","cust-sub1":"Histórico CREM","cust-sub2":"de Detecção",
+    "crem-title":"Histórico de CREM","crem-sub":"Histórico de Exposição",
+    "cr-label":"Relacionado a Controle","ir-label":"Relacionado a Impacto","ci-label":"Entradas do Cliente para Cenário",
+    "gi-title":"Global","gi-sub1":"Inteligência de Ameaças","gi-sub2":"sobre o Impacto"
+  },
+  ja:{
+    "qcr":"定量化サイバーリスク","likelihood":"可能性","loss-impact":"損失影響度",
+    "tf1":"脅威","tf2":"頻度","cre1":"サイバーリスク","cre2":"エクスポージャー",
+    "el1":"イベント","el2":"損失","pel1":"事後","pel2":"損失",
+    "aa1":"攻撃","aa2":"評価","ca1":"コントロール","ca2":"評価","ia1":"影響","ia2":"評価",
+    "ga-title":"グローバル","ga-sub1":"脅威インテリジェンス","ga-sub2":"(攻撃)",
+    "peer-title":"ピア/地域","peer-sub1":"CREM 脅威","peer-sub2":"検知履歴",
+    "cust-title":"顧客","cust-sub1":"CREM 脅威","cust-sub2":"検知履歴",
+    "crem-title":"CREM 履歴","crem-sub":"エクスポージャー履歴",
+    "cr-label":"コントロール関連","ir-label":"影響関連","ci-label":"シナリオ用の顧客入力",
+    "gi-title":"グローバル","gi-sub1":"脅威インテリジェンス","gi-sub2":"(影響)"
+  }
+};
+
+const CREMSUB_LINES = {
+  en:["Management of","Cyber Risk Exposure"],
+  es:["Gestión de Exposición","al Ciber Riesgo"],
+  pt:["Gestão de Exposição","ao Ciber Risco"],
+  ja:["サイバーリスク","エクスポージャーの管理"]
+};
+const CI_LINES = {
+  en:["Customer Inputs for","Selected Scenario"],
+  es:["Datos del Cliente","del Escenario Seleccionado"],
+  pt:["Dados do Cliente","do Cenário Selecionado"],
+  ja:["選択シナリオのための","顧客入力"]
+};
+const CR_LINES = {
+  en:["Control","Related"],
+  es:["Relacionado","al Control"],
+  pt:["Relacionado","a Controle"],
+  ja:["コントロール","関連"]
+};
+const IR_LINES = {
+  en:["Impact","Related"],
+  es:["Relacionado","al Impacto"],
+  pt:["Relacionado","a Impacto"],
+  ja:["影響","関連"]
+};
+const QCR_LINES = {
+  en:["Quantified Cyber Risk",""],
+  es:["Ciber Riesgo","Cuantificado"],
+  pt:["Ciber Risco","Quantificado"],
+  ja:["定量化","サイバーリスク"]
+};
+function updateSvgLabels(lang){
+  const t = SVG_T[lang];
+  document.querySelectorAll('[data-key]').forEach(el=>{
+    const k = el.getAttribute('data-key');
+    if(k === 'qcr' || k === 'cr-label' || k === 'ir-label' || k === 'ci-label' || k === 'crem-sub') return; // handled separately via tspans
+    if(t[k] !== undefined) el.textContent = t[k];
+  });
+  // Quantified Cyber Risk: single line for EN, two lines for ES/PT
+  const ql = QCR_LINES[lang] || QCR_LINES.en;
+  const l1 = document.getElementById('qcr-l1');
+  const l2 = document.getElementById('qcr-l2');
+  if(l1 && l2){
+    if(ql[1]){
+      l1.setAttribute('y','62'); l2.setAttribute('y','86');
+      l1.textContent = ql[0]; l2.textContent = ql[1];
+    } else {
+      l1.setAttribute('y','74'); l2.setAttribute('y','94');
+      l1.textContent = ql[0]; l2.textContent = "";
+    }
+  }
+  // Control Related / Impact Related: two lines for ES/PT
+  setBoxLines('cr-label', CR_LINES[lang]||CR_LINES.en, '578','591','584');
+  setBoxLines('ir-label', IR_LINES[lang]||IR_LINES.en, '578','591','584');
+  setBoxLines('ci-label', CI_LINES[lang]||CI_LINES.en, '619','632','625');
+  setBoxLines('crem-sub', CREMSUB_LINES[lang]||CREMSUB_LINES.en, '602','616','611');
+}
+const SVGNS='http://www.w3.org/2000/svg';
+function setBoxLines(key, lines, y2a, y2b, y1){
+  const el=document.querySelector('[data-key="'+key+'"]');
+  if(!el) return;
+  const cx=el.getAttribute('data-cx');
+  while(el.firstChild) el.removeChild(el.firstChild);
+  if(lines[1]){
+    const t1=document.createElementNS(SVGNS,'tspan');
+    t1.setAttribute('x',cx); t1.setAttribute('y',y2a); t1.textContent=lines[0];
+    const t2=document.createElementNS(SVGNS,'tspan');
+    t2.setAttribute('x',cx); t2.setAttribute('y',y2b); t2.textContent=lines[1];
+    el.appendChild(t1); el.appendChild(t2);
+  } else {
+    el.setAttribute('y',y1);
+    el.textContent=lines[0];
+  }
+}
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+// ─── GLOSSARY ─────────────────────────────────────────────────────────────────
+const GLOSSARY = {
+  en:{
+    heading:"Glossary",
+    categories:[
+      {name:"Core Risk Concepts", color:"#E63A37", terms:[
+        ["Risk","The quantified outcome of a scenario, calculated as Likelihood times Impact. Expressed as a monetary range with a confidence interval."],
+        ["Likelihood","The probability that a threat successfully exploits a weakness, given the environment's architecture and existing controls. Assessed via Threat Frequency and Cyber Risk Exposure."],
+        ["Impact","The extent of damage a risk event can cause. Categorized into Event Loss (immediate) and Post Event Loss (long term)."],
+        ["Risk Scenario","A structured, plausible narrative describing how a threat actor could exploit an exposure to impact assets, operations, or reputation."],
+        ["Inherent Risk","The level of risk that exists before any controls or mitigations are applied, reflecting exposure in its raw, unmanaged state."],
+        ["Residual Risk","The level of risk that remains after controls and mitigations have been applied, representing the exposure actually carried by the organization."],
+        ["Risk Appetite","The amount and type of risk an organization is willing to accept in pursuit of its objectives, used as the benchmark against which residual risk is compared."],
+        ["Risk Tolerance","The acceptable variation around an organization's risk appetite before corrective action is triggered. Where risk appetite sets the target level of risk, risk tolerance sets the boundaries around it."],
+        ["Risk Transfer","Shifting the financial consequences of a risk to a third party, typically through cyber insurance, rather than reducing its likelihood or impact directly."]
+      ]},
+      {name:"Risk Model Parameters", color:"#FF6A2C", terms:[
+        ["Threat Frequency","How often attacks of a given threat type could occur, modeled with a Poisson distribution and expressed as a three point tuple."],
+        ["Cyber Risk Exposure","The degree of exposure to a threat for assets in scope, scored as a float between 0 and 1 based on control maturity."],
+        ["Event Loss","Immediate financial damage from a scenario, such as business interruption, incident response, and incident recovery."],
+        ["Post Event Loss","Long term consequences after an event, such as regulatory penalties, reputation loss, and customer attrition."]
+      ]},
+      {name:"Risk Scenario Structure", color:"#F19A38", terms:[
+        ["Analysis","Defines the scope of what is being analyzed and sets boundaries that specify assets, threat actors, and outcomes, ensuring stakeholders are aligned on what is and isn't being quantified."],
+        ["Assessment","Enables consistency in how risks are assessed and compared, avoiding ambiguity and permitting repeatability across scenarios."],
+        ["Modeling","Provides structure for data collection so scenarios are relevant, not generic, and built unique to the organization being assessed."],
+        ["Decision Making","Assesses and recommends priorities for investments and resource allocation for controls, insurance, and response planning by comparing mitigation costs with anticipated losses."]
+      ]},
+      {name:"Risk Scenario Components", color:"#4FB4A6", terms:[
+        ["Asset at Risk","The specific system, data, process, or resource that could be affected, such as personally identifiable customer information stored in a cloud database."],
+        ["Threat Actor","An individual or group who could instigate a risk event, such as a cybercriminal, nation state, or insider, whether malicious or non malicious."],
+        ["Exposures","Weaknesses or flaws in organizational systems, processes, or behavior that could be exploited to cause damage, including weak passwords, unpatched software, or incomplete processes."],
+        ["Attack Vector","The method or pathway used for an attack, such as a phishing email, malware, social engineering, or physical access."],
+        ["Event Sequence","The steps or events leading from a threat actor's actions to the impact on the organization."],
+        ["Business Impact","The potential financial and operational consequences a cyber event could have, such as monetary loss or operational disruption."]
+      ]},
+      {name:"CRQ Task Elements", color:"#5B8FE0", terms:[
+        ["Threat Types","The kind or kinds of threats that occur in a selected risk scenario for analysis, such as ransomware or data exfiltration."],
+        ["Attack Techniques","The methods actors employ during the attack phases, such as brute force or process injection, typically mapped to a known attack matrix."],
+        ["Asset Scope","The assets included in a scenario as the targets for assessment, which can be a single asset or a group of devices, accounts, or data."],
+        ["Security Controls","The control measures that could be used to defend against attack techniques for a given threat type, typically mapped to a recognized control catalog."],
+        ["Loss Categories","The kinds of losses or costs considered based on the reflected threat type, such as business interruption, investigation cost, or reputational loss, displayed as event or post event parameters."]
+      ]},
+      {name:"Statistical Modeling", color:"#9B7FE0", terms:[
+        ["Three Point Tuple","A representation of the minimum, most likely, and maximum values for a variable, following a Beta PERT distribution to define a realistic range."],
+        ["Beta PERT Distribution","A statistical distribution used to model the three point tuples, weighting the most likely value while allowing for a realistic spread between the minimum and maximum."],
+        ["Poisson Distribution","A statistical distribution used to model how often discrete events, such as attacks, occur within a fixed period, used to derive the Threat Frequency tuple."],
+        ["Monte Carlo Simulation","A computational technique that feeds the model's parameter tuples through tens of thousands of randomized simulation rounds. Rather than producing a single outcome, it generates a full distribution of possible results, letting the simulator quantify variability and express the final quantified risk together with a confidence interval. Results are typically visualized as risk distribution histograms and loss exceedance curves."],
+        ["Confidence Interval","A statistical range around the quantified result indicating the level of certainty in the simulated outcome."],
+        ["Loss Exceedance Curve","A chart showing the probability that a loss will exceed a given monetary threshold, derived from Monte Carlo simulation output."]
+      ]},
+      {name:"Frameworks and Systems", color:"#E07FB8", terms:[
+        ["FAIR","Factor Analysis of Information Risk, an industry recognized methodology for quantifying information risk that inspired aspects of this model's structure."],
+        ["NIST SP 800 53","A catalog of security and privacy controls used to classify and map identified exposures into functional control categories."],
+        ["MITRE ATT&CK Matrix","A knowledge base of adversary tactics and techniques used to map attack related risk events to known attack patterns."],
+        ["Control Categories","Six functional groups, Detection, Prevention, Recovery, Mitigation, Support, and Procedure, used to classify controls and model their effect on risk parameters."],
+        ["Cyber Risk Index","A company wide qualitative risk score, expressed as a floating point number between 0 and 100, distilled from individual asset risk scores."],
+        ["Peer Reference","Anonymized detection or loss data from organizations with a similar industry, size, location, and revenue profile, used to benchmark a customer's own results."],
+        ["CREM","Cyber Risk Exposure Management, the broader discipline that tracks exposure and control status across an environment. CREM history and findings feed the Control Assessment and, in turn, the Cyber Risk Exposure parameter."]
+      ]},
+      {name:"Control Category Types", color:"#6FCF97", terms:[
+        ["Support","Controls that set up the procedure or improve the process when applied to other controls or practices in an organization. Doesn't affect risk parameters directly, but strengthens the other five categories."],
+        ["Procedure","Controls or practices acknowledged as the initial step to handle a security issue or problem. Like Support, it strengthens the other categories rather than affecting parameters directly."],
+        ["Detection","Controls that can detect attack attempts and behaviors. Directly lowers Threat Frequency, since visible attacks are more likely to be exposed and fail."],
+        ["Prevention","Controls that can prevent an attack from being launched successfully. Directly lowers Cyber Risk Exposure."],
+        ["Recovery","When loss happens, controls that help the organization return to its original state after the event. Directly lowers Event Loss."],
+        ["Mitigation","When loss happens, controls that mitigate the post loss state. Directly lowers Post Event Loss."]
+      ]},
+      {name:"Data Inputs and Systems", color:"#D9A94E", terms:[
+        ["Global Attack Intelligence","Extracted results from public intelligence sources, used to evaluate attack parameters with real world context, such as industry wide attack rates."],
+        ["Self Attack Detection History","A customer's own attack and threat detection history, analyzed to calculate the attack parameter and reflect the organization's specific environment."],
+        ["Peer Attack Reference","CRQ based detection results from peers with similar profiles, used to inform and benchmark a customer's own attack parameter."],
+        ["Customer Profile","Anonymized business data on location, industry, size, and revenue, used to create benchmarks for peer comparison."],
+        ["Event Library","A system that correlates a customer's threat detection and exposure history within the CRQ capability's statistical analysis."],
+        ["Intelligence Hub","A system that monitors, collects, purifies, and refines data from public intelligence sources."]
+      ]},
+      {name:"Industry Risk Metrics", color:"#4EC9E0", terms:[
+        ["ALE (Annualized Loss Expectancy)","The expected financial loss from a specific risk over one year, calculated as Single Loss Expectancy multiplied by Annualized Rate of Occurrence. The standard yardstick used to compare and prioritize risks across an organization."],
+        ["SLE (Single Loss Expectancy)","The financial loss expected from a single occurrence of a risk event, combining direct damage and response costs. Roughly equivalent to this model's Event Loss plus Post-Event Loss for one occurrence."],
+        ["ARO (Annualized Rate of Occurrence)","The expected number of times a risk event occurs in a year, closely related to this model's Threat Frequency parameter."],
+        ["ROSI (Return on Security Investment)","The financial return generated by a security control, calculated by comparing the reduction in expected loss it produces against its cost. Used to justify or prioritize control investments."],
+        ["Value at Risk (VaR)","The maximum expected loss over a given period at a specified confidence level, for example the loss not expected to be exceeded 95% of the time. A standard way to express quantified risk to boards, regulators, and insurers."]
+      ]}
+    ]
+  },
+  es:{
+    heading:"Glosario",
+    categories:[
+      {name:"Conceptos Centrales de Riesgo", color:"#E63A37", terms:[
+        ["Riesgo","El resultado cuantificado de un escenario, calculado como Probabilidad multiplicada por Impacto. Se expresa como un rango monetario con un intervalo de confianza."],
+        ["Probabilidad","La probabilidad de que una amenaza explote con éxito una debilidad, dada la arquitectura del entorno y los controles existentes. Se evalúa mediante Frecuencia de Amenaza y Exposición al Ciber Riesgo."],
+        ["Impacto","La magnitud del daño que puede causar un evento de riesgo. Se categoriza en Pérdida por Evento (inmediata) y Pérdida Post Evento (a largo plazo)."],
+        ["Escenario de Riesgo","Una narrativa estructurada y plausible que describe cómo un actor de amenaza podría explotar una exposición para impactar activos, operaciones o reputación."],
+        ["Riesgo Inherente","El nivel de riesgo que existe antes de aplicar cualquier control o mitigación, reflejando la exposición en su estado bruto, sin gestionar."],
+        ["Riesgo Residual","El nivel de riesgo que permanece después de aplicar controles y mitigaciones, representando la exposición que la organización realmente asume."],
+        ["Apetito de Riesgo","La cantidad y el tipo de riesgo que una organización está dispuesta a aceptar en la búsqueda de sus objetivos, usado como referencia para comparar el riesgo residual."],
+        ["Tolerancia al Riesgo","La variación aceptable alrededor del apetito de riesgo de una organización antes de que se active una acción correctiva. Mientras el apetito de riesgo establece el nivel objetivo de riesgo, la tolerancia al riesgo establece los límites alrededor de él."],
+        ["Transferencia de Riesgo","Trasladar las consecuencias financieras de un riesgo a un tercero, típicamente mediante un seguro cibernético, en lugar de reducir directamente su probabilidad o impacto."]
+      ]},
+      {name:"Parámetros del Modelo de Riesgo", color:"#FF6A2C", terms:[
+        ["Frecuencia de Amenaza","Con qué frecuencia podrían ocurrir ataques de un tipo de amenaza dado, modelado con una distribución de Poisson y expresado como una tupla de tres puntos."],
+        ["Exposición al Ciber Riesgo","El grado de exposición a una amenaza para los activos en alcance, puntuado como un valor entre 0 y 1 según la madurez de los controles."],
+        ["Pérdida por Evento","Daño financiero inmediato de un escenario, como interrupción del negocio, respuesta al incidente y recuperación del incidente."],
+        ["Pérdida Post Evento","Consecuencias a largo plazo tras un evento, como sanciones regulatorias, pérdida de reputación y deserción de clientes."]
+      ]},
+      {name:"Estructura del Escenario de Riesgo", color:"#F19A38", terms:[
+        ["Análisis","Define el alcance de lo que se está analizando y establece límites que especifican activos, actores de amenaza y resultados, asegurando que los interesados estén alineados sobre qué se está cuantificando y qué no."],
+        ["Evaluación","Permite consistencia en cómo se evalúan y comparan los riesgos, evitando la ambigüedad y permitiendo la repetibilidad entre escenarios."],
+        ["Modelado","Proporciona estructura para la recolección de datos de modo que los escenarios sean relevantes, no genéricos, y construidos de forma única para la organización evaluada."],
+        ["Toma de Decisiones","Evalúa y recomienda prioridades para inversiones y asignación de recursos en controles, seguros y planificación de respuesta, comparando los costos de mitigación con las pérdidas anticipadas."]
+      ]},
+      {name:"Componentes del Escenario de Riesgo", color:"#4FB4A6", terms:[
+        ["Activo en Riesgo","El sistema, dato, proceso o recurso específico que podría verse afectado, como información de clientes identificable almacenada en una base de datos en la nube."],
+        ["Actor de Amenaza","Un individuo o grupo que podría instigar un evento de riesgo, como un cibercriminal, un estado nación o un interno, sea malicioso o no."],
+        ["Exposiciones","Debilidades o fallas en los sistemas, procesos o comportamiento organizacional que podrían ser explotadas para causar daño, incluyendo contraseñas débiles, software sin parches o procesos incompletos."],
+        ["Vector de Ataque","El método o vía usada para el ataque, como un correo de phishing, malware, ingeniería social o acceso físico."],
+        ["Secuencia del Evento","Los pasos o eventos que llevan desde las acciones del actor de amenaza hasta el impacto en la organización."],
+        ["Impacto en el Negocio","Las posibles consecuencias financieras y operativas que podría tener un evento cibernético, como pérdida monetaria o interrupción operativa."]
+      ]},
+      {name:"Elementos de la Tarea CRQ", color:"#5B8FE0", terms:[
+        ["Tipos de Amenaza","El tipo o tipos de amenazas que ocurren en un escenario de riesgo seleccionado para análisis, como ransomware o exfiltración de datos."],
+        ["Técnicas de Ataque","Los métodos que emplean los actores durante las fases del ataque, como fuerza bruta o inyección de procesos, típicamente mapeados a una matriz de ataque conocida."],
+        ["Alcance del Activo","Los activos incluidos en un escenario como objetivos de la evaluación, que puede ser un único activo o un grupo de dispositivos, cuentas o datos."],
+        ["Controles de Seguridad","Las medidas de control que podrían usarse para defender contra las técnicas de ataque de un tipo de amenaza dado, típicamente mapeadas a un catálogo de controles reconocido."],
+        ["Categorías de Pérdida","Los tipos de pérdidas o costos considerados según el tipo de amenaza reflejado, como interrupción del negocio, costo de investigación o pérdida reputacional, mostrados como parámetros de evento o post evento."]
+      ]},
+      {name:"Modelado Estadístico", color:"#9B7FE0", terms:[
+        ["Tupla de Tres Puntos","Una representación de los valores mínimo, más probable y máximo de una variable, siguiendo una distribución Beta PERT para definir un rango realista."],
+        ["Distribución Beta PERT","Una distribución estadística usada para modelar las tuplas de tres puntos, ponderando el valor más probable mientras permite un rango realista entre el mínimo y el máximo."],
+        ["Distribución de Poisson","Una distribución estadística usada para modelar la frecuencia de eventos discretos, como ataques, dentro de un período fijo, usada para derivar la tupla de Frecuencia de Amenaza."],
+        ["Simulación de Monte Carlo","Una técnica computacional que procesa las tuplas de parámetros del modelo a través de decenas de miles de rondas de simulación aleatoria. En lugar de producir un único resultado, genera una distribución completa de resultados posibles, permitiendo al simulador cuantificar la variabilidad y expresar el riesgo cuantificado final junto con un intervalo de confianza. Los resultados se visualizan típicamente como histogramas de distribución de riesgo y curvas de excedencia de pérdida."],
+        ["Intervalo de Confianza","Un rango estadístico alrededor del resultado cuantificado que indica el nivel de certeza en el resultado simulado."],
+        ["Curva de Excedencia de Pérdida","Un gráfico que muestra la probabilidad de que una pérdida supere un umbral monetario dado, derivado de la salida de la simulación de Monte Carlo."]
+      ]},
+      {name:"Marcos y Sistemas", color:"#E07FB8", terms:[
+        ["FAIR","Factor Analysis of Information Risk, una metodología reconocida en la industria para cuantificar el riesgo de información que inspiró aspectos de la estructura de este modelo."],
+        ["NIST SP 800 53","Un catálogo de controles de seguridad y privacidad usado para clasificar y mapear las exposiciones identificadas en categorías funcionales de control."],
+        ["Matriz MITRE ATT&CK","Una base de conocimiento de tácticas y técnicas de adversarios usada para mapear eventos de riesgo relacionados con ataques a patrones de ataque conocidos."],
+        ["Categorías de Control","Seis grupos funcionales, Detección, Prevención, Recuperación, Mitigación, Soporte y Procedimiento, usados para clasificar controles y modelar su efecto en los parámetros de riesgo."],
+        ["Índice de Ciber Riesgo","Una puntuación de riesgo cualitativa a nivel de toda la empresa, expresada como un número de punto flotante entre 0 y 100, obtenida a partir de las puntuaciones de riesgo de activos individuales."],
+        ["Referencia de Pares","Datos anonimizados de detección o pérdida de organizaciones con un perfil similar de industria, tamaño, ubicación e ingresos, usados para comparar los resultados propios del cliente."],
+        ["CREM","Gestión de Exposición al Ciber Riesgo (Cyber Risk Exposure Management), la disciplina más amplia que rastrea el estado de exposición y controles en todo el entorno. El historial y los hallazgos de CREM alimentan la Evaluación de Control y, a su vez, el parámetro de Exposición al Ciber Riesgo."]
+      ]},
+      {name:"Tipos de Categoría de Control", color:"#6FCF97", terms:[
+        ["Soporte","Controles que establecen el procedimiento o mejoran el proceso al aplicarse a otros controles o prácticas en una organización. No afecta los parámetros de riesgo directamente, pero fortalece las otras cinco categorías."],
+        ["Procedimiento","Controles o prácticas reconocidas como el paso inicial para manejar un problema de seguridad. Igual que Soporte, fortalece las otras categorías en lugar de afectar los parámetros directamente."],
+        ["Detección","Controles que pueden detectar intentos y comportamientos de ataque. Reduce directamente la Frecuencia de Amenaza, ya que los ataques visibles tienen más probabilidades de ser expuestos y fallar."],
+        ["Prevención","Controles que pueden prevenir que un ataque se lance con éxito. Reduce directamente la Exposición al Ciber Riesgo."],
+        ["Recuperación","Cuando ocurre una pérdida, controles que ayudan a la organización a volver a su estado original después del evento. Reduce directamente la Pérdida por Evento."],
+        ["Mitigación","Cuando ocurre una pérdida, controles que mitigan el estado posterior a la pérdida. Reduce directamente la Pérdida Post Evento."]
+      ]},
+      {name:"Entradas de Datos y Sistemas", color:"#D9A94E", terms:[
+        ["Inteligencia Global de Ataque","Resultados extraídos de fuentes de inteligencia pública, usados para evaluar los parámetros de ataque con contexto del mundo real, como tasas de ataque por industria."],
+        ["Historial de Autodetección de Ataques","El historial propio de detección de ataques y amenazas de un cliente, analizado para calcular el parámetro de ataque y reflejar el entorno específico de la organización."],
+        ["Referencia de Ataque de Pares","Resultados de detección basados en CRQ de pares con perfiles similares, usados para informar y comparar el parámetro de ataque propio del cliente."],
+        ["Perfil del Cliente","Datos de negocio anonimizados sobre ubicación, industria, tamaño e ingresos, usados para crear puntos de referencia para la comparación entre pares."],
+        ["Biblioteca de Eventos","Un sistema que correlaciona el historial de detección de amenazas y exposición de un cliente dentro del análisis estadístico de la capacidad CRQ."],
+        ["Centro de Inteligencia","Un sistema que monitorea, recopila, purifica y refina datos de fuentes de inteligencia pública."]
+      ]},
+      {name:"Métricas de la Industria", color:"#4EC9E0", terms:[
+        ["ALE (Pérdida Anualizada Esperada)","La pérdida financiera esperada de un riesgo específico durante un año, calculada como la Pérdida Única Esperada multiplicada por la Tasa de Ocurrencia Anualizada. El referente estándar usado para comparar y priorizar riesgos en toda la organización."],
+        ["SLE (Pérdida Única Esperada)","La pérdida financiera esperada de una sola ocurrencia de un evento de riesgo, combinando daño directo y costos de respuesta. Equivale aproximadamente a la Pérdida por Evento más la Pérdida Post Evento de este modelo para una sola ocurrencia."],
+        ["ARO (Tasa de Ocurrencia Anualizada)","El número esperado de veces que ocurre un evento de riesgo en un año, estrechamente relacionado con el parámetro de Frecuencia de Amenaza de este modelo."],
+        ["ROSI (Retorno de la Inversión en Seguridad)","El retorno financiero generado por un control de seguridad, calculado comparando la reducción de la pérdida esperada que produce contra su costo. Se usa para justificar o priorizar inversiones en controles."],
+        ["Valor en Riesgo (VaR)","La pérdida máxima esperada durante un período determinado con un nivel de confianza específico, por ejemplo, la pérdida que no se espera superar el 95% de las veces. Una forma estándar de expresar el riesgo cuantificado ante juntas directivas, reguladores y aseguradoras."]
+      ]}
+    ]
+  },
+  pt:{
+    heading:"Glossário",
+    categories:[
+      {name:"Conceitos Centrais de Risco", color:"#E63A37", terms:[
+        ["Risco","O resultado quantificado de um cenário, calculado como Probabilidade multiplicada por Impacto. Expresso como um intervalo monetário com um intervalo de confiança."],
+        ["Probabilidade","A probabilidade de que uma ameaça explore com sucesso uma fraqueza, dada a arquitetura do ambiente e os controles existentes. Avaliada por meio de Frequência de Ameaça e Exposição ao Ciber Risco."],
+        ["Impacto","A extensão do dano que um evento de risco pode causar. Categorizado em Perda por Evento (imediata) e Perda Pós Evento (longo prazo)."],
+        ["Cenário de Risco","Uma narrativa estruturada e plausível que descreve como um agente de ameaça poderia explorar uma exposição para impactar ativos, operações ou reputação."],
+        ["Risco Inerente","O nível de risco que existe antes da aplicação de quaisquer controles ou mitigações, refletindo a exposição em seu estado bruto e não gerenciado."],
+        ["Risco Residual","O nível de risco que permanece após a aplicação de controles e mitigações, representando a exposição efetivamente assumida pela organização."],
+        ["Apetite ao Risco","A quantidade e o tipo de risco que uma organização está disposta a aceitar na busca de seus objetivos, usado como referência para comparação com o risco residual."],
+        ["Tolerância ao Risco","A variação aceitável em torno do apetite de risco de uma organização antes que uma ação corretiva seja acionada. Enquanto o apetite de risco define o nível-alvo de risco, a tolerância ao risco define os limites ao redor dele."],
+        ["Transferência de Risco","Transferir as consequências financeiras de um risco para um terceiro, tipicamente por meio de seguro cibernético, em vez de reduzir diretamente sua probabilidade ou impacto."]
+      ]},
+      {name:"Parâmetros do Modelo de Risco", color:"#FF6A2C", terms:[
+        ["Frequência de Ameaça","Com que frequência ataques de um determinado tipo de ameaça podem ocorrer, modelada com uma distribuição de Poisson e expressa como uma tupla de três pontos."],
+        ["Exposição ao Ciber Risco","O grau de exposição a uma ameaça para os ativos em escopo, pontuado como um valor entre 0 e 1 com base na maturidade dos controles."],
+        ["Perda por Evento","Dano financeiro imediato de um cenário, como interrupção de negócios, resposta ao incidente e recuperação do incidente."],
+        ["Perda Pós Evento","Consequências de longo prazo após um evento, como penalidades regulatórias, perda de reputação e deserção de clientes."]
+      ]},
+      {name:"Estrutura do Cenário de Risco", color:"#F19A38", terms:[
+        ["Análise","Define o escopo do que está sendo analisado e estabelece limites que especificam ativos, agentes de ameaça e resultados, garantindo que os interessados estejam alinhados sobre o que está sendo quantificado e o que não está."],
+        ["Avaliação","Permite consistência em como os riscos são avaliados e comparados, evitando ambiguidade e permitindo repetibilidade entre cenários."],
+        ["Modelagem","Fornece estrutura para a coleta de dados de modo que os cenários sejam relevantes, não genéricos, e construídos de forma única para a organização avaliada."],
+        ["Tomada de Decisão","Avalia e recomenda prioridades para investimentos e alocação de recursos em controles, seguros e planejamento de resposta, comparando os custos de mitigação com as perdas previstas."]
+      ]},
+      {name:"Componentes do Cenário de Risco", color:"#4FB4A6", terms:[
+        ["Ativo em Risco","O sistema, dado, processo ou recurso específico que poderia ser afetado, como informações de clientes identificáveis armazenadas em um banco de dados na nuvem."],
+        ["Agente de Ameaça","Um indivíduo ou grupo que poderia instigar um evento de risco, como um cibercriminoso, um estado nação ou um interno, seja malicioso ou não."],
+        ["Exposições","Fraquezas ou falhas nos sistemas, processos ou comportamento organizacional que poderiam ser exploradas para causar dano, incluindo senhas fracas, software sem correções ou processos incompletos."],
+        ["Vetor de Ataque","O método ou caminho usado para o ataque, como um email de phishing, malware, engenharia social ou acesso físico."],
+        ["Sequência do Evento","Os passos ou eventos que levam das ações do agente de ameaça ao impacto na organização."],
+        ["Impacto no Negócio","As possíveis consequências financeiras e operacionais que um evento cibernético poderia ter, como perda monetária ou interrupção operacional."]
+      ]},
+      {name:"Elementos da Tarefa CRQ", color:"#5B8FE0", terms:[
+        ["Tipos de Ameaça","O tipo ou tipos de ameaças que ocorrem em um cenário de risco selecionado para análise, como ransomware ou exfiltração de dados."],
+        ["Técnicas de Ataque","Os métodos que os agentes empregam durante as fases do ataque, como força bruta ou injeção de processos, tipicamente mapeados para uma matriz de ataque conhecida."],
+        ["Escopo do Ativo","Os ativos incluídos em um cenário como alvos da avaliação, que pode ser um único ativo ou um grupo de dispositivos, contas ou dados."],
+        ["Controles de Segurança","As medidas de controle que poderiam ser usadas para defender contra as técnicas de ataque de um determinado tipo de ameaça, tipicamente mapeadas para um catálogo de controles reconhecido."],
+        ["Categorias de Perda","Os tipos de perdas ou custos considerados com base no tipo de ameaça refletido, como interrupção de negócios, custo de investigação ou perda reputacional, exibidos como parâmetros de evento ou pós evento."]
+      ]},
+      {name:"Modelagem Estatística", color:"#9B7FE0", terms:[
+        ["Tupla de Três Pontos","Uma representação dos valores mínimo, mais provável e máximo de uma variável, seguindo uma distribuição Beta PERT para definir um intervalo realista."],
+        ["Distribuição Beta PERT","Uma distribuição estatística usada para modelar as tuplas de três pontos, ponderando o valor mais provável enquanto permite um intervalo realista entre o mínimo e o máximo."],
+        ["Distribuição de Poisson","Uma distribuição estatística usada para modelar a frequência de eventos discretos, como ataques, dentro de um período fixo, usada para derivar a tupla de Frequência de Ameaça."],
+        ["Simulação de Monte Carlo","Uma técnica computacional que processa as tuplas de parâmetros do modelo através de dezenas de milhares de rodadas de simulação aleatória. Em vez de produzir um único resultado, gera uma distribuição completa de resultados possíveis, permitindo ao simulador quantificar a variabilidade e expressar o risco quantificado final junto com um intervalo de confiança. Os resultados são tipicamente visualizados como histogramas de distribuição de risco e curvas de excedência de perda."],
+        ["Intervalo de Confiança","Um intervalo estatístico em torno do resultado quantificado que indica o nível de certeza no resultado simulado."],
+        ["Curva de Excedência de Perda","Um gráfico que mostra a probabilidade de que uma perda exceda um determinado limite monetário, derivado da saída da simulação de Monte Carlo."]
+      ]},
+      {name:"Estruturas e Sistemas", color:"#E07FB8", terms:[
+        ["FAIR","Factor Analysis of Information Risk, uma metodologia reconhecida na indústria para quantificar o risco de informação que inspirou aspectos da estrutura deste modelo."],
+        ["NIST SP 800 53","Um catálogo de controles de segurança e privacidade usado para classificar e mapear as exposições identificadas em categorias funcionais de controle."],
+        ["Matriz MITRE ATT&CK","Uma base de conhecimento de táticas e técnicas de adversários usada para mapear eventos de risco relacionados a ataques a padrões de ataque conhecidos."],
+        ["Categorias de Controle","Seis grupos funcionais, Detecção, Prevenção, Recuperação, Mitigação, Suporte e Procedimento, usados para classificar controles e modelar seu efeito nos parâmetros de risco."],
+        ["Índice de Ciber Risco","Uma pontuação de risco qualitativa em toda a empresa, expressa como um número de ponto flutuante entre 0 e 100, obtida a partir das pontuações de risco de ativos individuais."],
+        ["Referência de Pares","Dados anonimizados de detecção ou perda de organizações com perfil semelhante de setor, tamanho, localização e receita, usados para comparar os resultados próprios do cliente."],
+        ["CREM","Gestão de Exposição ao Ciber Risco (Cyber Risk Exposure Management), a disciplina mais amplia que rastreia o status de exposição e controles em todo o ambiente. O histórico e os achados do CREM alimentam a Avaliação de Controle e, por sua vez, o parâmetro de Exposição ao Ciber Risco."]
+      ]},
+      {name:"Tipos de Categoria de Controle", color:"#6FCF97", terms:[
+        ["Suporte","Controles que estabelecem o procedimento ou melhoram o processo quando aplicados a outros controles ou práticas em uma organização. Não afeta os parâmetros de risco diretamente, mas fortalece as outras cinco categorias."],
+        ["Procedimento","Controles ou práticas reconhecidas como o passo inicial para lidar com um problema de segurança. Assim como Suporte, fortalece as outras categorias em vez de afetar os parâmetros diretamente."],
+        ["Detecção","Controles que podem detectar tentativas e comportamentos de ataque. Reduz diretamente a Frequência de Ameaça, já que ataques visíveis têm mais probabilidade de serem expostos e falharem."],
+        ["Prevenção","Controles que podem impedir que um ataque seja lançado com sucesso. Reduz diretamente a Exposição ao Ciber Risco."],
+        ["Recuperação","Quando ocorre uma perda, controles que ajudam a organização a voltar ao seu estado original após o evento. Reduz diretamente a Perda por Evento."],
+        ["Mitigação","Quando ocorre uma perda, controles que mitigam o estado pós perda. Reduz diretamente a Perda Pós Evento."]
+      ]},
+      {name:"Entradas de Dados e Sistemas", color:"#D9A94E", terms:[
+        ["Inteligência Global de Ataque","Resultados extraídos de fontes de inteligência pública, usados para avaliar os parâmetros de ataque com contexto do mundo real, como taxas de ataque por setor."],
+        ["Histórico de Autodetecção de Ataques","O histórico próprio de detecção de ataques e ameaças de um cliente, analisado para calcular o parâmetro de ataque e refletir o ambiente específico da organização."],
+        ["Referência de Ataque de Pares","Resultados de detecção baseados em CRQ de pares com perfis semelhantes, usados para informar e comparar o parâmetro de ataque próprio do cliente."],
+        ["Perfil do Cliente","Dados de negócio anonimizados sobre localização, setor, tamanho e receita, usados para criar referências de comparação entre pares."],
+        ["Biblioteca de Eventos","Um sistema que correlaciona o histórico de detecção de ameaças e exposição de um cliente dentro da análise estatística da capacidade CRQ."],
+        ["Central de Inteligência","Um sistema que monitora, coleta, purifica e refina dados de fontes de inteligência pública."]
+      ]},
+      {name:"Métricas do Setor", color:"#4EC9E0", terms:[
+        ["ALE (Perda Anualizada Esperada)","A perda financeira esperada de um risco específico ao longo de um ano, calculada como a Perda Única Esperada multiplicada pela Taxa de Ocorrência Anualizada. A referência padrão usada para comparar e priorizar riscos em toda a organização."],
+        ["SLE (Perda Única Esperada)","A perda financeira esperada de uma única ocorrência de um evento de risco, combinando dano direto e custos de resposta. Equivale aproximadamente à Perda por Evento mais a Perda Pós Evento deste modelo para uma única ocorrência."],
+        ["ARO (Taxa de Ocorrência Anualizada)","O número esperado de vezes que um evento de risco ocorre em um ano, intimamente relacionado ao parâmetro de Frequência de Ameaça deste modelo."],
+        ["ROSI (Retorno do Investimento em Segurança)","O retorno financeiro gerado por um controle de segurança, calculado comparando a redução da perda esperada que ele produz com seu custo. Usado para justificar ou priorizar investimentos em controles."],
+        ["Valor em Risco (VaR)","A perda máxima esperada durante um determinado período com um nível de confiança especificado, por exemplo, a perda que não se espera exceder 95% das vezes. Uma forma padrão de expressar o risco quantificado para conselhos, reguladores e seguradoras."]
+      ]}
+    ]
+  },
+  ja:{
+    heading:"用語集",
+    categories:[
+      {name:"コアリスク概念", color:"#E63A37", terms:[
+        ["リスク","シナリオの定量化された結果で、可能性 × 影響度として算出される。信頼区間を伴う金額レンジとして表現される。"],
+        ["可能性","環境のアーキテクチャと既存のコントロールを前提として、脅威が弱点を突いて悪用に成功する確率。脅威頻度とサイバーリスクエクスポージャーを通じて評価される。"],
+        ["影響度","リスクイベントが引き起こしうる損害の程度。即時的なイベント損失と長期的な事後損失に分類される。"],
+        ["リスクシナリオ","脅威アクターがエクスポージャーを悪用し、資産、業務、または評判に影響を与える経緯を説明する、構造化された現実的なシナリオ。"],
+        ["固有リスク","いかなるコントロールや軽減策も適用される前に存在するリスクの水準で、未管理の生のエクスポージャーを反映する。"],
+        ["残存リスク","コントロールと軽減策が適用された後に残るリスクの水準で、組織が実際に負っているエクスポージャーを表す。"],
+        ["リスクアペタイト","組織が目標達成のために許容する意思があるリスクの量と種類で、残存リスクを比較する際の基準として用いられる。"],
+        ["リスク許容度","リスクアペタイトを中心として是正措置が発動されるまでに許容される変動幅。リスクアペタイトが目標とするリスク水準を定めるのに対し、リスク許容度はその周囲の許容範囲を定める。"],
+        ["リスク移転","リスクの発生可能性や影響度を直接軽減するのではなく、主にサイバー保険を通じて、その財務的影響を第三者に移転すること。"]
+      ]},
+      {name:"リスクモデルパラメータ", color:"#FF6A2C", terms:[
+        ["脅威頻度","特定の脅威タイプの攻撃がどの程度の頻度で発生しうるかを、ポアソン分布でモデル化し、3点タプルとして表現したもの。"],
+        ["サイバーリスクエクスポージャー","対象範囲内の資産における脅威への曝露度を、コントロールの成熟度に基づき0から1の間の値でスコア化したもの。"],
+        ["イベント損失","事業中断、インシデント対応、インシデント復旧など、シナリオによる即時的な財務的損害。"],
+        ["事後損失","規制上の制裁金、評判の毀損、顧客離反など、イベント発生後の長期的な影響。"]
+      ]},
+      {name:"リスクシナリオの構造", color:"#F19A38", terms:[
+        ["分析","分析対象の範囲を定義し、資産、脅威アクター、結果を明確にする境界を設定することで、何が定量化の対象であり何がそうでないかについて関係者の認識を一致させる。"],
+        ["評価","リスクの評価と比較の方法に一貫性を持たせ、曖昧さを排除し、シナリオ間での再現性を可能にする。"],
+        ["モデリング","シナリオが汎用的なものではなく評価対象組織に固有のものとなるよう、データ収集のための構造を提供する。"],
+        ["意思決定","軽減コストと想定される損失を比較することで、コントロール、保険、対応計画に関する投資とリソース配分の優先順位を評価・提言する。"]
+      ]},
+      {name:"リスクシナリオの構成要素", color:"#4FB4A6", terms:[
+        ["リスク対象資産","クラウドデータベースに保存された個人を特定できる顧客情報など、影響を受ける可能性のある特定のシステム、データ、プロセス、またはリソース。"],
+        ["脅威アクター","サイバー犯罪者、国家、内部関係者など、悪意の有無を問わずリスクイベントを引き起こしうる個人または集団。"],
+        ["エクスポージャー","脆弱なパスワード、パッチ未適用のソフトウェア、不完全なプロセスなど、損害を引き起こすために悪用されうる組織のシステム、プロセス、または行動上の弱点や欠陥。"],
+        ["攻撃ベクトル","フィッシングメール、マルウェア、ソーシャルエンジニアリング、物理的アクセスなど、攻撃に用いられる手法や経路。"],
+        ["イベントシーケンス","脅威アクターの行動から組織への影響に至るまでの一連の手順やイベント。"],
+        ["事業への影響","金銭的損失や業務の中断など、サイバーイベントが及ぼしうる潜在的な財務的・業務的影響。"]
+      ]},
+      {name:"CRQタスク要素", color:"#5B8FE0", terms:[
+        ["脅威タイプ","ランサムウェアやデータ窃取など、分析対象として選択されたリスクシナリオで発生する脅威の種類。"],
+        ["攻撃テクニック","ブルートフォースやプロセスインジェクションなど、攻撃フェーズでアクターが用いる手法で、通常は既知の攻撃マトリクスにマッピングされる。"],
+        ["資産スコープ","評価対象としてシナリオに含まれる資産で、単一の資産の場合もあれば、デバイス、アカウント、データの集合である場合もある。"],
+        ["セキュリティコントロール","特定の脅威タイプに対する攻撃テクニックを防御するために用いられうるコントロールで、通常は既知のコントロールカタログにマッピングされる。"],
+        ["損失カテゴリ","対象となる脅威タイプに基づいて考慮される損失やコストの種類で、事業中断、調査コスト、評判の毀損などがあり、イベントまたは事後パラメータとして表示される。"]
+      ]},
+      {name:"統計モデリング", color:"#9B7FE0", terms:[
+        ["3点タプル","変数の最小値、最も可能性の高い値、最大値を表現したもので、現実的な範囲を定義するためベータPERT分布に従う。"],
+        ["ベータPERT分布","3点タプルをモデル化するために用いられる統計分布で、最も可能性の高い値を重視しつつ、最小値と最大値の間の現実的な広がりを許容する。"],
+        ["ポアソン分布","攻撃のような離散的なイベントが一定期間内にどの程度の頻度で発生するかをモデル化するために用いられる統計分布で、脅威頻度のタプルを導出するために使われる。"],
+        ["モンテカルロシミュレーション","モデルのパラメータタプルを数万回のランダム化されたシミュレーションラウンドに通す計算手法。単一の結果を出すのではなく、起こりうる結果の分布全体を生成し、シミュレーターが変動性を定量化し、最終的な定量化リスクを信頼区間とともに表現できるようにする。結果は通常、リスク分布のヒストグラムや損失超過曲線として可視化される。"],
+        ["信頼区間","シミュレートされた結果の確からしさの水準を示す、定量化された結果を中心とした統計的範囲。"],
+        ["損失超過曲線","モンテカルロシミュレーションの出力から導かれる、損失が特定の金額しきい値を超える確率を示すグラフ。"]
+      ]},
+      {name:"フレームワークとシステム", color:"#E07FB8", terms:[
+        ["FAIR","情報リスクを定量化するための業界で認知された手法であるFactor Analysis of Information Riskの略称で、本モデルの構造の一部に着想を与えている。"],
+        ["NIST SP 800-53","特定されたエクスポージャーを機能別のコントロールカテゴリに分類・マッピングするために用いられる、セキュリティおよびプライバシーコントロールのカタログ。"],
+        ["MITRE ATT&CKマトリクス","攻撃に関連するリスクイベントを既知の攻撃パターンにマッピングするために用いられる、敵対者の戦術とテクニックに関するナレッジベース。"],
+        ["コントロールカテゴリ","コントロールを分類し、リスクパラメータへの影響をモデル化するために用いられる、検知、予防、復旧、緩和、支援、手順という6つの機能グループ。"],
+        ["サイバーリスクインデックス","個々の資産のリスクスコアから集約された、0から100の間の浮動小数点数で表される全社的な定性的リスクスコア。"],
+        ["ピアリファレンス","業界、規模、地域、収益プロファイルが類似する組織からの匿名化された検知データまたは損失データで、顧客自身の結果をベンチマークするために用いられる。"],
+        ["CREM","環境全体のエクスポージャーとコントロール状況を追跡する、より広範な規律であるCyber Risk Exposure Managementの略称。CREMの履歴と調査結果はコントロール評価に供給され、ひいてはサイバーリスクエクスポージャーパラメータに反映される。"]
+      ]},
+      {name:"コントロールカテゴリの種類", color:"#6FCF97", terms:[
+        ["支援","組織内の他のコントロールや実践に適用された際に、手順を整備したりプロセスを改善したりするコントロール。リスクパラメータに直接影響を与えることはないが、他の5つのカテゴリを強化する。"],
+        ["手順","セキュリティ上の問題に対応するための最初のステップとして認識されるコントロールまたは実践。支援と同様、パラメータに直接影響するのではなく、他のカテゴリを強化する。"],
+        ["検知","攻撃の試みや挙動を検知できるコントロール。可視化された攻撃は発見され失敗する可能性が高いため、脅威頻度を直接低下させる。"],
+        ["予防","攻撃が正常に開始されるのを防ぐことができるコントロール。サイバーリスクエクスポージャーを直接低下させる。"],
+        ["復旧","損失が発生した際に、組織がイベント後に元の状態へ回復するのを助けるコントロール。イベント損失を直接低下させる。"],
+        ["緩和","損失が発生した際に、損失発生後の状態を緩和するコントロール。事後損失を直接低下させる。"]
+      ]},
+      {name:"データ入力とシステム", color:"#D9A94E", terms:[
+        ["グローバル攻撃インテリジェンス","公開されているインテリジェンス情報源から抽出された結果で、業界全体の攻撃発生率など、実世界の文脈をもって攻撃パラメータを評価するために用いられる。"],
+        ["自組織攻撃検知履歴","攻撃パラメータを算出し、組織固有の環境を反映するために分析される、顧客自身の攻撃・脅威検知履歴。"],
+        ["ピア攻撃リファレンス","類似のプロファイルを持つピアからのCRQベースの検知結果で、顧客自身の攻撃パラメータの参考およびベンチマークに用いられる。"],
+        ["顧客プロファイル","ピア比較のためのベンチマークを作成するために用いられる、地域、業界、規模、収益に関する匿名化された事業データ。"],
+        ["イベントライブラリ","CRQ機能の統計分析の中で、顧客の脅威検知およびエクスポージャー履歴を関連付けるシステム。"],
+        ["インテリジェンスハブ","公開インテリジェンス情報源からデータを監視、収集、浄化、精製するシステム。"]
+      ]},
+      {name:"業界のリスク指標", color:"#4EC9E0", terms:[
+        ["ALE(年間予想損失額)","単一予想損失額に年間発生率を乗じて算出される、特定のリスクによる1年間の予想財務損失額。組織全体でリスクを比較・優先順位付けするための標準的な指標。"],
+        ["SLE(単一予想損失額)","直接的な損害と対応コストを合わせた、リスクイベントが一度発生した場合に想定される財務損失額。本モデルにおけるイベント損失と事後損失を1回分合算したものにおおむね相当する。"],
+        ["ARO(年間発生率)","リスクイベントが1年間に発生すると想定される回数で、本モデルの脅威頻度パラメータと密接に関連する。"],
+        ["ROSI(セキュリティ投資収益率)","セキュリティコントロールによって生み出される財務的リターンで、そのコントロールがもたらす予想損失の軽減効果をコストと比較して算出される。コントロールへの投資を正当化・優先順位付けするために用いられる。"],
+        ["バリュー・アット・リスク(VaR)","特定の信頼水準において、一定期間内に想定される最大損失額。例えば95%の確率で超えないと想定される損失額など。定量化されたリスクを取締役会、規制当局、保険会社に提示するための標準的な方法。"]
+      ]}
+    ]
+  }
+};
+
+function hexToRgba(hex, alpha){
+  const h = hex.replace('#','');
+  const r = parseInt(h.substring(0,2),16);
+  const g = parseInt(h.substring(2,4),16);
+  const b = parseInt(h.substring(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function applyGlossary(lang){
+  const g = GLOSSARY[lang] || GLOSSARY.en;
+  document.getElementById('gl-heading').textContent = g.heading;
+  const container = document.getElementById('gl-container');
+  container.innerHTML = '';
+  g.categories.forEach(cat=>{
+    const catDiv = document.createElement('div');
+    catDiv.className = 'gcat';
+    const wide = cat.terms.length >= 7;
+    catDiv.style.flex = wide ? '1 1 620px' : '1 1 300px';
+    catDiv.style.maxWidth = wide ? '640px' : '340px';
+    catDiv.style.setProperty('--gc', cat.color);
+    catDiv.style.setProperty('--gc-bg', hexToRgba(cat.color, 0.10));
+    catDiv.style.setProperty('--gc-border', hexToRgba(cat.color, 0.35));
+    const h4 = document.createElement('h4');
+    h4.textContent = cat.name;
+    catDiv.appendChild(h4);
+    const dl = document.createElement('dl');
+    dl.className = 'glossary-grid';
+    cat.terms.forEach(([term, def])=>{
+      const div = document.createElement('div');
+      div.className = 'gterm';
+      const dt = document.createElement('dt');
+      dt.textContent = term;
+      const dd = document.createElement('dd');
+      dd.textContent = def;
+      div.appendChild(dt);
+      div.appendChild(dd);
+      dl.appendChild(div);
+    });
+    catDiv.appendChild(dl);
+    container.appendChild(catDiv);
+  });
+}
+
+applyLang(detectLang());
+</script>
+
+
+</body></html>

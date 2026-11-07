@@ -1,0 +1,3305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ARR Waterfall Scenario Simulation for SQUAD</title>
+<style>
+  :root{
+    --ink:#1a1a1a;
+    --muted:#6b7280;
+    --grid:#eef0f2;
+    --gray-bar:#e9eaec;
+    --gray-bar-border:#d7d9dc;
+    --red:#e0938f;
+    --red-border:#c96a65;
+    --green:#a4d0a0;
+    --green-border:#7fb87a;
+    --blue:#a8c5e8;
+    --blue-border:#5f92cf;
+    --committed:#4472c4;
+    --committed-fill:rgba(68,114,196,0.16);
+    --likely:#c77dd2;
+    --likely-fill:rgba(199,125,210,0.18);
+    --card-bg:#ffffff;
+    --page-bg:#f4f5f7;
+    --card-border:#e3e5e8;
+    --input-bg:#ffffff;
+    --input-border:#c7cad0;
+    --input-text:#1a1a1a;
+    --plot-border:#e3e5e8;
+    --plot-bottom-border:#d5d7da;
+    --divider:#eceef0;
+    --btn-bg:#ffffff;
+  }
+  [data-theme="dark"]{
+    --ink:#e6edf3;
+    --muted:#8b949e;
+    --grid:#21262d;
+    --gray-bar:#4a3560;
+    --gray-bar-border:#8a5cad;
+    --red:#6e3a3f;
+    --red-border:#a34a52;
+    --green:#2f5641;
+    --green-border:#4a8562;
+    --blue:#2f4a66;
+    --blue-border:#4a7bab;
+    --committed:#6ea3f7;
+    --committed-fill:rgba(110,163,247,0.20);
+    --likely:#d9a6f0;
+    --likely-fill:rgba(217,166,240,0.18);
+    --card-bg:#161b22;
+    --page-bg:#0a0d12;
+    --card-border:#30363d;
+    --input-bg:#0d1117;
+    --input-border:#30363d;
+    --input-text:#e6edf3;
+    --plot-border:#30363d;
+    --plot-bottom-border:#30363d;
+    --divider:#21262d;
+    --btn-bg:#21262d;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', Arial, Helvetica, sans-serif;
+    background:var(--page-bg);
+    color:var(--ink);
+    padding:24px;
+  }
+  .card{
+    max-width:1500px;
+    margin:0 auto;
+    background:var(--card-bg);
+    border:1px solid var(--card-border);
+    border-radius:6px;
+    padding:20px 28px 28px;
+  }
+  h1{
+    font-size:20px;
+    font-weight:600;
+    margin:0 0 14px 0;
+  }
+  .header-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    margin-bottom:20px;
+  }
+  .header-row h1{margin:0;}
+  .title-group{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    min-width:0;
+    flex-wrap:wrap;
+  }
+  .squad-label{
+    font-size:20px;
+    font-weight:600;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+  .squad-label-edit-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:20px;
+    height:20px;
+    padding:0;
+    border:none;
+    background:none;
+    color:var(--muted);
+    cursor:pointer;
+    border-radius:4px;
+    flex-shrink:0;
+  }
+  .squad-label-edit-btn:hover{ color:var(--ink); background:var(--btn-bg); }
+  .squad-label-input{
+    font-size:20px;
+    font-weight:600;
+    padding:2px 6px;
+    border:1px solid var(--input-border);
+    border-radius:4px;
+    background:var(--card-bg);
+    color:var(--ink);
+    width:160px;
+  }
+  .lang-switch{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    flex-shrink:0;
+  }
+  .theme-switch{
+    border:none;
+    background:none;
+    padding:0;
+    margin-left:6px;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .theme-switch-track{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:44px;
+    height:22px;
+    border-radius:11px;
+    background:#dfe2e6;
+    border:1px solid #c7cad0;
+    padding:0 5px;
+    box-sizing:border-box;
+    transition:background 0.2s ease, border-color 0.2s ease;
+  }
+  [data-theme="dark"] .theme-switch-track{
+    background:#21262d;
+    border-color:#30363d;
+  }
+  .theme-icon-sun{ color:#c9820c; position:relative; z-index:1; }
+  .theme-icon-moon{ color:#8b949e; position:relative; z-index:1; }
+  .theme-switch-thumb{
+    position:absolute;
+    top:1px; left:1px;
+    width:18px; height:18px;
+    border-radius:50%;
+    background:#ffffff;
+    box-shadow:0 1px 3px rgba(0,0,0,0.25);
+    transition:transform 0.2s ease, background 0.2s ease;
+  }
+  [data-theme="dark"] .theme-switch-thumb{
+    transform:translateX(21px);
+    background:#3a3f47;
+  }
+  .lang-btn{
+    font-size:10.5px;
+    padding:3px 9px;
+    border:1px solid var(--input-border);
+    border-radius:4px;
+    background:var(--btn-bg);
+    cursor:pointer;
+    color:var(--muted);
+    font-weight:600;
+  }
+  .lang-btn.active{
+    background:#1a1a1a;
+    color:#fff;
+    border-color:#1a1a1a;
+  }
+  [data-theme="dark"] .lang-btn.active{
+    background:#e8e8ea;
+    color:#111318;
+    border-color:#e8e8ea;
+  }
+  .divider{border-bottom:1px solid var(--divider);margin-bottom:18px;}
+  .subtitle{
+    text-align:center;
+    font-size:15px;
+    font-weight:600;
+    color:#2a2a2a;
+    margin:4px 0 6px 0;
+  }
+  .legend{
+    display:flex;
+    justify-content:center;
+    gap:22px;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:8px;
+    flex-wrap:wrap;
+  }
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .swatch{width:11px;height:11px;border-radius:2px;display:inline-block;}
+  .target-strip{
+    display:flex;
+    justify-content:center;
+    gap:28px;
+    font-size:13px;
+    margin:2px 0 14px 0;
+    flex-wrap:wrap;
+  }
+  .target-strip .item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;}
+  .target-strip .item .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);}
+  .target-strip .item .v{font-weight:700;font-size:14px;}
+  .target-strip .v.pos{color:#2f7a2f;}
+  .target-strip .v.neg{color:#c4322b;}
+  .target-strip .val.pos{color:#2f7a2f;}
+  .target-strip .val.neg{color:#c4322b;}
+  .target-strip .group{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+    padding:6px 14px;
+    border:1px solid var(--divider);
+    border-radius:6px;
+  }
+  .target-strip .group.group-grey{
+    background:var(--gray-bar);
+    border-color:var(--gray-bar-border);
+  }
+  .target-strip .group .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;}
+  .target-strip .group .dual{display:flex;gap:16px;}
+  .target-strip .group .dual .metric{display:flex;flex-direction:column;align-items:center;gap:0;}
+  .target-strip .group .dual .metric .label{font-size:9.5px;color:var(--muted);}
+  .target-strip .group .dual .metric .val{font-weight:700;font-size:13.5px;}
+  .chart-wrap{
+    display:flex;
+    margin-top:56px;
+  }
+  .yaxis{
+    position:relative;
+    width:56px;
+    flex:0 0 56px;
+    height:520px;
+  }
+  .ylabel{
+    position:absolute;
+    right:8px;
+    transform:translateY(-50%);
+    font-size:11px;
+    color:var(--muted);
+  }
+  .plot{
+    position:relative;
+    flex:1;
+    height:520px;
+    border-left:1px solid var(--plot-border);
+    border-bottom:1px solid var(--plot-bottom-border);
+  }
+  .gridline{
+    position:absolute;
+    left:0;right:0;
+    border-top:1px solid var(--grid);
+  }
+  .gridlines{
+    position:absolute;
+    top:0;left:0;right:0;bottom:0;
+    z-index:-1;
+    pointer-events:none;
+  }
+  .groups{
+    position:absolute;
+    top:0;left:0;right:0;bottom:0;
+    z-index:0;
+    pointer-events:none;
+  }
+  #targetLineEl{
+    position:absolute;
+    top:0;left:0;right:0;bottom:0;
+    z-index:5;
+    pointer-events:none;
+  }
+  .group-box{
+    position:absolute;
+    top:-48px;
+    bottom:0;
+    border:1.5px solid;
+    box-sizing:border-box;
+  }
+  .group-header{
+    position:absolute;
+    top:0;left:0;right:0;
+    height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-bottom:1.5px solid;
+    border-bottom-color:inherit;
+    box-sizing:border-box;
+  }
+  .group-label{
+    text-align:center;
+    font-weight:700;
+    font-size:12.5px;
+    line-height:1.3;
+  }
+  .group-gray{
+    background:rgba(120,128,140,0.07);
+    border-color:rgba(120,128,140,0.35);
+  }
+  .group-gray .group-header{background:rgba(120,128,140,0.10);}
+  .group-gray .group-label{color:#5b6472;}
+  .group-red{
+    background:rgba(196,50,43,0.055);
+    border-color:rgba(196,50,43,0.4);
+  }
+  .group-red .group-header{background:rgba(196,50,43,0.075);}
+  .group-red .group-label{color:#c4322b;}
+  .group-green{
+    background:rgba(58,140,58,0.06);
+    border-color:rgba(58,140,58,0.4);
+  }
+  .group-green .group-header{background:rgba(58,140,58,0.08);}
+  .group-green .group-label{color:#2f7a2f;}
+  .group-blue{
+    background:rgba(47,111,214,0.06);
+    border-color:rgba(47,111,214,0.4);
+  }
+  .group-blue .group-header{background:rgba(47,111,214,0.08);}
+  .group-blue .group-label{color:#2f6fd6;}
+  [data-theme="dark"] .group-gray{ background:rgba(155,92,199,0.20); border-color:rgba(155,92,199,0.55); }
+  [data-theme="dark"] .group-gray .group-header{ background:rgba(155,92,199,0.30); }
+  [data-theme="dark"] .group-gray .group-label{ color:#d8b8f0; }
+  [data-theme="dark"] .group-red{ background:rgba(210,90,84,0.16); border-color:rgba(210,90,84,0.45); }
+  [data-theme="dark"] .group-red .group-header{ background:rgba(210,90,84,0.22); }
+  [data-theme="dark"] .group-red .group-label{ color:#e08b85; }
+  [data-theme="dark"] .group-green{ background:rgba(90,170,90,0.16); border-color:rgba(90,170,90,0.45); }
+  [data-theme="dark"] .group-green .group-header{ background:rgba(90,170,90,0.22); }
+  [data-theme="dark"] .group-green .group-label{ color:#8fce8f; }
+  [data-theme="dark"] .group-blue{ background:rgba(90,150,230,0.18); border-color:rgba(90,150,230,0.5); }
+  [data-theme="dark"] .group-blue .group-header{ background:rgba(90,150,230,0.24); }
+  [data-theme="dark"] .group-blue .group-label{ color:#9dc8f7; }
+  .columns{
+    position:absolute;
+    top:0;left:0;right:0;bottom:0;
+    display:flex;
+    z-index:1;
+  }
+  .col{
+    position:relative;
+    flex:1;
+    height:100%;
+    border-right:1px dashed transparent;
+  }
+  .bar{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    border-radius:2px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-size:11px;
+    line-height:1.3;
+    padding:4px;
+    overflow:hidden;
+  }
+  .bar.actual{
+    width:66%;
+    font-weight:600;
+    z-index:3;
+  }
+  .bar.total{
+    width:80%;
+    background:var(--gray-bar);
+    border:1px solid var(--gray-bar-border);
+    color:var(--ink);
+    font-weight:600;
+    font-size:13px;
+    z-index:2;
+    overflow:visible;
+  }
+  .bar.red{background:var(--red);border:1px solid var(--red-border);color:#5c2b28;}
+  .bar.green{background:var(--green);border:1px solid var(--green-border);color:#274d24;}
+  .bar.blue{background:var(--blue);border:1px solid var(--blue-border);color:#1a3358;}
+  [data-theme="dark"] .bar.red{ color:#f5d5d2; }
+  [data-theme="dark"] .bar.green{ color:#d2f0d0; }
+  [data-theme="dark"] .bar.blue{ color:#d2e4f5; }
+
+  .bar.extra{
+    width:66%;
+    font-size:10px;
+    font-weight:600;
+    color:#2a2a2a;
+    z-index:2;
+    line-height:1.2;
+  }
+  /* Loss categories (Churn, Erosion): Confirmed in brick red, At risk in purple */
+  .bar.extra-committed-red{
+    background:repeating-linear-gradient(135deg, rgba(178,58,58,0.24) 0 6px, rgba(178,58,58,0.1) 6px 12px);
+    border:2px dashed #b23a3a;
+    color:#7a2727;
+  }
+  .bar.extra-likely-red{
+    background:repeating-linear-gradient(135deg, rgba(142,68,173,0.24) 0 6px, rgba(142,68,173,0.1) 6px 12px);
+    border:2px dashed #8e44ad;
+    color:#5e3370;
+  }
+  /* Gain categories (Expansion, New Logo): Committed in forest green, Most likely in teal */
+  .bar.extra-committed-green{
+    background:repeating-linear-gradient(135deg, rgba(47,122,79,0.24) 0 6px, rgba(47,122,79,0.1) 6px 12px);
+    border:2px dashed #2f7a4f;
+    color:#1f5233;
+  }
+  .bar.extra-likely-green{
+    background:repeating-linear-gradient(135deg, rgba(31,158,142,0.24) 0 6px, rgba(31,158,142,0.1) 6px 12px);
+    border:2px dashed #1f9e8e;
+    color:#125f55;
+  }
+  /* CSTA Expansion (Expansion recolored blue): Committed in navy, Most likely in sky blue */
+  .bar.extra-committed-blue{
+    background:repeating-linear-gradient(135deg, rgba(47,79,158,0.24) 0 6px, rgba(47,79,158,0.1) 6px 12px);
+    border:2px dashed #2f4f9e;
+    color:#1c2f5c;
+  }
+  .bar.extra-likely-blue{
+    background:repeating-linear-gradient(135deg, rgba(63,169,220,0.24) 0 6px, rgba(63,169,220,0.1) 6px 12px);
+    border:2px dashed #3fa9dc;
+    color:#1f5f78;
+  }
+  [data-theme="dark"] .bar.extra-committed-red{
+    background:repeating-linear-gradient(135deg, rgba(210,90,84,0.30) 0 6px, rgba(210,90,84,0.16) 6px 12px);
+    color:#f0b8b4;
+  }
+  [data-theme="dark"] .bar.extra-likely-red{
+    background:repeating-linear-gradient(135deg, rgba(190,120,210,0.30) 0 6px, rgba(190,120,210,0.16) 6px 12px);
+    color:#e8c8ee;
+  }
+  [data-theme="dark"] .bar.extra-committed-green{
+    background:repeating-linear-gradient(135deg, rgba(90,170,110,0.30) 0 6px, rgba(90,170,110,0.16) 6px 12px);
+    color:#c0ecc8;
+  }
+  [data-theme="dark"] .bar.extra-likely-green{
+    background:repeating-linear-gradient(135deg, rgba(70,190,175,0.30) 0 6px, rgba(70,190,175,0.16) 6px 12px);
+    color:#bdeee6;
+  }
+  [data-theme="dark"] .bar.extra-committed-blue{
+    background:repeating-linear-gradient(135deg, rgba(90,130,220,0.30) 0 6px, rgba(90,130,220,0.16) 6px 12px);
+    color:#c8d8f5;
+  }
+  [data-theme="dark"] .bar.extra-likely-blue{
+    background:repeating-linear-gradient(135deg, rgba(110,210,235,0.30) 0 6px, rgba(110,210,235,0.16) 6px 12px);
+    color:#c8eef5;
+  }
+  .bar.phantom-target{
+    width:80%;
+    background:repeating-linear-gradient(135deg, rgba(184,134,11,0.20) 0 6px, rgba(184,134,11,0.08) 6px 12px);
+    border:2px dashed #b8860b;
+    color:#7a5c00;
+    font-size:10.5px;
+    font-weight:700;
+    z-index:2;
+  }
+  .bar.phantom-scenario{
+    width:80%;
+    background:repeating-linear-gradient(135deg, rgba(90,80,190,0.22) 0 6px, rgba(90,80,190,0.09) 6px 12px);
+    border:2px dashed #5a50be;
+    color:#3c3480;
+    font-size:10.5px;
+    font-weight:700;
+    z-index:3;
+    overflow:visible;
+  }
+  .bar.phantom-scenario > div{
+    background:rgba(255,255,255,0.85);
+    border-radius:3px;
+    padding:1px 4px;
+    line-height:1.3;
+  }
+  .bar.phantom-scenario-risk{
+    background:repeating-linear-gradient(135deg, rgba(196,50,43,0.20) 0 6px, rgba(196,50,43,0.08) 6px 12px);
+    border:2px dashed #c4322b;
+    color:#8a2621;
+  }
+  .bar.phantom-reported{
+    width:80%;
+    background:repeating-linear-gradient(135deg, rgba(38,124,138,0.22) 0 6px, rgba(38,124,138,0.09) 6px 12px);
+    border:2px dashed #267c8a;
+    color:#175c67;
+    font-size:10.5px;
+    font-weight:700;
+    z-index:3;
+  }
+  [data-theme="dark"] .bar.phantom-target{
+    background:repeating-linear-gradient(135deg, rgba(220,170,60,0.26) 0 6px, rgba(220,170,60,0.12) 6px 12px);
+    color:#f0d896;
+  }
+  [data-theme="dark"] .bar.phantom-scenario{
+    background:repeating-linear-gradient(135deg, rgba(140,130,230,0.26) 0 6px, rgba(140,130,230,0.12) 6px 12px);
+    color:#d6d2f5;
+  }
+  [data-theme="dark"] .bar.phantom-scenario > div{
+    background:rgba(20,22,28,0.85);
+  }
+  [data-theme="dark"] .bar.phantom-scenario-risk{
+    background:repeating-linear-gradient(135deg, rgba(210,90,84,0.26) 0 6px, rgba(210,90,84,0.12) 6px 12px);
+    color:#f0c0bc;
+  }
+  [data-theme="dark"] .bar.phantom-reported{
+    background:repeating-linear-gradient(135deg, rgba(70,180,196,0.26) 0 6px, rgba(70,180,196,0.12) 6px 12px);
+    color:#b8ecf2;
+  }
+  .connector{
+    position:absolute;
+    height:0;
+    border-top:2px dashed #9aa0a6;
+    z-index:4;
+  }
+  .target-line-label{
+    position:absolute;
+    font-size:11px;
+    font-weight:700;
+    color:#b8860b;
+    background:rgba(255,255,255,0.85);
+    padding:1px 5px;
+    border-radius:3px;
+    white-space:nowrap;
+    transform:translate(-50%, -100%);
+    z-index:5;
+  }
+  [data-theme="dark"] .target-line-label{
+    background:rgba(20,22,28,0.85);
+    color:#e0c26a;
+  }
+  .target-line-label.below{
+    transform:translate(-50%, 0);
+  }
+  .xaxis{
+    display:flex;
+    margin-left:56px;
+  }
+  .xcol{
+    flex:1;
+    text-align:center;
+    padding-top:10px;
+    font-size:12.5px;
+    color:var(--ink);
+  }
+  .xcol > div:first-child{
+    font-weight:700;
+  }
+  .controls{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    padding-top:8px;
+  }
+  .controls label{
+    font-size:11px;
+    color:var(--muted);
+    display:flex;
+    align-items:center;
+    gap:5px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .controls input[type=checkbox]{
+    appearance:none;
+    -webkit-appearance:none;
+    width:14px;height:14px;
+    border:1.5px solid var(--input-border);
+    border-radius:3px;
+    background:var(--input-bg);
+    cursor:pointer;
+    position:relative;
+    margin:0;
+    flex-shrink:0;
+  }
+  .controls input[type=checkbox]:checked{
+    background:#2f6fd6;
+    border-color:#2f6fd6;
+  }
+  .controls input[type=checkbox]:checked::after{
+    content:'';
+    position:absolute;
+    left:4px; top:1px;
+    width:3px; height:7px;
+    border:solid #fff;
+    border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+  }
+  .pct-input{
+    width:46px;
+    font-size:11px;
+    padding:1px 3px;
+    border:1px solid var(--input-border);
+    background:var(--input-bg);
+    color:var(--input-text);
+    border-radius:3px;
+    text-align:right;
+    -moz-appearance:textfield;
+  }
+  .dollar-input{
+    width:74px;
+  }
+  .base-input{
+    width:78px;
+    font-size:11px;
+    padding:2px 4px;
+    border:1px solid var(--input-border);
+    background:var(--input-bg);
+    color:var(--input-text);
+    border-radius:3px;
+    text-align:center;
+    font-weight:600;
+    margin-top:2px;
+  }
+  .input-error{ border-color:#c4322b !important; color:#c4322b !important; box-shadow:0 0 0 1px #c4322b; }
+  .no-spinner{ -moz-appearance:textfield; }
+  .no-spinner::-webkit-outer-spin-button,
+  .no-spinner::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+  .base-label{
+    font-size:10.5px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+  .category-card{
+    border:2px solid;
+    border-radius:8px;
+    padding:10px 8px 10px;
+    margin:8px auto 0;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    box-sizing:border-box;
+    width:calc(100% - 18px);
+  }
+  .category-card.red{ border-color:#c4322b; background:rgba(196,50,43,0.03); }
+  .category-card.green{ border-color:#4a934a; background:rgba(74,147,74,0.03); }
+  .category-card.blue{ border-color:#2f6fd6; background:rgba(47,111,214,0.03); }
+  .category-card.gray{ border-color:#9aa0a6; background:rgba(120,128,140,0.04); }
+  [data-theme="dark"] .category-card.red{ border-color:#c4322b; background:rgba(196,50,43,0.12); }
+  [data-theme="dark"] .category-card.green{ border-color:#4a934a; background:rgba(74,147,74,0.12); }
+  [data-theme="dark"] .category-card.blue{ border-color:#6fa8e0; background:rgba(47,111,214,0.16); }
+  [data-theme="dark"] .category-card.gray{ border-color:#9b5cc7; background:rgba(155,92,199,0.18); }
+  .controls .scenario-block{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+  }
+  .value-row{
+    display:flex;
+    align-items:center;
+    gap:3px;
+    flex-wrap:nowrap;
+    white-space:nowrap;
+  }
+  .pct-suffix{font-size:11px;color:var(--muted);}
+  .controls .pct-dollar{font-size:10px;color:var(--muted);margin-left:2px;white-space:nowrap;}
+  .controls .cb-committed{color:var(--committed);}
+  .acct-count-badge{ color:#8a8f98; font-weight:600; font-style:italic; }
+  .acct-count-badge:hover{ color:#c4322b; }
+  .controls .cb-likely{color:var(--likely);}
+  .controls .cb-committed.cb-red{color:#b23a3a;}
+  .controls .cb-likely.cb-red{color:#8e44ad;}
+  .controls .cb-committed.cb-green{color:#2f7a4f;}
+  .controls .cb-likely.cb-green{color:#1f9e8e;}
+  .controls .cb-committed.cb-blue{color:#2f4f9e;}
+  .controls .cb-likely.cb-blue{color:#3fa9dc;}
+  .footnote{
+    text-align:center;
+    font-size:11px;
+    color:var(--muted);
+    margin-top:16px;
+  }
+  .custom-tooltip{
+    position:fixed;
+    display:none;
+    pointer-events:none;
+    background:#1a1a1a;
+    color:#fff;
+    padding:5px 9px;
+    border-radius:4px;
+    font-size:12px;
+    line-height:1.4;
+    white-space:pre-line;
+    z-index:1000;
+    box-shadow:0 2px 8px rgba(0,0,0,0.25);
+  }
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    top:0;left:0;right:0;bottom:0;
+    background:rgba(20,20,20,0.55);
+    z-index:2000;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    background:var(--card-bg);
+    color:var(--ink);
+    border-radius:8px;
+    max-width:720px;
+    width:100%;
+    max-height:85vh;
+    overflow-y:auto;
+    padding:32px 36px;
+    position:relative;
+    box-shadow:0 12px 40px rgba(0,0,0,0.3);
+  }
+  .modal-close{
+    position:absolute;
+    top:14px;right:16px;
+    border:none;
+    background:none;
+    font-size:22px;
+    line-height:1;
+    cursor:pointer;
+    color:var(--muted);
+    padding:4px 8px;
+  }
+  [data-theme="dark"] .modal-close{ color:#c5c8d0; }
+  [data-theme="dark"] .modal-close:hover{ color:#ffffff; }
+  .modal-close:hover{color:#1a1a1a;}
+  #howToBody h2{font-size:17px;margin:22px 0 8px;color:var(--ink);}
+  #howToBody h2:first-child{margin-top:0;}
+  #howToBody h3{font-size:14px;margin:16px 0 4px;color:#c4322b;}
+  #howToBody p{font-size:13.5px;line-height:1.6;color:var(--ink);margin:0 0 10px;}
+  #howToBody ol{padding-left:20px;margin:0 0 10px;}
+  #howToBody li{font-size:13.5px;line-height:1.6;color:var(--ink);margin-bottom:4px;}
+
+  .acct-modal-box{
+    max-width:520px;
+    background:var(--card-bg);
+    color:var(--ink);
+  }
+  .acct-modal-box.red{ background:#fdf4f3; }
+  .acct-modal-box.green{ background:#f4faf4; }
+  .acct-modal-box.blue{ background:#f2f6fc; }
+  [data-theme="dark"] .acct-modal-box.red{ background:#2a1e1e; }
+  [data-theme="dark"] .acct-modal-box.green{ background:#1e2a1f; }
+  [data-theme="dark"] .acct-modal-box.blue{ background:#1c2430; }
+  .acct-modal-header{
+    font-size:14px;
+    font-weight:700;
+    margin:0 30px 16px 0;
+    color:var(--ink);
+  }
+  .acct-modal-header .sub{
+    display:block;
+    font-size:11.5px;
+    font-weight:500;
+    color:var(--muted);
+    margin-top:3px;
+  }
+  .acct-visual-bar{
+    display:flex;
+    flex-direction:column;
+    width:70%;
+    margin:0 auto 10px;
+    height:160px;
+    border-radius:6px;
+    overflow:hidden;
+    border:1.5px solid rgba(0,0,0,0.15);
+  }
+  .acct-visual-seg{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    flex-shrink:0;
+    width:100%;
+    border-bottom:2px solid rgba(255,255,255,0.9);
+    font-size:11px;
+    font-weight:700;
+    text-align:center;
+    line-height:1.3;
+    white-space:nowrap;
+    padding:0 6px;
+    box-sizing:border-box;
+  }
+  .acct-visual-seg:last-child{ border-bottom:none; }
+  .acct-visual-legend{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    margin-bottom:16px;
+  }
+  .acct-visual-legend-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+  }
+  .acct-visual-swatch{
+    width:14px;
+    height:14px;
+    border-radius:3px;
+    flex-shrink:0;
+    box-sizing:border-box;
+  }
+  .acct-visual-legend-name{ flex:1; color:var(--ink); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .acct-visual-legend-value{ color:var(--muted); font-weight:600; flex-shrink:0; }
+  .acct-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .acct-row input.acct-name{
+    flex:1;
+    background:var(--input-bg);
+    border:1px solid var(--input-border);
+    border-radius:6px;
+    color:var(--input-text);
+    font-size:14px;
+    padding:9px 12px;
+  }
+  .acct-row input.acct-amount{
+    width:100px;
+    background:var(--input-bg);
+    border:1px solid var(--input-border);
+    border-radius:6px;
+    color:var(--input-text);
+    font-size:14px;
+    padding:9px 10px;
+    text-align:right;
+    -moz-appearance:textfield;
+  }
+  .acct-row input.acct-amount::-webkit-outer-spin-button,
+  .acct-row input.acct-amount::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+  .acct-row .acct-amount-suffix{
+    font-size:12px;
+    color:#8a8f98;
+    flex-shrink:0;
+    margin-left:-4px;
+  }
+  .acct-row .acct-remove{
+    width:36px;
+    height:36px;
+    flex-shrink:0;
+    background:var(--input-bg);
+    border:1px solid var(--input-border);
+    border-radius:6px;
+    color:var(--muted);
+    cursor:pointer;
+    font-size:16px;
+  }
+  .acct-row .acct-remove:hover{ color:#1a1a1a; border-color:#9aa0a6; }
+  .acct-row input.acct-error{ border-color:#c4322b !important; box-shadow:0 0 0 1px #c4322b; }
+  .acct-row.acct-unassigned input.acct-name{ color:#a86a00; font-style:italic; font-weight:600; background:#fff8ec; border-color:#f0d9a8; }
+  .acct-row.acct-unassigned input.acct-amount{ color:#a86a00; font-weight:600; background:#fff8ec; border-color:#f0d9a8; }
+  .acct-row.acct-unassigned input.acct-amount.neg{ color:#c4322b; }
+  .acct-add-btn{
+    width:100%;
+    background:transparent;
+    border:1.5px dashed var(--input-border);
+    border-radius:6px;
+    color:var(--muted);
+    font-size:13.5px;
+    font-weight:600;
+    padding:10px;
+    cursor:pointer;
+    margin-top:4px;
+  }
+  .acct-add-btn:hover{ border-color:#c4322b; color:#c4322b; }
+  .acct-modal-box .modal-close{ color:var(--muted); }
+  [data-theme="dark"] .acct-modal-box .modal-close{ color:#c5c8d0; }
+  [data-theme="dark"] .acct-modal-box .modal-close:hover{ color:#ffffff; }
+  [data-theme="dark"] #howToBtn,
+  [data-theme="dark"] #exportBtn,
+  [data-theme="dark"] #importBtn{
+    background:var(--btn-bg) !important;
+  }
+  [data-theme="dark"] #toggleGroupsBtn,
+  [data-theme="dark"] #toggleTargetBtn,
+  [data-theme="dark"] #cstaExpansionBtn{
+    background:var(--btn-bg) !important;
+    color:var(--ink) !important;
+    border-color:var(--input-border) !important;
+  }
+  .acct-modal-box .modal-close:hover{ color:var(--ink); }
+  .acct-footer-btns{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+  }
+  .acct-cancel-btn, .acct-confirm-btn{
+    flex:1;
+    border-radius:6px;
+    font-size:13.5px;
+    font-weight:700;
+    padding:10px;
+    cursor:pointer;
+  }
+  .acct-cancel-btn{
+    background:var(--btn-bg);
+    border:1px solid var(--input-border);
+    color:var(--muted);
+  }
+  .acct-cancel-btn:hover{ border-color:#9aa0a6; color:var(--ink); }
+  .acct-confirm-btn{
+    background:#2f6fd6;
+    border:1px solid #2f6fd6;
+    color:#fff;
+  }
+  .acct-confirm-btn:hover{ background:#2559ad; border-color:#2559ad; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header-row">
+    <div class="title-group">
+      <h1 id="pageTitle" data-i18n="pageTitle">ARR Waterfall Scenario Simulation for SQUAD</h1>
+      <span id="squadLabelDisplay" class="squad-label"></span>
+      <input type="text" id="squadLabelInput" class="squad-label-input" maxlength="60" style="display:none;">
+      <button type="button" id="squadLabelEditBtn" class="squad-label-edit-btn" aria-label="Edit label" title="Edit label">
+        <svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+      </button>
+    </div>
+    <div class="lang-switch">
+      <button type="button" class="lang-btn active" id="langEnBtn">EN</button>
+      <button type="button" class="lang-btn" id="langEsBtn">ES</button>
+      <button type="button" class="lang-btn" id="langPtBtn">PT</button>
+      <button type="button" class="lang-btn" id="langJaBtn">日本語</button>
+      <button type="button" class="theme-switch" id="themeToggleBtn" aria-label="Toggle dark mode">
+        <span class="theme-switch-track">
+          <svg class="theme-icon-sun" viewBox="0 0 24 24" width="12" height="12"><circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></g></svg>
+          <svg class="theme-icon-moon" viewBox="0 0 24 24" width="11" height="11"><path fill="currentColor" d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+          <span class="theme-switch-thumb"></span>
+        </span>
+      </button>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div class="target-strip" id="targetStrip"></div>
+  <div class="legend">
+    <span><i class="swatch" style="background:var(--red);border:1px solid var(--red-border);"></i><span data-i18n="actualLoss">Actual loss</span></span>
+    <span><i class="swatch" style="background:var(--green);border:1px solid var(--green-border);"></i><span data-i18n="actualGain">Actual gain</span></span>
+    <span><i class="swatch" style="background:repeating-linear-gradient(135deg, rgba(178,58,58,0.28) 0 4px, rgba(178,58,58,0.1) 4px 8px);border:2px dashed #b23a3a;"></i><span data-i18n="legendConfirmed">Confirmed Loss</span></span>
+    <span><i class="swatch" style="background:repeating-linear-gradient(135deg, rgba(142,68,173,0.28) 0 4px, rgba(142,68,173,0.1) 4px 8px);border:2px dashed #8e44ad;"></i><span data-i18n="legendAtRisk">At Risk Loss</span></span>
+    <span><i class="swatch" style="background:repeating-linear-gradient(135deg, rgba(47,122,79,0.28) 0 4px, rgba(47,122,79,0.1) 4px 8px);border:2px dashed #2f7a4f;"></i><span data-i18n="legendCommitted">Committed Gain</span></span>
+    <span><i class="swatch" style="background:repeating-linear-gradient(135deg, rgba(31,158,142,0.28) 0 4px, rgba(31,158,142,0.1) 4px 8px);border:2px dashed #1f9e8e;"></i><span data-i18n="legendMostLikely">Most Likely Gain</span></span>
+  </div>
+  <div style="text-align:center;margin-bottom:8px;">
+    <button id="howToBtn" type="button" style="font-size:12px;padding:4px 10px;border:1px solid #c4322b;border-radius:4px;background:#fff;cursor:pointer;color:#c4322b;font-weight:600;" data-i18n="howToBtn">How to Use</button>
+    <button id="exportBtn" type="button" style="font-size:12px;padding:4px 10px;border:1px solid #2f7a4f;border-radius:4px;background:#fff;cursor:pointer;color:#2f7a4f;font-weight:600;margin-left:8px;" data-i18n="exportBtn">Export Data</button>
+    <button id="importBtn" type="button" style="font-size:12px;padding:4px 10px;border:1px solid #2f6fd6;border-radius:4px;background:#fff;cursor:pointer;color:#2f6fd6;font-weight:600;margin-left:8px;" data-i18n="importBtn">Import Data</button>
+    <button id="toggleGroupsBtn" type="button" style="font-size:12px;padding:4px 10px;border:1px solid #d7d9dc;border-radius:4px;background:#fff;cursor:pointer;color:#2a2a2a;margin-left:8px;" data-i18n="hideSquadImpact">Hide Squad Impact</button>
+    <button id="toggleTargetBtn" type="button" style="font-size:12px;padding:4px 10px;border:1px solid #d7d9dc;border-radius:4px;background:#fff;cursor:pointer;color:#2a2a2a;margin-left:8px;" data-i18n="hideTarget">Hide Target</button>
+    <button id="cstaExpansionBtn" type="button" style="font-size:12px;padding:4px 10px;border:1px solid #d7d9dc;border-radius:4px;background:#fff;cursor:pointer;color:#2a2a2a;margin-left:8px;" data-i18n="showCstaExpansion">Show CSTA Expansion</button>
+    <input type="file" id="importFileInput" accept="application/json,.json" style="display:none;">
+  </div>
+
+  <div class="chart-wrap">
+    <div class="yaxis" id="yaxis"></div>
+    <div class="plot" id="plot">
+      <div class="gridlines" id="gridlines"></div>
+      <div class="groups" id="groups"></div>
+      <div class="columns" id="columns"></div>
+      <div id="targetLineEl"></div>
+    </div>
+  </div>
+  <div class="xaxis" id="xaxis"></div>
+
+  <div class="footnote" data-i18n="footnote">Check Confirmed/At risk (Churn, Erosion) or Committed/Most likely (Expansion, New Logo) to stack an extra segment onto that bar — the whole chart (every later bar and the final total) recalculates automatically.</div>
+</div>
+<div class="custom-tooltip" id="customTooltip"></div>
+
+<div class="modal-overlay" id="howToOverlay">
+  <div class="modal-box">
+    <button class="modal-close" id="howToCloseBtn" type="button" aria-label="Close">&times;</button>
+    <div id="howToBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="acctOverlay">
+  <div class="modal-box acct-modal-box">
+    <button class="modal-close" id="acctCloseBtn" type="button" aria-label="Close">&times;</button>
+    <div id="acctModalHeader" class="acct-modal-header"></div>
+    <div id="acctVisualBar" class="acct-visual-bar"></div>
+    <div id="acctVisualLegend" class="acct-visual-legend"></div>
+    <div id="acctModalList" class="acct-modal-list"></div>
+    <button type="button" id="acctAddBtn" class="acct-add-btn" data-i18n="addAccount">+ Add account</button>
+    <div class="acct-footer-btns">
+      <button type="button" id="acctCancelBtn" class="acct-cancel-btn" data-i18n="cancelBtn">Cancel</button>
+      <button type="button" id="acctConfirmBtn" class="acct-confirm-btn" data-i18n="confirmBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- Internationalization (EN / JA) ----
+let lang = 'en';
+let squadLabel = ''; // free-text label the user can add after "SQUAD" in the title
+const I18N = {
+  en: {
+    pageTitle: 'ARR Waterfall Scenario Simulation for SQUAD',
+    actualLoss: 'Actual Loss',
+    actualGain: 'Actual Gain',
+    confirmed: 'Confirmed',
+    atRisk: 'At Risk',
+    committed: 'Committed',
+    mostLikely: 'Most Likely',
+    legendConfirmed: 'Confirmed Loss',
+    legendAtRisk: 'At Risk Loss',
+    legendCommitted: 'Committed Gain',
+    legendMostLikely: 'Most Likely Gain',
+    hideSquadImpact: 'Hide Squad Impact',
+    showSquadImpact: 'Show Squad Impact',
+    hideTarget: 'Hide Target',
+    showTarget: 'Show Target',
+    footnote: 'Check Confirmed/At risk (Churn, Erosion) or Committed/Most likely (Expansion, New Logo) to stack an extra segment onto that bar, the whole chart (every later bar and the final total) recalculates automatically. If you want to add account details, click on a segment that supports it to open its account breakdown.',
+    churn: 'Churn',
+    erosion: 'Erosion',
+    expansion: 'Expansion',
+    newlogo: 'New Logo',
+    startArrK: 'Start ARR (K)',
+    actualK: 'Actual (K)',
+    reportedYtdK: 'Reported YTD (K)',
+    targetTotalK: 'ARR Target Total (K)',
+    reportedArrLabel: 'Reported ARR',
+    targetGrowthPct: 'ARR Target Growth',
+    startArr: 'Start ARR',
+    growthArrLabel: 'Growth ARR',
+    targetArrLabel: 'Target ARR',
+    targetWithPct: (pct)=>`Target (start +${pct}%)`,
+    actualGroup: 'Actual',
+    projectedGroup: 'Projected',
+    arrGroup: 'ARR',
+    grr: 'GRR',
+    nrr: 'NRR',
+    startSmall: 'START',
+    targetSmall: 'TARGET',
+    gapSmall: 'GAP',
+    gapToTarget: 'Gap to Target',
+    surplusVsTarget: 'Surplus vs Target',
+    actualStatus: 'Actual',
+    upside: 'Upside',
+    downside: 'Downside',
+    reportedGrowth: 'Reported growth',
+    reportedShortfall: 'Reported shortfall',
+    surplusVsTargetLower: 'Surplus vs target',
+    deltaToTarget: 'Δ to target',
+    targetLinePrefix: 'Target',
+    projectedWithScenarios: 'Projected (with scenarios)',
+    squadStart: 'SQUAD START<br>(AM+SE+CSTA)',
+    cstaPerformance: 'CSTA<br>PERFORMANCE',
+    amseCstaPerformance: 'AM+SE+CSTA<br>PERFORMANCE',
+    amsePerformance: 'AM+SE<br>PERFORMANCE',
+    squadPerformance: 'SQUAD PERFORMANCE<br>(AM+SE+CSTA)',
+    showCstaExpansion: 'Show CSTA Expansion',
+    hideCstaExpansion: 'Hide CSTA Expansion',
+    howToBtn: 'How to Use',
+    exportBtn: 'Export Data',
+    importBtn: 'Import Data',
+    unassigned: 'Unassigned',
+    accountsLabel: 'Accounts',
+    accountsLabelSingular: 'Account',
+    darkModeBtn: 'Dark',
+    lightModeBtn: 'Light',
+    clickToAddAccounts: 'Click to add account details',
+    addAccount: '+ Add account',
+    confirmBtn: 'Confirm',
+    cancelBtn: 'Cancel',
+    howToContent: `
+      <h2>Objective</h2>
+      <p>Give the SQUAD (AM + SE + CSTA) a common business language and a shared reference point: the growth target. This lets them discuss churn, erosion, expansion, and new logo scenarios together and see the real impact on ARR. The goal is for everyone to understand together how far or close they are to <strong style="color:#c4322b;">double digit growth</strong>, instead of each function (AM, SE, CSTA) having its own version of the conversation with its own numbers.</p>
+
+      <h2>Step-by-step usage dynamic</h2>
+      <ol>
+        <li><strong>Load the current situation.</strong> The squad loads their real values: Start ARR, and the Actual for Churn, Erosion, Expansion, and New Logo. They then set the ARR Target Total directly (the absolute ARR they're chasing) — the growth still needed to get there, in both dollars and percent, is calculated automatically from the current reported ARR and becomes visible to everyone.</li>
+        <li><strong>Load Confirmed and At risk churn/erosion.</strong> Before discussing anything else, they load what CSTA already knows: what revenue is confirmed to be lost, and what revenue is at risk of being lost. This immediately shows how that loss alone moves the needle toward, or away from, the target, before expansion or new logo has even been discussed.</li>
+        <li><strong>Load the Committed and Most likely opportunities.</strong> Now they load the Expansion and New Logo opportunities that AM/SE have: what's committed (high probability of closing) and what's most likely (more speculative pipeline). This shows how much business already generated is helping close the gap.</li>
+        <li><strong>See the real gap to target.</strong> With everything loaded, the squad sees the real "Gap to Target," in dollars and in percentage. It's no longer a guess or a number each person calculates differently, it's one concrete number everyone is looking at at the same time.</li>
+        <li><strong>Design the plan to close that gap, with an agreed buffer.</strong> With the gap visible, the squad decides together what to do to close it: which opportunities to accelerate, where CSTA can help get a contact, where AM/SE need to move something from "most likely" pipeline to "committed." The key point: since not every "committed" or "most likely" opportunity is actually going to close, the plan needs a buffer, it can't assume 100% pipeline conversion. The squad should explicitly agree on what conversion rate they're assuming for committed and most likely pipeline, so the buffer is a decision they made together, not a silent assumption buried in someone's spreadsheet.</li>
+        <li><strong>If the plan still doesn't close the gap, decide together how to handle it.</strong> Not every gap can be closed with the pipeline on hand. If the plan built in step 5 still falls short of target, the squad should decide as a group whether to escalate for support, revisit the target itself, or consciously accept the shortfall and explain why. The point is that this decision is made together and out loud, not left unresolved after the meeting ends.</li>
+        <li><strong>Add account details when it's useful.</strong> For any Confirmed, At risk, Committed, or Most likely segment, you can click directly on that bar to open an account breakdown, adding the specific accounts (with names and amounts) that make up that number. This lets the squad see exactly which deals or churn risks sit behind each figure, not just the aggregate total, and keeps that detail attached to the scenario for the next time you look at it.</li>
+      </ol>
+
+      <h2>Keeping it current</h2>
+      <p>The tool is only useful if the numbers reflect reality. It's the squad's responsibility, in each area: CSTA owns the churn/erosion signal and should refresh those values and flag the squad the moment something changes, while AM and SE own the committed/most likely pipeline and should do the same for their side of the numbers. Each part of the squad is responsible for notifying the group whenever something relevant changes in their area, not just updating the tool in isolation, so the numbers stay current every time the group looks at them together.</p>
+
+      <h2>Review cadence</h2>
+      <p>This isn't a one-time exercise. The squad should revisit the simulation on a fixed cadence, monthly at minimum, or at each QBR, so it becomes a recurring checkpoint against the year-end target rather than something used once and set aside.</p>
+
+      <h2>In summary</h2>
+      <p>The dynamic shifts from "everyone reports their own number" to a single conversation, with one shared picture of where they are today, where they need to get to, and how they're going to close the difference between the two, on a recurring basis, with a clear owner keeping it accurate.</p>
+    `,
+  },
+  es: {
+    pageTitle: 'Simulación de escenarios ARR Waterfall para el SQUAD',
+    actualLoss: 'Pérdida Actual',
+    actualGain: 'Ganancia Actual',
+    confirmed: 'Confirmado',
+    atRisk: 'En Riesgo',
+    committed: 'Comprometido',
+    mostLikely: 'Más Probable',
+    legendConfirmed: 'Pérdida Confirmada',
+    legendAtRisk: 'Pérdida en Riesgo',
+    legendCommitted: 'Ganancia Comprometida',
+    legendMostLikely: 'Ganancia Más Probable',
+    hideSquadImpact: 'Ocultar impacto del squad',
+    showSquadImpact: 'Mostrar impacto del squad',
+    hideTarget: 'Ocultar objetivo',
+    showTarget: 'Mostrar objetivo',
+    footnote: 'Marca Confirmado/En riesgo (Churn, Erosión) o Comprometido/Más probable (Expansión, Nuevos clientes) para apilar un segmento adicional en esa barra, todo el gráfico (cada barra posterior y el total final) se recalcula automáticamente. Si quieres agregar detalles de cuentas, haz clic en un segmento compatible para abrir su desglose de cuentas.',
+    churn: 'Churn',
+    erosion: 'Erosión',
+    expansion: 'Expansión',
+    newlogo: 'Nuevos clientes',
+    startArrK: 'ARR inicial (K)',
+    actualK: 'Actual (K)',
+    reportedYtdK: 'YTD reportado (K)',
+    targetTotalK: 'ARR Objetivo Total (K)',
+    reportedArrLabel: 'ARR Reportado',
+    targetGrowthPct: 'Crecimiento de ARR',
+    startArr: 'ARR inicial',
+    growthArrLabel: 'ARR Crecimiento',
+    targetArrLabel: 'ARR Objetivo',
+    targetWithPct: (pct)=>`Objetivo (inicial +${pct}%)`,
+    actualGroup: 'Actual',
+    projectedGroup: 'Proyectado',
+    arrGroup: 'ARR',
+    grr: 'GRR',
+    nrr: 'NRR',
+    startSmall: 'INICIAL',
+    targetSmall: 'OBJETIVO',
+    gapSmall: 'BRECHA',
+    gapToTarget: 'Brecha al Objetivo',
+    surplusVsTarget: 'Superávit vs Objetivo',
+    actualStatus: 'Actual',
+    upside: 'Alza',
+    downside: 'Baja',
+    reportedGrowth: 'Crecimiento reportado',
+    reportedShortfall: 'Déficit reportado',
+    surplusVsTargetLower: 'Superávit vs objetivo',
+    deltaToTarget: 'Δ al objetivo',
+    targetLinePrefix: 'Objetivo',
+    projectedWithScenarios: 'Proyectado (con escenarios)',
+    squadStart: 'INICIO DEL SQUAD<br>(AM+SE+CSTA)',
+    cstaPerformance: 'CSTA<br>PERFORMANCE',
+    amseCstaPerformance: 'AM+SE+CSTA<br>PERFORMANCE',
+    amsePerformance: 'AM+SE<br>PERFORMANCE',
+    squadPerformance: 'SQUAD PERFORMANCE<br>(AM+SE+CSTA)',
+    showCstaExpansion: 'Mostrar CSTA Expansión',
+    hideCstaExpansion: 'Ocultar CSTA Expansión',
+    howToBtn: 'Cómo usarlo',
+    exportBtn: 'Exportar datos',
+    importBtn: 'Importar datos',
+    unassigned: 'No Asignado',
+    accountsLabel: 'Cuentas',
+    accountsLabelSingular: 'Cuenta',
+    darkModeBtn: 'Oscuro',
+    lightModeBtn: 'Claro',
+    clickToAddAccounts: 'Clic para agregar detalles de cuentas',
+    addAccount: '+ Agregar cuenta',
+    confirmBtn: 'Confirmar',
+    cancelBtn: 'Cancelar',
+    howToContent: `
+      <h2>Objetivo</h2>
+      <p>Darle al SQUAD (AM + SE + CSTA) un lenguaje de negocio común y un punto de referencia compartido: el objetivo de crecimiento. Esto les permite discutir juntos los escenarios de churn, erosión, expansión y nuevos clientes, y ver el impacto real en el ARR. El objetivo es que todos entiendan juntos qué tan cerca o lejos están de un <strong style="color:#c4322b;">crecimiento de doble dígito</strong>, en lugar de que cada función (AM, SE, CSTA) tenga su propia versión de la conversación con sus propios números.</p>
+
+      <h2>Dinámica de uso paso a paso</h2>
+      <ol>
+        <li><strong>Cargar la situación actual.</strong> El squad carga sus valores reales: ARR inicial, y el Real de Churn, Erosión, Expansión y Nuevos clientes. Luego define el ARR Objetivo Total directamente (el ARR absoluto que persiguen): el crecimiento que aún falta para llegar ahí, en dólares y en porcentaje, se calcula automáticamente a partir del ARR reportado actual y queda visible para todos.</li>
+        <li><strong>Cargar el Churn/Erosión Confirmado y En riesgo.</strong> Antes de discutir cualquier otra cosa, cargan lo que CSTA ya sabe: qué revenue está confirmado que se va a perder, y qué revenue está en riesgo de perderse. Esto muestra de inmediato cómo esa pérdida, por sí sola, mueve la aguja hacia, o lejos, del objetivo, antes de siquiera haber hablado de expansión o nuevos clientes.</li>
+        <li><strong>Cargar las oportunidades Comprometidas y Más probables.</strong> Ahora cargan las oportunidades de Expansión y Nuevos clientes que AM/SE tienen: lo que está comprometido (alta probabilidad de cierre) y lo que es más probable (pipeline más especulativo). Esto muestra cuánto negocio ya generado está ayudando a cerrar la brecha.</li>
+        <li><strong>Ver la brecha real al objetivo.</strong> Con todo cargado, el squad ve la "Brecha al Objetivo" real, en dólares y en porcentaje. Ya no es una suposición ni un número que cada persona calcula distinto, es un número concreto que todos están viendo al mismo tiempo.</li>
+        <li><strong>Diseñar el plan para cerrar esa brecha, con un buffer acordado.</strong> Con la brecha visible, el squad decide juntos qué hacer para cerrarla: qué oportunidades acelerar, dónde CSTA puede ayudar a conseguir un contacto, dónde AM/SE necesitan mover algo del pipeline de "más probable" a "comprometido". Lo clave: como no toda oportunidad "comprometida" o "más probable" va a cerrar en la realidad, el plan necesita un buffer, no puede asumir 100% de conversión de pipeline. El squad debe acordar explícitamente qué tasa de conversión están asumiendo para el pipeline comprometido y más probable, de modo que el buffer sea una decisión que tomaron juntos, no un supuesto silencioso enterrado en la hoja de cálculo de alguien.</li>
+        <li><strong>Si el plan aún no cierra la brecha, decidir juntos cómo manejarlo.</strong> No toda brecha se puede cerrar con el pipeline disponible. Si el plan construido en el paso 5 sigue por debajo del objetivo, el squad debe decidir como grupo si escalar para pedir apoyo, revisar el objetivo mismo, o aceptar conscientemente el déficit y explicar por qué. El punto es que esta decisión se toma juntos y en voz alta, no queda sin resolver después de que termina la reunión.</li>
+        <li><strong>Agregar detalles de cuentas cuando sea útil.</strong> En cualquier segmento de Confirmado, En riesgo, Comprometido o Más probable, puedes hacer clic directamente sobre esa barra para abrir un desglose de cuentas, agregando las cuentas específicas (con nombre y monto) que componen ese número. Esto le permite al squad ver exactamente qué cuentas o riesgos de churn están detrás de cada cifra, no solo el total agregado, y mantiene ese detalle guardado en el escenario para la próxima vez que lo revisen.</li>
+      </ol>
+
+      <h2>Mantenerlo actualizado</h2>
+      <p>La herramienta solo es útil si los números reflejan la realidad. Es la responsabilidad del squad, en cada área: CSTA es dueño de la señal de churn/erosión y debe actualizar esos valores y avisar al squad en cuanto algo cambie, mientras que AM y SE son dueños del pipeline comprometido/más probable y deben hacer lo mismo con su parte de los números. Cada parte del squad es responsable de notificar al grupo cuando algo relevante cambie en su área, no solo de actualizar la herramienta de forma aislada, para que los números estén al día cada vez que el grupo los revisa juntos.</p>
+
+      <h2>Frecuencia de revisión</h2>
+      <p>Esto no es un ejercicio de una sola vez. El squad debe revisar la simulación con una frecuencia fija, mensual como mínimo, o en cada QBR, para que se convierta en un punto de control recurrente frente al objetivo de fin de año, en lugar de algo que se usa una vez y se deja de lado.</p>
+
+      <h2>En resumen</h2>
+      <p>La dinámica pasa de que "cada quien reporta su número" a una sola conversación, con una sola imagen compartida de dónde están hoy, a dónde necesitan llegar, y cómo van a cerrar la diferencia entre ambos, de forma recurrente, con un dueño claro que la mantiene precisa.</p>
+    `,
+  },
+  ja: {
+    pageTitle: 'ARRウォーターフォール・シナリオシミュレーション（SQUAD向け）',
+    actualLoss: '実績減少',
+    actualGain: '実績増加',
+    confirmed: '確定',
+    atRisk: 'リスクあり',
+    committed: 'コミット済み',
+    mostLikely: '有力見込み',
+    legendConfirmed: '確定損失',
+    legendAtRisk: 'リスク損失',
+    legendCommitted: 'コミット増加',
+    legendMostLikely: '有力増加',
+    hideSquadImpact: 'スクワッド影響を非表示',
+    showSquadImpact: 'スクワッド影響を表示',
+    hideTarget: '目標を非表示',
+    showTarget: '目標を表示',
+    footnote: 'チャーン・コントラクションの「確定/リスクあり」、またはエクスパンション・新規獲得の「コミット済み/有力見込み」にチェックを入れると、そのバーに追加セグメントが積み上がります。チャート全体（以降のすべてのバーと最終合計）は自動的に再計算されます。アカウントの詳細を追加したい場合は、対応するセグメントをクリックしてアカウント内訳を開いてください。',
+    churn: 'チャーン',
+    erosion: 'コントラクション',
+    expansion: 'エクスパンション',
+    newlogo: '新規獲得',
+    startArrK: '期首ARR（千）',
+    actualK: '実績（千）',
+    reportedYtdK: '報告実績・年初来（千）',
+    targetTotalK: '目標ARR合計（千）',
+    reportedArrLabel: '報告ARR',
+    targetGrowthPct: '目標ARR成長率',
+    startArr: '期首ARR',
+    growthArrLabel: '成長ARR',
+    targetArrLabel: '目標ARR',
+    targetWithPct: (pct)=>`目標（期首+${pct}%）`,
+    actualGroup: '実績',
+    projectedGroup: '予測',
+    arrGroup: 'ARR',
+    grr: 'GRR',
+    nrr: 'NRR',
+    startSmall: '期首',
+    targetSmall: '目標',
+    gapSmall: 'ギャップ',
+    gapToTarget: '目標とのギャップ',
+    surplusVsTarget: '目標超過',
+    actualStatus: '実績',
+    upside: 'アップサイド',
+    downside: 'ダウンサイド',
+    reportedGrowth: '報告値の増加',
+    reportedShortfall: '報告値の不足',
+    surplusVsTargetLower: '目標超過',
+    deltaToTarget: '目標とのギャップ',
+    targetLinePrefix: '目標',
+    projectedWithScenarios: '予測（シナリオ反映後）',
+    squadStart: 'SQUAD開始<br>（AM+SE+CSTA）',
+    cstaPerformance: 'CSTA<br>実績',
+    amseCstaPerformance: 'AM+SE+CSTA<br>実績',
+    amsePerformance: 'AM+SE<br>実績',
+    squadPerformance: 'SQUAD実績<br>（AM+SE+CSTA）',
+    showCstaExpansion: 'CSTA エクスパンションを表示',
+    hideCstaExpansion: 'CSTA エクスパンションを非表示',
+    howToBtn: '使い方',
+    exportBtn: 'データ書き出し',
+    importBtn: 'データ読み込み',
+    unassigned: '未割り当て',
+    accountsLabel: 'アカウント',
+    accountsLabelSingular: 'アカウント',
+    darkModeBtn: 'ダーク',
+    lightModeBtn: 'ライト',
+    clickToAddAccounts: 'クリックしてアカウントの詳細を追加',
+    addAccount: '+ アカウントを追加',
+    confirmBtn: '確定',
+    cancelBtn: 'キャンセル',
+    howToContent: `
+      <h2>目的</h2>
+      <p>SQUAD（AM + SE + CSTA）に共通のビジネス言語と共有の基準点（成長目標）を提供します。これにより、チャーン、コントラクション、エクスパンション、新規獲得のシナリオについて全員で議論し、ARRへの実際の影響を確認できるようになります。目的は、AM・SE・CSTAそれぞれが自分の数字で別々の会話をするのではなく、全員が<strong style="color:#c4322b;">二桁成長</strong>までの距離を一緒に理解することです。</p>
+
+      <h2>使い方のステップ</h2>
+      <ol>
+        <li><strong>現状を入力する。</strong>SQUADは実際の数値を入力します。期首ARR、そしてチャーン・コントラクション・エクスパンション・新規獲得の実績です。続いて、目指す絶対的なARRの数値である目標ARR合計を直接入力します。そこに到達するために必要な残りの成長額・成長率は、現在の報告ARRから自動的に計算され、全員に表示されます。</li>
+        <li><strong>確定・リスクありのチャーン/コントラクションを入力する。</strong>他の議論を始める前に、CSTAがすでに把握している情報を入力します。どの売上が確実に失われるか、そしてどの売上が失われるリスクがあるかです。これにより、エクスパンションや新規獲得の話をする前に、その損失だけで目標にどれだけ近づく、あるいは遠ざかるかがすぐに分かります。</li>
+        <li><strong>コミット済み・有力見込みの商談を入力する。</strong>次に、AM/SEが持っているエクスパンションと新規獲得の商談を入力します。確約されているもの（成約確度が高い）と、有力見込みのもの（よりスペキュラティブなパイプライン）です。これにより、すでに生み出されているビジネスがギャップをどれだけ埋めているかが分かります。</li>
+        <li><strong>目標との実際のギャップを確認する。</strong>すべてを入力した後、SQUADは実際の「目標とのギャップ」を金額とパーセンテージの両方で確認します。もはや推測でも、人によって計算方法が異なる数字でもありません。全員が同時に見ている具体的な一つの数字です。</li>
+        <li><strong>バッファーを含めてギャップを埋める計画を立てる。</strong>ギャップが見えたら、SQUADは全員でそれを埋めるためにどうするかを決めます。どの商談を加速させるか、CSTAがどこでコンタクトの獲得を支援できるか、AM/SEが「有力見込み」から「コミット済み」へ動かすべきパイプラインはどこか。重要なのは、「コミット済み」や「有力見込み」の商談すべてが実際に成約するわけではないため、計画にはバッファーが必要だということです。パイプラインの100%成約を前提にすることはできません。SQUADは、コミット済みと有力見込みのパイプラインにどの成約率を想定するかを明確に合意すべきです。そうすることで、バッファーは誰かのスプレッドシートに埋め込まれた暗黙の前提ではなく、全員で決めた意思決定になります。</li>
+        <li><strong>それでもギャップが埋まらない場合、どう対応するか全員で決める。</strong>すべてのギャップが、手元のパイプラインだけで埋まるとは限りません。ステップ5で立てた計画でも目標に届かない場合、SQUADはグループとして、支援をエスカレーションするか、目標自体を見直すか、あるいは未達を意識的に受け入れてその理由を説明するかを決めるべきです。重要なのは、この判断が会議の後に未解決のまま残るのではなく、全員で、明確に行われることです。</li>
+        <li><strong>必要に応じてアカウントの詳細を追加する。</strong>確定・リスクあり・コミット済み・有力見込みのいずれのセグメントでも、そのバーを直接クリックすることでアカウントの内訳を開くことができます。その数値を構成する具体的なアカウント（名前と金額）を追加できます。これにより、SQUADは合計値だけでなく、各数値の背後にある具体的な商談やチャーンリスクを正確に把握でき、その詳細は次回確認するときのためにシナリオに保存されます。</li>
+      </ol>
+
+      <h2>数値を最新に保つ</h2>
+      <p>このツールは、数値が現実を反映している場合にのみ役立ちます。これは各エリアにおけるSQUAD全体の責任です。CSTAはチャーン・コントラクションのシグナルを担当し、変化があった瞬間にその数値を更新してSQUADに知らせるべきです。同様に、AM・SEはコミット済み・有力見込みのパイプラインを担当し、自分たちの側の数値についても同じことをすべきです。SQUADの各パートは、自分の担当領域で重要な変化があったときにグループへ通知する責任があります。ツールを個別に更新するだけでは不十分です。そうすることで、グループが一緒に数値を見るたびに、それが最新の状態になります。</p>
+
+      <h2>レビューの頻度</h2>
+      <p>これは一度きりの取り組みではありません。SQUADは決まった頻度、最低でも月次、あるいは四半期レビュー（QBR）ごとに、このシミュレーションを見直すべきです。そうすることで、一度使って終わりにするのではなく、年間目標に対する継続的なチェックポイントになります。</p>
+
+      <h2>まとめ</h2>
+      <p>このダイナミクスは、「各自が自分の数字を報告する」というやり方から、「今どこにいるか、どこに行く必要があるか、そしてその差をどう埋めるか」について、一つの共有された全体像を持つ、一つの継続的な会話へと変わります。それは一度きりではなく繰り返し行われ、正確さを保つ明確な担当者がいる状態で行われます。</p>
+    `,
+  },
+  pt: {
+    pageTitle: 'Simulação de cenários ARR Waterfall para o SQUAD',
+    actualLoss: 'Perda Actual',
+    actualGain: 'Ganho Actual',
+    confirmed: 'Confirmado',
+    atRisk: 'Em Risco',
+    committed: 'Comprometido',
+    mostLikely: 'Mais Provável',
+    legendConfirmed: 'Perda Confirmada',
+    legendAtRisk: 'Perda em Risco',
+    legendCommitted: 'Ganho Comprometido',
+    legendMostLikely: 'Ganho Mais Provável',
+    hideSquadImpact: 'Ocultar impacto do squad',
+    showSquadImpact: 'Mostrar impacto do squad',
+    hideTarget: 'Ocultar meta',
+    showTarget: 'Mostrar meta',
+    footnote: 'Marque Confirmado/Em risco (Churn, Erosão) ou Comprometido/Mais provável (Expansão, Novos clientes) para empilhar um segmento adicional nessa barra, todo o gráfico (cada barra posterior e o total final) é recalculado automaticamente. Se quiser adicionar detalhes de contas, clique em um segmento compatível para abrir o detalhamento de contas.',
+    churn: 'Churn',
+    erosion: 'Erosão',
+    expansion: 'Expansão',
+    newlogo: 'Novos clientes',
+    startArrK: 'ARR inicial (K)',
+    actualK: 'Actual (K)',
+    reportedYtdK: 'YTD reportado (K)',
+    targetTotalK: 'ARR Meta Total (K)',
+    reportedArrLabel: 'ARR Reportado',
+    targetGrowthPct: 'Crescimento de ARR',
+    startArr: 'ARR inicial',
+    growthArrLabel: 'ARR Crescimento',
+    targetArrLabel: 'ARR Meta',
+    targetWithPct: (pct)=>`Meta (inicial +${pct}%)`,
+    actualGroup: 'Actual',
+    projectedGroup: 'Projetado',
+    arrGroup: 'ARR',
+    grr: 'GRR',
+    nrr: 'NRR',
+    startSmall: 'INICIAL',
+    targetSmall: 'META',
+    gapSmall: 'GAP',
+    gapToTarget: 'Gap para a Meta',
+    surplusVsTarget: 'Superávit vs Meta',
+    actualStatus: 'Actual',
+    upside: 'Alta',
+    downside: 'Baixa',
+    reportedGrowth: 'Crescimento reportado',
+    reportedShortfall: 'Déficit reportado',
+    surplusVsTargetLower: 'Superávit vs meta',
+    deltaToTarget: 'Δ para a meta',
+    targetLinePrefix: 'Meta',
+    projectedWithScenarios: 'Projetado (com cenários)',
+    squadStart: 'INÍCIO DO SQUAD<br>(AM+SE+CSTA)',
+    cstaPerformance: 'CSTA<br>PERFORMANCE',
+    amseCstaPerformance: 'AM+SE+CSTA<br>PERFORMANCE',
+    amsePerformance: 'AM+SE<br>PERFORMANCE',
+    squadPerformance: 'SQUAD PERFORMANCE<br>(AM+SE+CSTA)',
+    showCstaExpansion: 'Mostrar CSTA Expansão',
+    hideCstaExpansion: 'Ocultar CSTA Expansão',
+    howToBtn: 'Como usar',
+    exportBtn: 'Exportar dados',
+    importBtn: 'Importar dados',
+    unassigned: 'Não Atribuído',
+    accountsLabel: 'Contas',
+    accountsLabelSingular: 'Conta',
+    darkModeBtn: 'Escuro',
+    lightModeBtn: 'Claro',
+    clickToAddAccounts: 'Clique para adicionar detalhes de contas',
+    addAccount: '+ Adicionar conta',
+    confirmBtn: 'Confirmar',
+    cancelBtn: 'Cancelar',
+    howToContent: `
+      <h2>Objetivo</h2>
+      <p>Dar ao SQUAD (AM + SE + CSTA) uma linguagem de negócio comum e um ponto de referência compartilhado: a meta de crescimento. Isso permite que discutam juntos os cenários de churn, erosão, expansão e novos clientes, e vejam o impacto real no ARR. O objetivo é que todos entendam juntos o quão perto ou longe estão de um <strong style="color:#c4322b;">crescimento de dois dígitos</strong>, em vez de cada função (AM, SE, CSTA) ter sua própria versão da conversa com seus próprios números.</p>
+
+      <h2>Dinâmica de uso passo a passo</h2>
+      <ol>
+        <li><strong>Carregar a situação atual.</strong> O squad carrega seus valores reais: ARR inicial, e o Real de Churn, Erosão, Expansão e Novos clientes. Em seguida, define o ARR Meta Total diretamente (o ARR absoluto que estão buscando): o crescimento que ainda falta para chegar lá, em valor e em percentual, é calculado automaticamente a partir do ARR reportado atual e fica visível para todos.</li>
+        <li><strong>Carregar o Churn/Erosão Confirmado e Em risco.</strong> Antes de discutir qualquer outra coisa, eles carregam o que o CSTA já sabe: qual receita está confirmada como perdida, e qual receita está em risco de ser perdida. Isso mostra imediatamente como essa perda, sozinha, move o ponteiro em direção, ou para longe, da meta, antes mesmo de se falar sobre expansão ou novos clientes.</li>
+        <li><strong>Carregar as oportunidades Comprometidas e Mais prováveis.</strong> Agora eles carregam as oportunidades de Expansão e Novos clientes que AM/SE têm: o que está comprometido (alta probabilidade de fechamento) e o que é mais provável (pipeline mais especulativo). Isso mostra quanto negócio já gerado está ajudando a fechar o gap.</li>
+        <li><strong>Ver o gap real para a meta.</strong> Com tudo carregado, o squad vê o "Gap para a Meta" real, em dólares e em porcentagem. Não é mais um palpite nem um número que cada pessoa calcula de forma diferente, é um número concreto que todos estão vendo ao mesmo tempo.</li>
+        <li><strong>Desenhar o plano para fechar esse gap, com uma margem de segurança acordada.</strong> Com o gap visível, o squad decide juntos o que fazer para fechá-lo: quais oportunidades acelerar, onde o CSTA pode ajudar a conseguir um contato, onde AM/SE precisam mover algo do pipeline de "mais provável" para "comprometido". O ponto principal: como nem toda oportunidade "comprometida" ou "mais provável" vai realmente fechar, o plano precisa de uma margem de segurança, não pode assumir 100% de conversão do pipeline. O squad deve concordar explicitamente sobre qual taxa de conversão estão assumindo para o pipeline comprometido e mais provável, para que a margem de segurança seja uma decisão tomada em conjunto, não uma suposição silenciosa escondida na planilha de alguém.</li>
+        <li><strong>Se o plano ainda não fechar o gap, decidir juntos como lidar com isso.</strong> Nem todo gap pode ser fechado com o pipeline disponível. Se o plano construído no passo 5 ainda ficar abaixo da meta, o squad deve decidir em grupo se vai escalar para pedir apoio, revisar a própria meta, ou aceitar conscientemente o déficit e explicar o motivo. O ponto é que essa decisão é tomada juntos e em voz alta, não fica sem resolução depois que a reunião termina.</li>
+        <li><strong>Adicionar detalhes de contas quando for útil.</strong> Em qualquer segmento de Confirmado, Em risco, Comprometido ou Mais provável, você pode clicar diretamente nessa barra para abrir um detalhamento de contas, adicionando as contas específicas (com nome e valor) que compõem esse número. Isso permite que o squad veja exatamente quais negócios ou riscos de churn estão por trás de cada número, não apenas o total agregado, e mantém esse detalhe salvo no cenário para a próxima vez que for consultado.</li>
+      </ol>
+
+      <h2>Mantendo atualizado</h2>
+      <p>A ferramenta só é útil se os números refletirem a realidade. É responsabilidade do squad, em cada área: o CSTA é dono do sinal de churn/erosão e deve atualizar esses valores e avisar o squad assim que algo mudar, enquanto AM e SE são donos do pipeline comprometido/mais provável e devem fazer o mesmo com a parte deles. Cada parte do squad é responsável por notificar o grupo sempre que algo relevante mudar na sua área, não apenas atualizar a ferramenta isoladamente, para que os números estejam atualizados toda vez que o grupo os analisa junto.</p>
+
+      <h2>Frequência de revisão</h2>
+      <p>Isso não é um exercício único. O squad deve revisitar a simulação em uma cadência fixa, mensalmente no mínimo, ou a cada QBR, para que se torne um checkpoint recorrente em relação à meta de fim de ano, em vez de algo usado uma vez e deixado de lado.</p>
+
+      <h2>Em resumo</h2>
+      <p>A dinâmica muda de "cada um reporta seu número" para uma única conversa, com uma imagem compartilhada de onde estão hoje, para onde precisam chegar, e como vão fechar a diferença entre os dois, de forma recorrente, com um dono claro mantendo tudo preciso.</p>
+    `,
+  }
+};
+function t(key){ return I18N[lang][key] !== undefined ? I18N[lang][key] : key; }
+
+// ---- Domain / scale ----
+let DOMAIN_MIN = 88, DOMAIN_MAX = 122; // in $M — recalculated dynamically each render
+const PLOT_H = 520;
+let pxPerM = PLOT_H / (DOMAIN_MAX - DOMAIN_MIN);
+function yFromValue(v){ return PLOT_H - (v - DOMAIN_MIN) * pxPerM; } // px from top
+
+// ---- Data (values in $M) ----
+let start = 1.4;
+const TOTAL_CUSTOMERS_START = 3970; // 3.97K
+let TARGET_GROWTH_PCT = 0.20; // legacy field, kept only so old exported JSON files still import correctly
+const DEFAULT_TARGET_GROWTH_PCT = 0.20;
+// The target is now entered directly as an absolute ARR Total (not a %
+// growth over Start ARR) — always clamped to zero or above, since a total
+// ARR figure can never be negative.
+let TARGET_TOTAL_M = Math.max(0, start * (1 + TARGET_GROWTH_PCT));
+function computePureActualFinal(){
+  // Baseline actual only (Start ARR + each category's Actual delta) —
+  // never affected by checked Committed/Most likely scenario boxes.
+  return start + steps.reduce((sum,s)=>sum+s.actualDelta, 0);
+}
+function fmtTargetDollarK(){
+  // Growth still needed ($K) to go from the current reported ARR to the
+  // target total — floored at 0 once the target has already been reached.
+  const growthM = Math.max(0, TARGET_TOTAL_M - computePureActualFinal());
+  return trimZeroDecimal(mToK(growthM).toFixed(1));
+}
+let reportedYTDOverride = null; // null = show the computed/projected total
+
+// Default extra-percentage per category (editable live in the UI).
+// e.g. committedPct:10 means Committed stacks on an extra 10% of that
+// category's actual delta. Each category can have its own value.
+const steps = [
+  { key:'churn',     labelKey:'churn',     color:'red',   actualDelta:-0.0755, actualCustNum:558, committedPct:50, likelyPct:50, committedLabelKey:'confirmed', likelyLabelKey:'atRisk' },
+  { key:'erosion',   labelKey:'erosion',   color:'red',   actualDelta:-0.0873, actualCustNum:817, committedPct:50, likelyPct:50, committedLabelKey:'confirmed', likelyLabelKey:'atRisk' },
+  { key:'expansion', labelKey:'expansion', color:'green', actualDelta:0.0738,  actualCustNum:923, committedPct:50, likelyPct:50, committedLabelKey:'committed', likelyLabelKey:'mostLikely' },
+  { key:'newlogo',   labelKey:'newlogo',   color:'green', actualDelta:0.05,   actualCustNum:176, committedPct:50, likelyPct:50, committedLabelKey:'committed', likelyLabelKey:'mostLikely' }
+];
+
+steps.forEach(s=>{ s.custSign = s.color==='red' ? -1 : 1; });
+
+// Checkbox + live percentage state per category
+const state = {};
+steps.forEach(s=> state[s.key] = { committed:false, committedPct:s.committedPct, likely:false, likelyPct:s.likelyPct, committedAbs:0, likelyAbs:0 });
+
+// References to the Committed/Most-likely $ input boxes, so render() can
+// keep their displayed values in sync when Actual or Start ARR changes.
+const scenarioInputs = {};
+// Returns the sum of named account amounts (a magnitude, in K) already
+// assigned to a given segment — used to prevent the waterfall card's
+// Committed/Likely inputs from being set below what's already itemized
+// in the account breakdown modal.
+function getAssignedMagnitudeForSegKey(segKey){
+  return (accountData[segKey]||[]).reduce((sum,x)=>sum+Math.abs(parseFloat(x.amount)||0), 0);
+}
+let targetDollarInputRef = null;
+let targetFormulaBoxRef = null;
+let endColLabelRef = null;
+let endCardRef = null;
+let startInputRef = null;
+let repInputRef = null;
+let targetPctInputRef = null;
+let targetTotalInputRef = null;
+
+function mToK(m){ return Math.round(m*1000*100)/100; } // $M -> $K, for input boxes
+function kToM(k){ return k/1000; } // $K -> $M, internal storage stays in $M
+
+// Dynamic unit formatting for bar/label display: uses K under 1M, M otherwise.
+function splitUnit(value){
+  const abs = Math.abs(value);
+  if(abs < 1) return { num: value*1000, unit:'K' };
+  return { num: value, unit:'M' };
+}
+function formatNum(num, unit){
+  const decimals = unit==='K' ? 1 : 2;
+  let str = num.toFixed(decimals);
+  if(/\.0+$/.test(str)) str = str.slice(0, str.indexOf('.'));
+  return str+unit;
+}
+// Trims a fixed-decimal string down to a whole number whenever every
+// digit after the decimal point is zero (e.g. "40.0" -> "40", "40.3"
+// stays "40.3") — used anywhere numbers are formatted outside fmt/fmtAbs.
+function trimZeroDecimal(str){
+  return /\.0+$/.test(str) ? str.slice(0, str.indexOf('.')) : str;
+}
+function fmt(v){ const {num,unit}=splitUnit(v); return (num>=0?'+':'')+formatNum(num,unit); }
+function fmtAbs(v){ const {num,unit}=splitUnit(Math.abs(v)); return formatNum(num,unit); }
+function pctOfStart(v){ const p=(v/start*100); return (p>=0?'+':'')+p.toFixed(1)+'%'; }
+function tip(category, status, amountStr, pctStr){
+  return `${category} — ${status}: ${amountStr}${pctStr ? ' ('+pctStr+')' : ''}`;
+}
+// Appends a sorted (largest first) per-account breakdown to a tooltip,
+// when that segment has any named accounts assigned to it.
+function accountsCountLabel(n){
+  return n===1 ? t('accountsLabelSingular') : t('accountsLabel');
+}
+// A row added via "+ Add account" but never filled in (blank name AND
+// zero amount) isn't a real account yet — never let it inflate any
+// account count shown to the user (badges, tooltips, etc).
+function meaningfulAccountRows(segKey){
+  return (accountData[segKey]||[]).filter(r=>(r.name && r.name.trim()!=='') || Math.abs(r.amount||0) > 1e-9);
+}
+function escapeHtml(str){
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function tipWithAccounts(baseTip, segKey, totalValueM){
+  const rows = meaningfulAccountRows(segKey);
+  if(!rows || rows.length===0) return `${escapeHtml(baseTip)}<br><span style="color:#e5766c;">${escapeHtml(t('clickToAddAccounts'))}</span>`;
+  const catStep = getCatStepForSegKey(segKey);
+  const isNegative = catStep && catStep.color==='red';
+  const totalMagnitudeK = Math.abs(mToK(totalValueM));
+  const assignedMagnitudeK = rows.reduce((sum,x)=>sum+Math.abs(parseFloat(x.amount)||0), 0);
+  const sorted = [...rows].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount));
+  const lines = sorted.map(r=>{
+    const magnitude = Math.abs(r.amount)||0;
+    const pct = totalMagnitudeK ? (magnitude/totalMagnitudeK*100) : 0;
+    const name = r.name && r.name.trim() ? r.name : t('unassigned');
+    const displayAmount = isNegative ? -magnitude : magnitude;
+    return `${escapeHtml(name)}: ${trimZeroDecimal(displayAmount.toFixed(1))}K (${trimZeroDecimal(pct.toFixed(1))}%)`;
+  });
+  // Show the remaining Unassigned portion in its own color whenever the
+  // segment isn't fully allocated — based on the actual current numbers,
+  // not the modal's hidden-flag (which only refreshes when reopened).
+  const remainderK = totalMagnitudeK - assignedMagnitudeK;
+  if(remainderK > 1e-6){
+    const pct = totalMagnitudeK ? (remainderK/totalMagnitudeK*100) : 0;
+    const displayRemainder = isNegative ? -remainderK : remainderK;
+    lines.push(`<span style="color:#e0a94a;">${escapeHtml(t('unassigned'))}: ${trimZeroDecimal(displayRemainder.toFixed(1))}K (${trimZeroDecimal(pct.toFixed(1))}%)</span>`);
+  }
+  return `${escapeHtml(baseTip)} - ${rows.length} ${escapeHtml(accountsCountLabel(rows.length))}<br>` + lines.join('<br>');
+}
+function roundUpNice(value){
+  // Rounds up to the next clean number, scaling the rounding granularity
+  // to the value's own order of magnitude (so this works whether values
+  // are in the hundreds, the ones, or the thousands — not just ~100+).
+  if(value <= 0) return 1;
+  const granularity = Math.pow(10, Math.floor(Math.log10(value)) - 1);
+  return Math.ceil(value/granularity) * granularity;
+}
+function custLabel(num){
+  const p = Math.round(Math.abs(num) / TOTAL_CUSTOMERS_START * 100);
+  return `${Math.abs(Math.round(num)).toLocaleString()} (${p}%)`;
+}
+
+// ---- Static scaffolding: y-axis, gridlines, columns, checkboxes ----
+const yaxis = document.getElementById('yaxis');
+const gridlinesEl = document.getElementById('gridlines');
+const plot = document.getElementById('plot');
+const columnsEl = document.getElementById('columns');
+const xaxis = document.getElementById('xaxis');
+
+// Recomputes DOMAIN_MIN/MAX + pxPerM from the actual data range, then
+// rebuilds the y-axis labels and gridlines to match. Called every render()
+// so editing any value keeps the chart correctly scaled.
+function computeDomainAndAxis(values, forcedMax){
+  let minV = Math.min(...values);
+  let maxV = forcedMax;
+  if(minV>=maxV){ minV = maxV - 10; }
+  const range = maxV - minV;
+  const rawStep = range/6;
+  const mag = Math.pow(10, Math.floor(Math.log10(rawStep||1)));
+  const norm = rawStep/mag;
+  const step = norm<1.5 ? 1*mag : norm<3 ? 2*mag : norm<7 ? 5*mag : 10*mag;
+  const pad = range*0.08;
+  DOMAIN_MIN = Math.floor((minV-pad)/step)*step;
+  DOMAIN_MAX = forcedMax + step*0.15; // small headroom so the top tick isn't flush against the header line
+  if(DOMAIN_MAX<=DOMAIN_MIN) DOMAIN_MIN = DOMAIN_MAX - step;
+  pxPerM = PLOT_H/(DOMAIN_MAX-DOMAIN_MIN);
+
+  yaxis.innerHTML='';
+  gridlinesEl.innerHTML='';
+  const decimals = step<1 ? 2 : (step<10 ? 1 : 0);
+  for(let v=DOMAIN_MIN; v<=DOMAIN_MAX+1e-6; v+=step){
+    const y = yFromValue(v);
+    const lab = document.createElement('div');
+    lab.className='ylabel';
+    lab.style.top = y+'px';
+    lab.textContent = (Math.round(v*100)/100).toFixed(decimals)+'M';
+    yaxis.appendChild(lab);
+
+    const gl = document.createElement('div');
+    gl.className='gridline';
+    gl.style.top = y+'px';
+    gridlinesEl.appendChild(gl);
+  }
+}
+
+// one persistent column div per position: start total, 4 steps, end total
+const colEls = [];
+const NUM_COLS = steps.length + 2;
+for(let i=0;i<NUM_COLS;i++){
+  const col = document.createElement('div');
+  col.className='col';
+  columnsEl.appendChild(col);
+  colEls.push(col);
+}
+
+// x-axis labels + checkboxes (built once)
+function buildXAxis(){
+  const startXcol = document.createElement('div');
+  startXcol.className='xcol';
+  startXcol.innerHTML = `<div>2025-12</div>`;
+  const startCard = document.createElement('div');
+  startCard.className = 'category-card gray';
+  const startWrap = document.createElement('div');
+  startWrap.style.marginTop='0';
+  startWrap.innerHTML = `<div class="base-label" data-i18n="startArrK">${t('startArrK')}</div>`;
+  const startInput = document.createElement('input');
+  startInput.type='number';
+  startInput.className='base-input';
+  startInput.step='10';
+  startInput.value = mToK(start);
+  startInput.addEventListener('input', ()=>{
+    const v = parseFloat(startInput.value);
+    if(!isNaN(v)) start = kToM(v);
+    render();
+  });
+  startWrap.appendChild(startInput);
+  startInputRef = startInput;
+  startCard.appendChild(startWrap);
+  startXcol.appendChild(startCard);
+  xaxis.appendChild(startXcol);
+
+  steps.forEach(s=>{
+    const xcol = document.createElement('div');
+    xcol.className='xcol';
+    xcol.innerHTML = `<div data-i18n="${s.labelKey}">${t(s.labelKey)}</div>`;
+
+    const card = document.createElement('div');
+    card.className = 'category-card ' + s.color;
+
+    const actualWrap = document.createElement('div');
+    actualWrap.style.marginTop='0';
+    actualWrap.innerHTML = `<div class="base-label" data-i18n="actualK">${t('actualK')}</div>`;
+    const actualInput = document.createElement('input');
+    actualInput.type='number';
+    actualInput.className='base-input';
+    actualInput.step='10';
+    actualInput.value = mToK(s.actualDelta);
+    actualInput.addEventListener('input', ()=>{
+      const v = parseFloat(actualInput.value);
+      if(!isNaN(v)){
+        // Enforce sign convention: red categories are always a loss
+        // (negative), green categories are always a gain (positive) —
+        // flip the sign automatically if typed the "wrong" way.
+        const corrected = s.color==='red' ? -Math.abs(v) : Math.abs(v);
+        s.actualDelta = kToM(corrected);
+        if(corrected !== v) actualInput.value = corrected;
+      }
+      render();
+    });
+    actualWrap.appendChild(actualInput);
+    card.appendChild(actualWrap);
+
+    const controls = document.createElement('div');
+    controls.className='controls';
+
+    const blockC = document.createElement('div');
+    blockC.className='scenario-block';
+    const labelC = document.createElement('label');
+    labelC.className='cb-committed cb-'+s.color;
+    const cbC = document.createElement('input');
+    cbC.type='checkbox';
+    cbC.addEventListener('change', ()=>{ state[s.key].committed = cbC.checked; render(); });
+    labelC.appendChild(cbC);
+    labelC.appendChild(document.createTextNode(' '));
+    const labelCSpan = document.createElement('span');
+    labelCSpan.dataset.i18n = s.committedLabelKey;
+    labelCSpan.textContent = t(s.committedLabelKey);
+    labelC.appendChild(labelCSpan);
+    const countBadgeC = document.createElement('span');
+    countBadgeC.className = 'acct-count-badge';
+    countBadgeC.addEventListener('click', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      openAccountModal(s.key+'__committed', t(s.labelKey), t(s.committedLabelKey), s.committedExtra);
+    });
+    labelC.appendChild(countBadgeC);
+    blockC.appendChild(labelC);
+
+    const rowC = document.createElement('div');
+    rowC.className='value-row';
+    const pctC = document.createElement('input');
+    pctC.type='number';
+    pctC.className='pct-input';
+    pctC.value = state[s.key].committedPct;
+    pctC.step='10';
+    const eqC = document.createElement('span');
+    eqC.className='pct-suffix';
+    eqC.textContent = 'K =';
+    const dollarC = document.createElement('input');
+    dollarC.type='number';
+    dollarC.className='pct-input dollar-input';
+    dollarC.step='10';
+    dollarC.value = trimZeroDecimal(mToK(s.actualDelta*state[s.key].committedPct/100).toFixed(1));
+    pctC.addEventListener('input', ()=>{
+      let typedPct = parseFloat(pctC.value)||0;
+      const assignedK = getAssignedMagnitudeForSegKey(s.key+'__committed');
+      if(assignedK > 0 && s.actualDelta){
+        const floorPct = Math.abs(kToM(assignedK)/s.actualDelta*100);
+        if(typedPct < floorPct) typedPct = Math.round(floorPct*10)/10;
+      }
+      if(typedPct !== parseFloat(pctC.value)) pctC.value = typedPct;
+      state[s.key].committedPct = typedPct;
+      dollarC.value = trimZeroDecimal(mToK(s.actualDelta*state[s.key].committedPct/100).toFixed(1));
+      render();
+    });
+    dollarC.addEventListener('input', ()=>{
+      const typedK = parseFloat(dollarC.value)||0;
+      let correctedK = s.color==='red' ? -Math.abs(typedK) : Math.abs(typedK);
+      const assignedK = getAssignedMagnitudeForSegKey(s.key+'__committed');
+      if(assignedK > 0 && Math.abs(correctedK) < assignedK){
+        correctedK = s.color==='red' ? -assignedK : assignedK;
+      }
+      if(correctedK !== typedK) dollarC.value = correctedK;
+      const dollarValM = kToM(correctedK);
+      if(Math.abs(s.actualDelta) < 1e-9){
+        // Actual is 0 — a percentage of zero can never be nonzero, so
+        // store this as a direct absolute value instead of a fraction.
+        state[s.key].committedAbs = dollarValM;
+      } else {
+        state[s.key].committedPct = (dollarValM/s.actualDelta*100);
+        pctC.value = Math.round(state[s.key].committedPct*10)/10;
+      }
+      render();
+    });
+    rowC.appendChild(dollarC);
+    rowC.appendChild(eqC);
+    rowC.appendChild(pctC);
+    rowC.appendChild(Object.assign(document.createElement('span'),{className:'pct-suffix',textContent:'%'}));
+    blockC.appendChild(rowC);
+
+    const blockL = document.createElement('div');
+    blockL.className='scenario-block';
+    const labelL = document.createElement('label');
+    labelL.className='cb-likely cb-'+s.color;
+    const cbL = document.createElement('input');
+    cbL.type='checkbox';
+    cbL.addEventListener('change', ()=>{ state[s.key].likely = cbL.checked; render(); });
+    labelL.appendChild(cbL);
+    labelL.appendChild(document.createTextNode(' '));
+    const labelLSpan = document.createElement('span');
+    labelLSpan.dataset.i18n = s.likelyLabelKey;
+    labelLSpan.textContent = t(s.likelyLabelKey);
+    labelL.appendChild(labelLSpan);
+    const countBadgeL = document.createElement('span');
+    countBadgeL.className = 'acct-count-badge';
+    countBadgeL.addEventListener('click', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      openAccountModal(s.key+'__likely', t(s.labelKey), t(s.likelyLabelKey), s.likelyExtra);
+    });
+    labelL.appendChild(countBadgeL);
+    blockL.appendChild(labelL);
+
+    const rowL = document.createElement('div');
+    rowL.className='value-row';
+    const pctL = document.createElement('input');
+    pctL.type='number';
+    pctL.className='pct-input';
+    pctL.value = state[s.key].likelyPct;
+    pctL.step='10';
+    const eqL = document.createElement('span');
+    eqL.className='pct-suffix';
+    eqL.textContent = 'K =';
+    const dollarL = document.createElement('input');
+    dollarL.type='number';
+    dollarL.className='pct-input dollar-input';
+    dollarL.step='10';
+    dollarL.value = trimZeroDecimal(mToK(s.actualDelta*state[s.key].likelyPct/100).toFixed(1));
+    pctL.addEventListener('input', ()=>{
+      let typedPct = parseFloat(pctL.value)||0;
+      const assignedK = getAssignedMagnitudeForSegKey(s.key+'__likely');
+      if(assignedK > 0 && s.actualDelta){
+        const floorPct = Math.abs(kToM(assignedK)/s.actualDelta*100);
+        if(typedPct < floorPct) typedPct = Math.round(floorPct*10)/10;
+      }
+      if(typedPct !== parseFloat(pctL.value)) pctL.value = typedPct;
+      state[s.key].likelyPct = typedPct;
+      dollarL.value = trimZeroDecimal(mToK(s.actualDelta*state[s.key].likelyPct/100).toFixed(1));
+      render();
+    });
+    dollarL.addEventListener('input', ()=>{
+      const typedK = parseFloat(dollarL.value)||0;
+      let correctedK = s.color==='red' ? -Math.abs(typedK) : Math.abs(typedK);
+      const assignedK = getAssignedMagnitudeForSegKey(s.key+'__likely');
+      if(assignedK > 0 && Math.abs(correctedK) < assignedK){
+        correctedK = s.color==='red' ? -assignedK : assignedK;
+      }
+      if(correctedK !== typedK) dollarL.value = correctedK;
+      const dollarValM = kToM(correctedK);
+      if(Math.abs(s.actualDelta) < 1e-9){
+        state[s.key].likelyAbs = dollarValM;
+      } else {
+        state[s.key].likelyPct = (dollarValM/s.actualDelta*100);
+        pctL.value = Math.round(state[s.key].likelyPct*10)/10;
+      }
+      render();
+    });
+    rowL.appendChild(dollarL);
+    rowL.appendChild(eqL);
+    rowL.appendChild(pctL);
+    rowL.appendChild(Object.assign(document.createElement('span'),{className:'pct-suffix',textContent:'%'}));
+    blockL.appendChild(rowL);
+
+    scenarioInputs[s.key] = { pctC, dollarC, pctL, dollarL, cbC, cbL, actualInput, countBadgeC, countBadgeL, card, labelC, labelL };
+
+    controls.appendChild(blockC);
+    controls.appendChild(blockL);
+    card.appendChild(controls);
+    xcol.appendChild(card);
+    xaxis.appendChild(xcol);
+  });
+
+  const endXcol = document.createElement('div');
+  endXcol.className='xcol';
+  endXcol.innerHTML = `<div id="end-col-label">2026-YTD</div>`;
+  endColLabelRef = endXcol.querySelector('#end-col-label');
+  const endCard = document.createElement('div');
+  endCard.className = 'category-card gray';
+  // ARR Target Total: the user enters the absolute total ARR they want to
+  // reach (not a growth %) — this replaces the old manual "Reported YTD"
+  // override box entirely. Always clamped to zero or above.
+  const targetTotalWrap = document.createElement('div');
+  targetTotalWrap.style.marginTop='0';
+  targetTotalWrap.innerHTML = `<div class="base-label" data-i18n="targetTotalK">${t('targetTotalK')}</div>`;
+  const targetTotalInput = document.createElement('input');
+  targetTotalInput.type='number';
+  targetTotalInput.className='base-input';
+  targetTotalInput.step='10';
+  targetTotalInput.min = mToK(computePureActualFinal()); // keeps the up/down spinner from going below the reported ARR
+  targetTotalInput.value = mToK(TARGET_TOTAL_M); // same as Start/Actual (K) boxes — no forced decimals
+  // The target total can never imply negative growth (below the current
+  // reported ARR) — but we never rewrite what the user is typing
+  // mid-keystroke (that would make it impossible to type "2000" one
+  // digit at a time). Instead: accept the raw input as-is, flag it red
+  // while it's below the reported ARR, and only feed it into the actual
+  // target calculation once it's valid. On blur, snap an invalid value
+  // up to the reported ARR so nothing invalid is left behind.
+  targetTotalInput.addEventListener('input', ()=>{
+    const v = parseFloat(targetTotalInput.value);
+    const reported = computePureActualFinal();
+    const valid = !isNaN(v) && kToM(v) >= reported - 1e-9;
+    targetTotalInput.classList.toggle('input-error', !valid);
+    TARGET_TOTAL_M = valid ? kToM(v) : reported;
+    render();
+  });
+  targetTotalInput.addEventListener('blur', ()=>{
+    const v = parseFloat(targetTotalInput.value);
+    const reported = computePureActualFinal();
+    if(isNaN(v) || kToM(v) < reported - 1e-9){
+      targetTotalInput.value = mToK(reported);
+      targetTotalInput.classList.remove('input-error');
+      TARGET_TOTAL_M = reported;
+      render();
+    }
+  });
+  targetTotalWrap.appendChild(targetTotalInput);
+  targetTotalInputRef = targetTotalInput;
+  endCard.appendChild(targetTotalWrap);
+
+  const targetWrap = document.createElement('div');
+  targetWrap.style.marginTop='8px';
+  targetWrap.innerHTML = `<div class="base-label" data-i18n="targetGrowthPct">${t('targetGrowthPct')}</div>`;
+
+  const targetRow = document.createElement('div');
+  targetRow.className='value-row';
+  targetRow.style.justifyContent='center';
+
+  // Both fields below now express the growth still needed FROM the current
+  // reported ARR TO the target total above — editing either one solves
+  // back for a new (always-positive) target total. Growth itself is never
+  // allowed to go negative: once the target total is at or below the
+  // current reported ARR, growth just floors at 0 (nothing more needed).
+  const initialReported = computePureActualFinal();
+  // Growth % is expressed over Start ARR (not the current reported ARR) —
+  // the $ growth amount itself is still target minus reported.
+  const initialGrowthPct = start ? (Math.max(0, TARGET_TOTAL_M-initialReported)/start*100) : 0;
+
+  const targetPctInput = document.createElement('input');
+  targetPctInput.type='number';
+  targetPctInput.className='pct-input';
+  targetPctInput.step='10';
+  targetPctInput.min='0';
+  targetPctInput.value = Math.round(initialGrowthPct*10)/10;
+
+  const targetEq = document.createElement('span');
+  targetEq.className='pct-suffix';
+  targetEq.textContent = 'K =';
+
+  const targetDollarInput = document.createElement('input');
+  targetDollarInput.type='number';
+  targetDollarInput.className='pct-input dollar-input';
+  targetDollarInput.step='10';
+  targetDollarInput.min='0';
+  targetDollarInput.value = fmtTargetDollarK();
+
+  targetPctInput.addEventListener('input', ()=>{
+    const typed = parseFloat(targetPctInput.value);
+    const v = Math.max(0, isNaN(typed) ? 0 : typed);
+    if(v !== typed) targetPctInput.value = v;
+    const reported = computePureActualFinal();
+    // % is over Start ARR — solve back for the growth $ that represents,
+    // then the target total is reported + that growth.
+    const growthM = start * (v/100);
+    TARGET_TOTAL_M = Math.max(0, reported + growthM);
+    targetDollarInput.value = fmtTargetDollarK();
+    targetTotalInput.value = mToK(TARGET_TOTAL_M);
+    render();
+  });
+  targetDollarInput.addEventListener('input', ()=>{
+    const typedK = parseFloat(targetDollarInput.value)||0;
+    const correctedK = Math.max(0, typedK);
+    if(correctedK !== typedK) targetDollarInput.value = correctedK;
+    const growthM = kToM(correctedK);
+    const reported = computePureActualFinal();
+    TARGET_TOTAL_M = Math.max(0, reported + growthM);
+    const gp = start ? (growthM/start*100) : 0;
+    targetPctInput.value = Math.round(gp*10)/10;
+    targetTotalInput.value = mToK(TARGET_TOTAL_M);
+    render();
+  });
+
+  targetRow.appendChild(targetDollarInput);
+  targetRow.appendChild(targetEq);
+  targetRow.appendChild(targetPctInput);
+  targetPctInputRef = targetPctInput;
+  targetRow.appendChild(Object.assign(document.createElement('span'),{className:'pct-suffix',textContent:'%'}));
+  targetWrap.appendChild(targetRow);
+  endCard.appendChild(targetWrap);
+
+  const formulaBox = document.createElement('div');
+  formulaBox.id = 'targetFormulaBox';
+  formulaBox.style.marginTop = '10px';
+  formulaBox.style.fontSize = '11px';
+  formulaBox.style.lineHeight = '1.6';
+  formulaBox.style.color = '#5b6472';
+  formulaBox.style.textAlign = 'left';
+  formulaBox.style.display = 'inline-block';
+  endCard.appendChild(formulaBox);
+  targetFormulaBoxRef = formulaBox;
+  targetDollarInputRef = targetDollarInput;
+  endCardRef = endCard;
+  endXcol.appendChild(endCard);
+
+  xaxis.appendChild(endXcol);
+}
+buildXAxis();
+
+// ---- Dynamic render: recompute the whole chain and redraw everything ----
+function render(){
+  // 1. Recompute cumulative chain using effective (actual + checked extras) deltas
+  let cumARR = start;
+  let cumCust = TOTAL_CUSTOMERS_START;
+  steps.forEach(s=>{
+    s.baseline = cumARR;
+    s.custBaseline = cumCust;
+
+    s.afterActualARR = cumARR + s.actualDelta;
+    let arr = s.afterActualARR;
+    let custDelta = s.custSign * s.actualCustNum;
+
+    s.segments = [];
+    if(Math.abs(s.actualDelta) > 1e-9){
+      s.segments.push({ kind:'actual', from:cumARR, to:s.afterActualARR });
+    }
+
+    const committedFrac = (state[s.key].committedPct||0) / 100;
+    const likelyFrac = (state[s.key].likelyPct||0) / 100;
+    const actualIsZero = Math.abs(s.actualDelta) < 1e-9;
+    s.committedExtra = actualIsZero ? (state[s.key].committedAbs||0) : s.actualDelta * committedFrac;
+    s.likelyExtra = actualIsZero ? (state[s.key].likelyAbs||0) : s.actualDelta * likelyFrac;
+    s.committedCustExtra = Math.round(s.actualCustNum * committedFrac);
+    s.likelyCustExtra = Math.round(s.actualCustNum * likelyFrac);
+
+    // Keep the Committed/Most-likely $ boxes in sync with Actual/Start ARR.
+    // Skip whichever field the user is actively typing in, so we don't
+    // fight their keystrokes.
+    const si = scenarioInputs[s.key];
+    if(si){
+      if(document.activeElement !== si.dollarC){
+        si.dollarC.value = trimZeroDecimal(mToK(s.committedExtra).toFixed(1));
+      }
+      if(document.activeElement !== si.dollarL){
+        si.dollarL.value = trimZeroDecimal(mToK(s.likelyExtra).toFixed(1));
+      }
+      const committedAccts = meaningfulAccountRows(s.key+'__committed');
+      if(committedAccts.length>0){
+        si.countBadgeC.textContent = ` - ${committedAccts.length} ${accountsCountLabel(committedAccts.length)}`;
+        si.countBadgeC.style.cursor = 'pointer';
+      } else {
+        si.countBadgeC.textContent = '';
+        si.countBadgeC.style.cursor = '';
+      }
+      const likelyAccts = meaningfulAccountRows(s.key+'__likely');
+      if(likelyAccts.length>0){
+        si.countBadgeL.textContent = ` - ${likelyAccts.length} ${accountsCountLabel(likelyAccts.length)}`;
+        si.countBadgeL.style.cursor = 'pointer';
+      } else {
+        si.countBadgeL.textContent = '';
+        si.countBadgeL.style.cursor = '';
+      }
+    }
+
+    if(state[s.key].committed){
+      const to = arr + s.committedExtra;
+      if(Math.abs(s.committedExtra) > 1e-9){
+        s.segments.push({ kind:'committed', from:arr, to });
+      }
+      arr = to;
+      custDelta += s.custSign * s.committedCustExtra;
+    }
+    if(state[s.key].likely){
+      const to = arr + s.likelyExtra;
+      if(Math.abs(s.likelyExtra) > 1e-9){
+        s.segments.push({ kind:'likely', from:arr, to });
+      }
+      arr = to;
+      custDelta += s.custSign * s.likelyCustExtra;
+    }
+
+    s.effEnd = arr;
+    s.effCustDelta = custDelta;
+    s.custEffEnd = cumCust + custDelta;
+
+    cumARR = s.effEnd;
+    cumCust = s.custEffEnd;
+  });
+  const finalARR = cumARR;      // cascaded total: actual + any checked Committed/Most likely extras
+  const finalCust = cumCust;
+  const pureActualFinal = computePureActualFinal(); // baseline actual only — never changes with scenarios
+  // The target total can never sit below the current reported ARR — that
+  // would imply negative growth, which isn't allowed. Clamp here too in
+  // case pureActualFinal itself moved (e.g. an Actual box was edited)
+  // since the target total was last set.
+  if(TARGET_TOTAL_M < pureActualFinal - 1e-9) TARGET_TOTAL_M = pureActualFinal;
+  const targetValue = TARGET_TOTAL_M;
+  if(targetTotalInputRef){
+    targetTotalInputRef.min = mToK(pureActualFinal); // keeps the spinner's floor in sync as the reported ARR moves
+    if(document.activeElement !== targetTotalInputRef){
+      targetTotalInputRef.value = mToK(targetValue); // same as Start/Actual (K) boxes — no forced decimals
+    }
+  }
+  if(targetDollarInputRef && document.activeElement !== targetDollarInputRef){
+    targetDollarInputRef.value = fmtTargetDollarK();
+  }
+  if(targetPctInputRef && document.activeElement !== targetPctInputRef){
+    // % is over Start ARR, not the current reported ARR.
+    const gp = start ? (Math.max(0, targetValue-pureActualFinal)/start*100) : 0;
+    targetPctInputRef.value = Math.round(gp*10)/10;
+  }
+  if(targetFormulaBoxRef){
+    // Growth is always shown as a positive "how much more is needed" figure
+    // — once the target total is at or below the reported ARR, it floors at 0.
+    const growthValue = Math.max(0, targetValue - pureActualFinal);
+    const growthPctDisplay = start ? (growthValue/start*100) : 0;
+    targetFormulaBoxRef.innerHTML =
+      `${t('startArr')} = ${fmtAbs(start)}<br>` +
+      `${t('reportedArrLabel')} = ${fmtAbs(pureActualFinal)}<br>` +
+      `${t('growthArrLabel')} = ${fmtAbs(growthValue)} (${growthPctDisplay.toFixed(0)}%)<br>` +
+      `${t('targetArrLabel')} = ${fmtAbs(targetValue)}`;
+  }
+
+  // Collect every value that will appear on the chart so the y-axis can
+  // scale to fit, however the inputs change.
+  const allValues = [start, targetValue, finalARR, pureActualFinal];
+  steps.forEach(s=>{
+    allValues.push(s.baseline);
+    s.segments.forEach(seg=>{ allValues.push(seg.from, seg.to); });
+  });
+  if(reportedYTDOverride!==null) allValues.push(reportedYTDOverride);
+  // The axis top is normally the target's rounded ceiling, but if any bar
+  // (e.g. a large scenario input) actually goes higher than that, expand
+  // the top to cover it instead of letting it render off-chart.
+  const forcedMax = roundUpNice(Math.max(targetValue, ...allValues));
+  computeDomainAndAxis(allValues, forcedMax);
+
+  const gap = finalARR - targetValue;
+  const gapPct = (gap/targetValue*100);
+  const gapClass = gap>=0 ? 'pos':'neg';
+
+  // GRR: revenue retained from the existing base, before any expansion or
+  // new logo — Start ARR minus Churn minus Erosion, as a % of Start ARR.
+  // NRR: same, but also includes Expansion (still excludes New Logo, since
+  // that's net-new customers, not retention of the existing base).
+  const churnStep = steps.find(s=>s.key==='churn');
+  const erosionStep = steps.find(s=>s.key==='erosion');
+  const expansionStep = steps.find(s=>s.key==='expansion');
+
+  // Actual: uses the raw actual deltas only, never affected by checkboxes.
+  const grrValue = start + churnStep.actualDelta + erosionStep.actualDelta;
+  const nrrValue = grrValue + expansionStep.actualDelta;
+  const grrPct = (grrValue/start*100);
+  const nrrPct = (nrrValue/start*100);
+
+  // Projected: uses the cascaded (effective) deltas, so checking Confirmed/
+  // At risk/Committed/Most likely moves these live.
+  const churnEff = churnStep.effEnd - churnStep.baseline;
+  const erosionEff = erosionStep.effEnd - erosionStep.baseline;
+  const expansionEff = expansionStep.effEnd - expansionStep.baseline;
+  const projGrrValue = start + churnEff + erosionEff;
+  const projNrrValue = projGrrValue + expansionEff;
+  const projGrrPct = (projGrrValue/start*100);
+  const projNrrPct = (projNrrValue/start*100);
+
+  // Compares a projected value against its actual counterpart and returns
+  // a colored value with an arrow: green up if higher, red down if lower,
+  // gray flat icon if equal — color applied to the whole number, not just the icon.
+  function trendValue(newVal, oldVal, text){
+    const diff = newVal - oldVal;
+    const color = Math.abs(diff) < 1e-6 ? '#8a8f98' : (diff > 0 ? '#2f7a2f' : '#c4322b');
+    const icon = Math.abs(diff) < 1e-6 ? '&#9654;' : (diff > 0 ? '&#9650;' : '&#9660;');
+    return `<span style="color:${color};">${icon} ${text}</span>`;
+  }
+
+  document.getElementById('targetStrip').innerHTML = `
+    <div class="group">
+      <span class="k">${t('actualGroup')}</span>
+      <div class="dual">
+        <div class="metric"><span class="label">${t('arrGroup')}</span><span class="val">${fmtAbs(pureActualFinal)}</span></div>
+        <div class="metric"><span class="label">${t('grr')}</span><span class="val">${grrPct.toFixed(1)}%</span></div>
+        <div class="metric"><span class="label">${t('nrr')}</span><span class="val">${nrrPct.toFixed(1)}%</span></div>
+      </div>
+    </div>
+    <div class="group">
+      <span class="k">${t('projectedGroup')}</span>
+      <div class="dual">
+        <div class="metric"><span class="label">${t('arrGroup')}</span><span class="val">${trendValue(finalARR,pureActualFinal,fmtAbs(finalARR))}</span></div>
+        <div class="metric"><span class="label">${t('grr')}</span><span class="val">${trendValue(projGrrPct,grrPct,projGrrPct.toFixed(1)+'%')}</span></div>
+        <div class="metric"><span class="label">${t('nrr')}</span><span class="val">${trendValue(projNrrPct,nrrPct,projNrrPct.toFixed(1)+'%')}</span></div>
+      </div>
+    </div>
+    <div class="group">
+      <span class="k">${t('arrGroup')}</span>
+      <div class="dual">
+        <div class="metric"><span class="label">${t('startSmall')}</span><span class="val">${fmtAbs(start)}</span></div>
+        <div class="metric"><span class="label">${t('targetSmall')}</span><span class="val">${fmtAbs(targetValue)}</span></div>
+        <div class="metric"><span class="label">${t('gapSmall')}</span><span class="val ${gapClass}">${fmt(gap)}</span></div>
+      </div>
+    </div>
+  `;
+
+  // 2. Draw start total bar
+  drawTotalBar(colEls[0], start, start, tip('2025-12', t('startArr'), fmtAbs(start)));
+
+  // 3. Draw each step's stacked bar
+  steps.forEach((s, i)=>{
+    const col = colEls[i+1];
+    col.innerHTML = '';
+
+    // CSTA Expansion recolors the Expansion category blue everywhere
+    // (bar, card, checkboxes, account modal) without touching its
+    // underlying sign logic — s.color still drives gain/loss math;
+    // dc only drives what's painted.
+    const dc = getDisplayColor(s);
+
+    s.segments.forEach(seg=>{
+      const lo = Math.min(seg.from, seg.to);
+      const hi = Math.max(seg.from, seg.to);
+      const bar = document.createElement('div');
+      bar.style.top = yFromValue(hi)+'px';
+      bar.style.height = Math.max(1, yFromValue(lo)-yFromValue(hi))+'px';
+
+      if(seg.kind==='actual'){
+        bar.className = 'bar actual ' + dc;
+        bar.innerHTML = `<div>${fmt(s.actualDelta)} (${pctOfStart(s.actualDelta)})</div>`;
+        bar.dataset.tooltip = tip(t(s.labelKey), t('actualStatus'), fmt(s.actualDelta), pctOfStart(s.actualDelta));
+      } else if(seg.kind==='committed'){
+        bar.className = 'bar extra extra-committed-' + dc;
+        const committedPctDisplay = Math.round(state[s.key].committedPct*10)/10;
+        bar.innerHTML = `<div>${fmt(s.committedExtra)} ${t(s.committedLabelKey).toLowerCase()}<br>+${committedPctDisplay}%</div>`;
+        bar.dataset.tooltip = tipWithAccounts(tip(t(s.labelKey), t(s.committedLabelKey), fmt(s.committedExtra), `+${committedPctDisplay}%`), s.key+'__committed', s.committedExtra);
+        bar.style.cursor = 'pointer';
+        bar.addEventListener('click', ()=> openAccountModal(s.key+'__committed', t(s.labelKey), t(s.committedLabelKey), s.committedExtra));
+      } else {
+        bar.className = 'bar extra extra-likely-' + dc;
+        const likelyPctDisplay = Math.round(state[s.key].likelyPct*10)/10;
+        bar.innerHTML = `<div>${fmt(s.likelyExtra)} ${t(s.likelyLabelKey).toLowerCase()}<br>+${likelyPctDisplay}%</div>`;
+        bar.dataset.tooltip = tipWithAccounts(tip(t(s.labelKey), t(s.likelyLabelKey), fmt(s.likelyExtra), `+${likelyPctDisplay}%`), s.key+'__likely', s.likelyExtra);
+        bar.style.cursor = 'pointer';
+        bar.addEventListener('click', ()=> openAccountModal(s.key+'__likely', t(s.labelKey), t(s.likelyLabelKey), s.likelyExtra));
+      }
+      col.appendChild(bar);
+    });
+  });
+
+  // 4. Draw end total bar. Position is always the pure actual (start + real
+  // category deltas) — checking scenario boxes never moves the gray bar.
+  // The resulting new total (if any scenarios are checked) is shown as an
+  // extra colored line inside the same bar: blue above for growth, red
+  // below for a decrease — the bracketed number is always the pure actual.
+  const lastCol = colEls[colEls.length-1];
+  drawEndTotalBar(lastCol, pureActualFinal, finalARR);
+
+  // If Reported YTD overpasses (or falls short of) the actual, show that
+  // growth/shortfall as its own stacked box.
+  if(reportedYTDOverride!==null && Math.abs(reportedYTDOverride-pureActualFinal) > 1e-6){
+    const repDiff = reportedYTDOverride - pureActualFinal;
+    const repPct = (repDiff/pureActualFinal*100);
+    const repLo = Math.min(pureActualFinal, reportedYTDOverride);
+    const repHi = Math.max(pureActualFinal, reportedYTDOverride);
+    const repBox = document.createElement('div');
+    repBox.className = 'bar phantom-reported';
+    repBox.style.top = yFromValue(repHi)+'px';
+    repBox.style.height = Math.max(1, yFromValue(repLo)-yFromValue(repHi))+'px';
+    repBox.innerHTML = `<div>${repDiff>=0?t('reportedGrowth'):t('reportedShortfall')}<br>${fmt(repDiff)}</div>`;
+    repBox.dataset.tooltip = tip('2026-YTD', repDiff>=0?t('reportedGrowth'):t('reportedShortfall'), fmt(repDiff), `${repPct>=0?'+':''}${repPct.toFixed(1)}%`);
+    lastCol.appendChild(repBox);
+  }
+
+  // Scenario delta: extra contributed by any checked Committed/Most likely
+  // boxes, shown as its own hatched box (same pattern language as the
+  // Target box) with both the amount and the percentage of the actual.
+  if(Math.abs(finalARR-pureActualFinal) > 1e-6){
+    const scenDiff = finalARR - pureActualFinal;
+    const scenPct = (scenDiff/pureActualFinal*100);
+    const scenLo = Math.min(pureActualFinal, finalARR);
+    const scenHi = Math.max(pureActualFinal, finalARR);
+    const scenBox = document.createElement('div');
+    scenBox.className = 'bar phantom-scenario' + (scenDiff<0 ? ' phantom-scenario-risk' : '');
+    scenBox.style.top = yFromValue(scenHi)+'px';
+    scenBox.style.height = Math.max(1, yFromValue(scenLo)-yFromValue(scenHi))+'px';
+    scenBox.innerHTML = `<div>${scenDiff>=0?t('upside'):t('downside')}<br>${fmt(scenDiff)} (${scenPct>=0?'+':''}${scenPct.toFixed(1)}%)</div>`;
+    scenBox.dataset.tooltip = tip('2026-YTD', scenDiff>=0?t('upside'):t('downside'), fmt(scenDiff), `${scenPct>=0?'+':''}${scenPct.toFixed(1)}%`);
+    lastCol.appendChild(scenBox);
+    if(endColLabelRef) endColLabelRef.textContent = '2026-YTD & ' + t('projectedGroup');
+  } else if(endColLabelRef){
+    endColLabelRef.textContent = '2026-YTD';
+  }
+
+  // Phantom bar: the gap between the projected total (actual + any checked
+  // scenarios) and the target, stacked as an extension toward the target
+  // line. Hidden together with the target label via the Show/Hide Target
+  // toggle.
+  // Only draw the gap-to-target box when there's an actual, meaningful gap
+  // — at exactly (or effectively) on-target, there's nothing to show.
+  if(targetLineVisible && Math.abs(gap) > 1e-6){
+    const gapLo = Math.min(finalARR, targetValue);
+    const gapHi = Math.max(finalARR, targetValue);
+    const phantom = document.createElement('div');
+    phantom.className = 'bar phantom-target';
+    phantom.style.top = yFromValue(gapHi)+'px';
+    phantom.style.height = Math.max(1, yFromValue(gapLo)-yFromValue(gapHi))+'px';
+    phantom.innerHTML = `<div>${gap>=0?t('surplusVsTargetLower'):t('deltaToTarget')}<br>${fmt(gap)} (${gapPct>=0?'+':''}${gapPct.toFixed(1)}%)</div>`;
+    phantom.dataset.tooltip = tip('2026-YTD', gap>=0?t('surplusVsTargetLower'):t('gapToTarget'), fmt(gap), `${gapPct>=0?'+':''}${gapPct.toFixed(1)}%`);
+    lastCol.appendChild(phantom);
+  }
+
+  // 5. Connectors between every column at each cumulative level
+  drawConnectors();
+  drawGroups();
+  lastTargetValue = targetValue;
+  // If there's no growth left to chase (target total == reported ARR),
+  // the target label has nothing useful to add — hide it too.
+  lastTargetHasGrowth = (targetValue - pureActualFinal) > 1e-6;
+  drawTargetLine();
+  requestAnimationFrame(syncCardHeights);
+}
+
+// Makes every category card match the actual measured height of the
+// 2026-YTD card specifically (not just "whichever is tallest"), since
+// generic flex-stretch can't target one particular card as the reference.
+function syncCardHeights(){
+  if(!endCardRef) return;
+  const cards = document.querySelectorAll('.category-card');
+  cards.forEach(c=>{ c.style.height = 'auto'; });
+  const refHeight = endCardRef.getBoundingClientRect().height;
+  cards.forEach(c=>{ c.style.height = refHeight+'px'; });
+}
+
+function drawTotalBar(col, posValue, displayValue, tooltip){
+  col.innerHTML = '';
+  const bar = document.createElement('div');
+  bar.className='bar total';
+  const top = yFromValue(posValue);
+  const bottom = yFromValue(DOMAIN_MIN);
+  bar.style.top = top+'px';
+  bar.style.height = (bottom-top)+'px';
+  bar.innerHTML = `<div>${fmtAbs(displayValue)}</div>`;
+  if(tooltip) bar.dataset.tooltip = tooltip;
+  col.appendChild(bar);
+}
+
+function drawEndTotalBar(col, pureVal, finalVal){
+  col.innerHTML = '';
+  const bar = document.createElement('div');
+  bar.className = 'bar total';
+  const top = yFromValue(pureVal); // position always follows the pure actual
+  const bottom = yFromValue(DOMAIN_MIN);
+  bar.style.top = top+'px';
+  bar.style.height = (bottom-top)+'px';
+
+  const plainLine = fmtAbs(pureVal);
+  const pctVsStart = (v)=>{ const p=(v-start)/start*100; return `${p>=0?'+':''}${p.toFixed(1)}%`; };
+  const baseLine = `(${plainLine}) (${pctVsStart(pureVal)})`;
+  const upColor = isDarkModeActive() ? '#9dc3fb' : '#2f6fd6';
+  const downColor = isDarkModeActive() ? '#f0a9a2' : '#c4322b';
+  let html;
+  if(finalVal > pureVal + 1e-6){
+    html = `<span style="color:${upColor};">${fmtAbs(finalVal)} (${pctVsStart(finalVal)})</span><br>${baseLine}`;
+  } else if(finalVal < pureVal - 1e-6){
+    html = `${baseLine}<br><span style="color:${downColor};">${fmtAbs(finalVal)} (${pctVsStart(finalVal)})</span>`;
+  } else {
+    html = `${plainLine} (${pctVsStart(pureVal)})`;
+  }
+  bar.innerHTML = `<div>${html}</div>`;
+  bar.dataset.tooltip = (Math.abs(finalVal-pureVal) > 1e-6)
+    ? tip('2026-YTD', t('actualStatus'), fmtAbs(pureVal)) + ' | ' + tip('2026-YTD', t('projectedWithScenarios'), fmtAbs(finalVal))
+    : tip('2026-YTD', t('actualStatus'), fmtAbs(pureVal));
+  col.appendChild(bar);
+}
+
+// Exact edge fractions (within a column) for each bar type, so connectors
+// touch the real bar edge instead of an approximate offset.
+const BAR_STEP_LEFT = 0.17,  BAR_STEP_RIGHT = 0.83;  // actual/extra bars: 66% wide, centered
+const BAR_TOTAL_LEFT = 0.10, BAR_TOTAL_RIGHT = 0.90; // total bars: 80% wide, centered
+const colType = ['total', ...steps.map(()=>'step'), 'total'];
+
+// Section groupings (business-team view): Squad Start / CSTA / AM+SE / Squad Performance
+const groupsEl = document.getElementById('groups');
+// When CSTA Expansion is toggled on, the Expansion column is pulled out of
+// the plain AM+SE band into its own AM+SE+CSTA band (blue), reflecting
+// CSTA's credit on expansion — New Logo stays under AM+SE only.
+function getGroupDefs(){
+  if(cstaExpansionOn){
+    return [
+      { labelKey:'squadStart',          start:0, end:0, kind:'gray'  },
+      { labelKey:'cstaPerformance',     start:1, end:2, kind:'red'   },
+      { labelKey:'amseCstaPerformance', start:3, end:3, kind:'blue'  },
+      { labelKey:'amsePerformance',     start:4, end:4, kind:'green' },
+      { labelKey:'squadPerformance',    start:5, end:5, kind:'gray'  }
+    ];
+  }
+  return [
+    { labelKey:'squadStart',       start:0, end:0, kind:'gray'  },
+    { labelKey:'cstaPerformance',  start:1, end:2, kind:'red'   },
+    { labelKey:'amsePerformance',  start:3, end:4, kind:'green' },
+    { labelKey:'squadPerformance', start:5, end:5, kind:'gray' }
+  ];
+}
+function drawGroups(){
+  if(!groupsVisible){ groupsEl.innerHTML=''; return; }
+  groupsEl.innerHTML = '';
+  const plotRect = plot.getBoundingClientRect();
+  getGroupDefs().forEach(d=>{
+    const rectA = colEls[d.start].getBoundingClientRect();
+    const rectB = colEls[d.end].getBoundingClientRect();
+    const left = rectA.left - plotRect.left;
+    const width = (rectB.right - plotRect.left) - left;
+    const box = document.createElement('div');
+    box.className = 'group-box group-'+d.kind;
+    box.style.left = left+'px';
+    box.style.width = width+'px';
+    const header = document.createElement('div');
+    header.className = 'group-header';
+    const label = document.createElement('div');
+    label.className = 'group-label';
+    label.innerHTML = t(d.labelKey);
+    header.appendChild(label);
+    box.appendChild(header);
+    groupsEl.appendChild(box);
+  });
+}
+
+let groupsVisible = true;
+let cstaExpansionOn = false;
+// Single source of truth for "what color should this category paint as" —
+// used by the waterfall bar, the category card, the checkbox labels, and
+// the account breakdown modal, so CSTA Expansion never desyncs between them.
+function getDisplayColor(step){
+  if(!step) return 'green';
+  return (step.key==='expansion' && cstaExpansionOn) ? 'blue' : step.color;
+}
+const toggleGroupsBtn = document.getElementById('toggleGroupsBtn');
+const cstaExpansionBtn = document.getElementById('cstaExpansionBtn');
+// The CSTA Expansion toggle only makes sense while the Squad Impact bands
+// are on screen — keep it disabled/dimmed whenever they're hidden.
+function syncCstaExpansionAvailability(){
+  cstaExpansionBtn.disabled = !groupsVisible;
+  cstaExpansionBtn.style.opacity = groupsVisible ? '1' : '0.45';
+  cstaExpansionBtn.style.cursor = groupsVisible ? 'pointer' : 'default';
+}
+toggleGroupsBtn.addEventListener('click', ()=>{
+  groupsVisible = !groupsVisible;
+  toggleGroupsBtn.textContent = groupsVisible ? t('hideSquadImpact') : t('showSquadImpact');
+  syncCstaExpansionAvailability();
+  drawGroups();
+});
+// Recolors the Expansion category card + its Committed/Most likely
+// checkbox labels blue (or back to green) to match the CSTA Expansion
+// toggle. The waterfall bar itself is recolored inside render().
+function updateCstaExpansionColors(){
+  const exp = scenarioInputs['expansion'];
+  if(!exp) return;
+  const dc = cstaExpansionOn ? 'blue' : 'green';
+  exp.card.className = 'category-card ' + dc;
+  exp.labelC.className = 'cb-committed cb-' + dc;
+  exp.labelL.className = 'cb-likely cb-' + dc;
+}
+cstaExpansionBtn.addEventListener('click', ()=>{
+  if(cstaExpansionBtn.disabled) return;
+  cstaExpansionOn = !cstaExpansionOn;
+  cstaExpansionBtn.textContent = cstaExpansionOn ? t('hideCstaExpansion') : t('showCstaExpansion');
+  updateCstaExpansionColors();
+  drawGroups();
+  render();
+  // If the account breakdown modal happens to be open on the Expansion
+  // segment while this is toggled, recolor it in place too.
+  if(acctOverlay.classList.contains('open') && currentAcctSegKey && currentAcctSegKey.startsWith('expansion__')){
+    const modalBox = acctOverlay.querySelector('.acct-modal-box');
+    const catStep = getCatStepForSegKey(currentAcctSegKey);
+    modalBox.classList.remove('red','green','blue');
+    if(catStep) modalBox.classList.add(getDisplayColor(catStep));
+    renderAcctVisualBar();
+  }
+});
+syncCstaExpansionAvailability();
+
+// Dotted target line, scoped to the Squad Performance (final) column
+const targetLineEl = document.getElementById('targetLineEl');
+let targetLineVisible = true;
+let lastTargetValue = null; // set by render() each time
+let lastTargetHasGrowth = true; // false once target total == reported ARR (nothing left to chase)
+function drawTargetLine(){
+  targetLineEl.innerHTML = '';
+  if(!targetLineVisible || lastTargetValue===null || !lastTargetHasGrowth) return;
+  const plotRect = plot.getBoundingClientRect();
+  const lastCol = colEls[colEls.length-1];
+  const rect = lastCol.getBoundingClientRect();
+  const left = rect.left - plotRect.left;
+  const width = rect.width;
+  const y = yFromValue(lastTargetValue);
+
+  const label = document.createElement('div');
+  label.className = 'target-line-label';
+  label.textContent = `${t('targetLinePrefix')} ${fmtAbs(lastTargetValue)}`;
+  // If the target sits right at (or above) the top of the plot, the label
+  // would normally render upward into the group header above — flip it to
+  // sit below its anchor point instead so it never overlaps that header.
+  const LABEL_CLEARANCE = 24;
+  if(y < LABEL_CLEARANCE){
+    label.classList.add('below');
+    label.style.top = (y+4)+'px';
+  } else {
+    label.style.top = y+'px';
+  }
+  label.style.left = (left + width/2)+'px';
+  targetLineEl.appendChild(label);
+}
+
+const toggleTargetBtn = document.getElementById('toggleTargetBtn');
+toggleTargetBtn.addEventListener('click', ()=>{
+  targetLineVisible = !targetLineVisible;
+  toggleTargetBtn.textContent = targetLineVisible ? t('hideTarget') : t('showTarget');
+  render();
+});
+
+function drawConnectors(){
+  document.querySelectorAll('.connector').forEach(e=>e.remove());
+  const levels = [start, ...steps.map(s=>s.effEnd)];
+  const plotRect = plot.getBoundingClientRect();
+
+  // Start (0) and the final total column are always visible anchors; a
+  // step column only counts as "has a bar" if it actually rendered a
+  // segment. Hidden (zero-value) step columns get bridged straight
+  // through by a single connector instead of leaving a gap where their
+  // (invisible) bar would have been.
+  const hasBar = colEls.map((el, idx)=>{
+    if(idx===0 || idx===colEls.length-1) return true;
+    const step = steps[idx-1];
+    return step.segments.length > 0;
+  });
+
+  let i = 0;
+  while(i < colEls.length-1){
+    let j = i+1;
+    while(j < colEls.length-1 && !hasBar[j]) j++;
+    const y = yFromValue(levels[i]);
+    const rectA = colEls[i].getBoundingClientRect();
+    const rectB = colEls[j].getBoundingClientRect();
+    const rightFracA = colType[i]==='total' ? BAR_TOTAL_RIGHT : BAR_STEP_RIGHT;
+    const leftFracB  = colType[j]==='total' ? BAR_TOTAL_LEFT : BAR_STEP_LEFT;
+    const xLeft = rectA.left - plotRect.left + rectA.width*rightFracA;
+    const xRight = rectB.left - plotRect.left + rectB.width*leftFracB;
+    const line = document.createElement('div');
+    line.className='connector';
+    line.style.top = y+'px';
+    line.style.left = xLeft+'px';
+    line.style.width = Math.max(0, xRight-xLeft)+'px';
+    plot.appendChild(line);
+    i = j;
+  }
+}
+
+// ---- Apply translations to all static / built-once elements ----
+function applyStaticI18n(){
+  document.title = t('pageTitle');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    // These toggle buttons carry their own visible/hidden state text,
+    // which is handled separately below — skip them here.
+    if(el.id==='toggleGroupsBtn' || el.id==='toggleTargetBtn' || el.id==='cstaExpansionBtn') return;
+    el.innerHTML = t(el.dataset.i18n);
+  });
+  toggleGroupsBtn.textContent = groupsVisible ? t('hideSquadImpact') : t('showSquadImpact');
+  toggleTargetBtn.textContent = targetLineVisible ? t('hideTarget') : t('showTarget');
+  cstaExpansionBtn.textContent = cstaExpansionOn ? t('hideCstaExpansion') : t('showCstaExpansion');
+}
+
+const langEnBtn = document.getElementById('langEnBtn');
+const langEsBtn = document.getElementById('langEsBtn');
+const langPtBtn = document.getElementById('langPtBtn');
+const langJaBtn = document.getElementById('langJaBtn');
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+let isDarkMode = false;
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+  themeToggleBtn.setAttribute('aria-label', isDarkMode ? t('lightModeBtn') : t('darkModeBtn'));
+}
+themeToggleBtn.addEventListener('click', ()=>{
+  isDarkMode = !isDarkMode;
+  applyTheme();
+});
+const howToBtn = document.getElementById('howToBtn');
+const howToOverlay = document.getElementById('howToOverlay');
+const howToCloseBtn = document.getElementById('howToCloseBtn');
+const howToBody = document.getElementById('howToBody');
+
+function openHowTo(){
+  howToBody.innerHTML = t('howToContent');
+  howToOverlay.classList.add('open');
+}
+function closeHowTo(){
+  howToOverlay.classList.remove('open');
+}
+howToBtn.addEventListener('click', openHowTo);
+howToCloseBtn.addEventListener('click', closeHowTo);
+howToOverlay.addEventListener('click', (e)=>{ if(e.target===howToOverlay) closeHowTo(); });
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeHowTo(); });
+
+// ---- Editable label appended after "SQUAD" in the title ----
+const squadLabelDisplay = document.getElementById('squadLabelDisplay');
+const squadLabelInput = document.getElementById('squadLabelInput');
+const squadLabelEditBtn = document.getElementById('squadLabelEditBtn');
+function renderSquadLabel(){
+  squadLabelDisplay.textContent = squadLabel;
+}
+function openSquadLabelEdit(){
+  squadLabelInput.value = squadLabel;
+  squadLabelDisplay.style.display = 'none';
+  squadLabelEditBtn.style.display = 'none';
+  squadLabelInput.style.display = 'inline-block';
+  squadLabelInput.focus();
+  squadLabelInput.select();
+}
+function commitSquadLabelEdit(){
+  squadLabel = squadLabelInput.value.trim();
+  renderSquadLabel();
+  squadLabelInput.style.display = 'none';
+  squadLabelDisplay.style.display = 'inline';
+  squadLabelEditBtn.style.display = 'inline-flex';
+}
+squadLabelEditBtn.addEventListener('click', openSquadLabelEdit);
+squadLabelInput.addEventListener('blur', commitSquadLabelEdit);
+squadLabelInput.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter'){ e.preventDefault(); commitSquadLabelEdit(); }
+  else if(e.key==='Escape'){ squadLabelInput.value = squadLabel; commitSquadLabelEdit(); }
+});
+renderSquadLabel();
+
+// ---- Export / Import scenario data as JSON ----
+function collectExportData(){
+  return {
+    version: 3,
+    lang,
+    squadLabel,
+    start,
+    targetTotalM: TARGET_TOTAL_M,
+    targetGrowthPct: TARGET_GROWTH_PCT, // legacy, kept for older-file compatibility only
+    reportedYTDOverride,
+    cstaExpansionOn,
+    steps: steps.map(s => ({
+      key: s.key,
+      actualDelta: s.actualDelta,
+      committedPct: state[s.key].committedPct,
+      likelyPct: state[s.key].likelyPct,
+      committed: state[s.key].committed,
+      likely: state[s.key].likely
+    })),
+    accountData: JSON.parse(JSON.stringify(accountData)),
+    unassignedHiddenMap: {...unassignedHiddenMap}
+  };
+}
+
+function exportData(){
+  const data = collectExportData();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `arr-scenario-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function applyImportedData(data){
+  if(!data || typeof data !== 'object') return;
+
+  // Older exports won't have this field — default to empty so backward
+  // compatibility is preserved (no error, just no label).
+  squadLabel = (typeof data.squadLabel === 'string') ? data.squadLabel : '';
+  renderSquadLabel();
+
+  if(typeof data.start === 'number' && startInputRef){
+    start = data.start;
+    startInputRef.value = mToK(start);
+  }
+  if(typeof data.targetTotalM === 'number'){
+    // Current format — the absolute target total was saved directly.
+    TARGET_TOTAL_M = Math.max(0, data.targetTotalM);
+  } else if(typeof data.targetGrowthPct === 'number'){
+    // Older export (pre "ARR Target Total") — it only stored a % of Start
+    // ARR, so rebuild an equivalent absolute total from that.
+    TARGET_TOTAL_M = Math.max(0, start * (1 + data.targetGrowthPct));
+  }
+  if(targetTotalInputRef) targetTotalInputRef.value = mToK(TARGET_TOTAL_M);
+  if(targetPctInputRef){
+    const reported = computePureActualFinal();
+    const gp = start ? (Math.max(0, TARGET_TOTAL_M-reported)/start*100) : 0;
+    targetPctInputRef.value = Math.round(gp*10)/10;
+  }
+  if(targetDollarInputRef) targetDollarInputRef.value = fmtTargetDollarK();
+  if(typeof data.cstaExpansionOn === 'boolean'){
+    cstaExpansionOn = data.cstaExpansionOn;
+    // CSTA Expansion only makes sense with Squad Impact showing — if the
+    // export had it on, make sure Squad Impact comes back on too.
+    if(cstaExpansionOn && !groupsVisible){
+      groupsVisible = true;
+      toggleGroupsBtn.textContent = t('hideSquadImpact');
+    }
+    cstaExpansionBtn.textContent = cstaExpansionOn ? t('hideCstaExpansion') : t('showCstaExpansion');
+    syncCstaExpansionAvailability();
+    updateCstaExpansionColors();
+  }
+  if(Array.isArray(data.steps)){
+    data.steps.forEach(sd=>{
+      const s = steps.find(x=>x.key===sd.key);
+      const si = scenarioInputs[sd.key];
+      if(!s || !si) return;
+      if(typeof sd.actualDelta === 'number'){
+        s.actualDelta = sd.actualDelta;
+        si.actualInput.value = mToK(s.actualDelta);
+      }
+      if(typeof sd.committedPct === 'number'){
+        state[s.key].committedPct = sd.committedPct;
+        si.pctC.value = Math.round(sd.committedPct*10)/10;
+      }
+      if(typeof sd.likelyPct === 'number'){
+        state[s.key].likelyPct = sd.likelyPct;
+        si.pctL.value = Math.round(sd.likelyPct*10)/10;
+      }
+      if(typeof sd.committed === 'boolean'){
+        state[s.key].committed = sd.committed;
+        si.cbC.checked = sd.committed;
+      }
+      if(typeof sd.likely === 'boolean'){
+        state[s.key].likely = sd.likely;
+        si.cbL.checked = sd.likely;
+      }
+    });
+  }
+  // Restore account-breakdown details (per-segment named accounts and
+  // whether each segment's Unassigned bucket was hidden), clearing out
+  // whatever was there before the import.
+  Object.keys(accountData).forEach(k=> delete accountData[k]);
+  Object.keys(unassignedHiddenMap).forEach(k=> delete unassignedHiddenMap[k]);
+  if(data.accountData && typeof data.accountData === 'object'){
+    Object.keys(data.accountData).forEach(segKey=>{
+      const arr = data.accountData[segKey];
+      if(Array.isArray(arr)){
+        accountData[segKey] = arr.map(r=>({
+          id: (typeof r.id==='string') ? r.id : ('a'+(acctIdCounter++)),
+          name: (typeof r.name==='string') ? r.name : '',
+          amount: (typeof r.amount==='number') ? r.amount : 0
+        }));
+      }
+    });
+  }
+  if(data.unassignedHiddenMap && typeof data.unassignedHiddenMap === 'object'){
+    Object.keys(data.unassignedHiddenMap).forEach(segKey=>{
+      unassignedHiddenMap[segKey] = !!data.unassignedHiddenMap[segKey];
+    });
+  }
+  if(typeof data.lang === 'string' && ['en','es','pt','ja'].includes(data.lang)){
+    setLang(data.lang);
+  } else {
+    render();
+  }
+}
+
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      applyImportedData(data);
+    } catch(err){
+      alert('Could not read that file — please check it is a valid exported JSON file.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+const exportBtn = document.getElementById('exportBtn');
+const importBtn = document.getElementById('importBtn');
+const importFileInput = document.getElementById('importFileInput');
+exportBtn.addEventListener('click', exportData);
+importBtn.addEventListener('click', ()=> importFileInput.click());
+importFileInput.addEventListener('change', ()=>{
+  if(importFileInput.files && importFileInput.files[0]){
+    importData(importFileInput.files[0]);
+  }
+  importFileInput.value = '';
+});
+
+// ---- Account breakdown modal ----
+// While the modal is open, editing accounts is pure drill-down detail and
+// never touches the chart. Only on CLOSE: if the Unassigned bucket ended up
+// hidden (either because named accounts fully used/exceeded the segment
+// total, or the user manually dismissed it), the segment's actual value is
+// updated to match the sum of named accounts — otherwise (Unassigned still
+// visible, meaning accounts + remainder == original total exactly) nothing
+// changes.
+const accountData = {}; // segKey -> [{id, name, amount(K), positive magnitude}]
+const unassignedHiddenMap = {}; // segKey -> boolean
+let acctIdCounter = 0;
+let currentAcctSegKey = null;
+let currentAcctTotalM = 0;
+let acctSnapshot = null;
+const acctLastKnownTotalM = {};
+
+const acctOverlay = document.getElementById('acctOverlay');
+const acctCloseBtn = document.getElementById('acctCloseBtn');
+const acctModalHeader = document.getElementById('acctModalHeader');
+const acctModalList = document.getElementById('acctModalList');
+const acctAddBtn = document.getElementById('acctAddBtn');
+
+function openAccountModal(segKey, categoryLabel, statusLabel, totalValueM){
+  currentAcctSegKey = segKey;
+  currentAcctTotalM = totalValueM;
+  if(!accountData[segKey]) accountData[segKey] = [];
+
+  // If the segment's total changed since the last time this modal was
+  // used (e.g. the user edited the Committed/Likely value directly on
+  // the waterfall card), the stored Unassigned visibility is stale —
+  // recompute it fresh so any new excess or shortfall is reflected.
+  // If the total hasn't changed, leave it alone so a manual dismissal
+  // survives a simple reopen.
+  const prevTotal = acctLastKnownTotalM[segKey];
+  if(prevTotal===undefined || Math.abs(prevTotal - totalValueM) > 1e-9){
+    const totalMagnitudeK = mToK(Math.abs(totalValueM));
+    const assignedMagnitudeK = accountData[segKey].reduce((sum,x)=>sum+Math.abs(parseFloat(x.amount)||0), 0);
+    unassignedHiddenMap[segKey] = (totalMagnitudeK - assignedMagnitudeK) <= 1e-6;
+  }
+  acctLastKnownTotalM[segKey] = totalValueM;
+
+  // Snapshot the current state so Cancel/× can revert any edits made in
+  // this session without touching the waterfall.
+  acctSnapshot = {
+    accounts: accountData[segKey].map(r=>({...r})),
+    hidden: !!unassignedHiddenMap[segKey]
+  };
+  acctModalHeader.innerHTML = `${categoryLabel} — ${statusLabel}<span class="sub"></span>`;
+  const catKey = segKey.slice(0, segKey.lastIndexOf('__'));
+  const catStep = steps.find(x=>x.key===catKey);
+  const modalBox = acctOverlay.querySelector('.acct-modal-box');
+  modalBox.classList.remove('red','green','blue');
+  if(catStep) modalBox.classList.add(getDisplayColor(catStep));
+  renderAcctModalList();
+  updateAcctHeaderPending();
+  acctOverlay.classList.add('open');
+}
+
+// The magnitude (in K) that will actually be fed to the waterfall if the
+// user hits Confirm right now.
+function computePendingMagnitudeK(){
+  const isHidden = !!unassignedHiddenMap[currentAcctSegKey];
+  return isHidden ? currentAssignedMagnitudeK() : mToK(Math.abs(currentAcctTotalM));
+}
+
+// Keeps the header's value in sync with whatever would be fed to the
+// waterfall if confirmed right now — not just the original static total.
+function updateAcctHeaderPending(){
+  const subEl = acctModalHeader.querySelector('.sub');
+  if(!subEl) return;
+  const catStep = getCatStepForSegKey(currentAcctSegKey);
+  const magM = kToM(computePendingMagnitudeK());
+  const pendingM = catStep && catStep.color==='red' ? -magM : magM;
+  subEl.textContent = fmt(pendingM);
+}
+
+function confirmAccountModal(){
+  if(!validateAcctRowsBeforeClose()) return;
+  if(!validateFullAllocationBeforeConfirm()) return;
+  applyAccountTotalToEngine(currentAcctSegKey, computePendingMagnitudeK());
+  acctOverlay.classList.remove('open');
+}
+
+// Blocks Confirm when accounts have been named but the total isn't fully
+// reconciled (Unassigned is still visible with a remaining value). With
+// zero named accounts, leaving the whole segment as Unassigned is fine.
+function validateFullAllocationBeforeConfirm(){
+  const namedCount = (accountData[currentAcctSegKey]||[]).length;
+  const unassignedVisible = !unassignedHiddenMap[currentAcctSegKey];
+  if(namedCount > 0 && unassignedVisible){
+    if(acctUnassignedAmtRef) acctUnassignedAmtRef.classList.add('acct-error');
+    return false;
+  }
+  return true;
+}
+
+function cancelAccountModal(){
+  if(currentAcctSegKey && acctSnapshot){
+    accountData[currentAcctSegKey] = acctSnapshot.accounts.map(r=>({...r}));
+    unassignedHiddenMap[currentAcctSegKey] = acctSnapshot.hidden;
+  }
+  acctOverlay.classList.remove('open');
+}
+
+// Returns false (and marks the offending fields with a red border) if any
+// named account has an empty name or an empty amount. The Unassigned row
+// is never validated since it's not user-entered.
+function validateAcctRowsBeforeClose(){
+  let ok = true;
+  const namedRows = acctModalList.querySelectorAll('.acct-row:not(.acct-unassigned)');
+  namedRows.forEach(row=>{
+    const nameEl = row.querySelector('.acct-name');
+    const amtEl = row.querySelector('.acct-amount');
+    if(nameEl.value.trim()===''){ nameEl.classList.add('acct-error'); ok = false; }
+    if(amtEl.value.trim()==='' || parseFloat(amtEl.value)===0){ amtEl.classList.add('acct-error'); ok = false; }
+  });
+  return ok;
+}
+
+function getCatStepForSegKey(segKey){
+  const catKey = segKey.slice(0, segKey.lastIndexOf('__'));
+  return steps.find(x=>x.key===catKey);
+}
+
+// Writes the account total (a magnitude) back into the underlying step,
+// applying the category's own sign convention (negative for Churn/Erosion,
+// positive for Expansion/New Logo).
+function applyAccountTotalToEngine(segKey, assignedMagnitudeK){
+  const sep = segKey.lastIndexOf('__');
+  const catKey = segKey.slice(0, sep);
+  const segType = segKey.slice(sep+2);
+  const s = steps.find(x=>x.key===catKey);
+  if(!s) return;
+  const magM = kToM(Math.max(0, assignedMagnitudeK));
+  const signedM = s.color==='red' ? -magM : magM;
+  const si = scenarioInputs[catKey];
+
+  if(segType==='actual'){
+    s.actualDelta = signedM;
+    if(si) si.actualInput.value = mToK(s.actualDelta);
+  } else if(segType==='committed'){
+    if(Math.abs(s.actualDelta) < 1e-9){
+      state[catKey].committedAbs = signedM;
+      if(si) si.dollarC.value = trimZeroDecimal(mToK(signedM).toFixed(1));
+    } else {
+      const rawPct = signedM/s.actualDelta*100;
+      state[catKey].committedPct = rawPct; // full precision — no drift when read back
+      if(si){
+        si.pctC.value = Math.round(rawPct*10)/10; // rounded for display only
+        si.dollarC.value = trimZeroDecimal(mToK(signedM).toFixed(1)); // exact assigned total, not recomputed from a rounded %
+      }
+    }
+  } else if(segType==='likely'){
+    if(Math.abs(s.actualDelta) < 1e-9){
+      state[catKey].likelyAbs = signedM;
+      if(si) si.dollarL.value = trimZeroDecimal(mToK(signedM).toFixed(1));
+    } else {
+      const rawPct = signedM/s.actualDelta*100;
+      state[catKey].likelyPct = rawPct; // full precision — no drift when read back
+      if(si){
+        si.pctL.value = Math.round(rawPct*10)/10; // rounded for display only
+        si.dollarL.value = trimZeroDecimal(mToK(signedM).toFixed(1)); // exact assigned total, not recomputed from a rounded %
+      }
+    }
+  }
+  render();
+}
+
+// Re-evaluates whether Unassigned should show, based on the current
+// remainder (a magnitude) — called whenever a NAMED account is added,
+// edited, or removed (but not when Unassigned itself is manually dismissed).
+function reevaluateUnassigned(remainderMagnitudeK){
+  unassignedHiddenMap[currentAcctSegKey] = remainderMagnitudeK <= 1e-6;
+}
+
+function currentAssignedMagnitudeK(){
+  return (accountData[currentAcctSegKey]||[]).reduce((sum,x)=>sum+Math.abs(parseFloat(x.amount)||0), 0);
+}
+
+let acctUnassignedAmtRef = null;
+
+let acctUnassignedRowRef = null;
+
+// Builds the Unassigned row element on its own (doesn't touch named rows),
+// so it can be added/removed surgically without disturbing focus elsewhere.
+function buildUnassignedRow(isNegative, unassignedMagnitudeK){
+  const uRow = document.createElement('div');
+  uRow.className = 'acct-row acct-unassigned';
+  const uName = document.createElement('input');
+  uName.className = 'acct-name';
+  uName.type = 'text';
+  uName.value = t('unassigned');
+  uName.disabled = true;
+  const uAmt = document.createElement('input');
+  const uDisplay = isNegative ? -unassignedMagnitudeK : unassignedMagnitudeK;
+  uAmt.className = 'acct-amount' + (unassignedMagnitudeK < -1e-6 ? ' neg' : '');
+  uAmt.type = 'text';
+  uAmt.value = uDisplay.toFixed(1);
+  uAmt.disabled = true;
+  acctUnassignedAmtRef = uAmt;
+  const uRemoveBtn = document.createElement('button');
+  uRemoveBtn.type = 'button';
+  uRemoveBtn.className = 'acct-remove';
+  uRemoveBtn.textContent = '\u00d7';
+  uRemoveBtn.addEventListener('click', ()=>{
+    unassignedHiddenMap[currentAcctSegKey] = true;
+    if(acctUnassignedRowRef){ acctUnassignedRowRef.remove(); acctUnassignedRowRef = null; acctUnassignedAmtRef = null; }
+    renderAcctVisualBar();
+    updateAcctHeaderPending();
+  });
+  uRow.appendChild(uName);
+  uRow.appendChild(uAmt);
+  const uSuffix = document.createElement('span');
+  uSuffix.className = 'acct-amount-suffix';
+  uSuffix.textContent = 'K';
+  uRow.appendChild(uSuffix);
+  uRow.appendChild(uRemoveBtn);
+  acctUnassignedRowRef = uRow;
+  return uRow;
+}
+
+// Matches the exact hatch texture + colors used for each segment type on
+// the waterfall chart itself (see .bar.extra-* CSS), so the modal's mini
+// visual looks like a slice of the same box.
+const SEG_TEXTURE = {
+  'committed-red': { rgb:[178,58,58], border:'#b23a3a', text:'#7a2727', textDark:'#f5cac8' },
+  'likely-red':    { rgb:[142,68,173], border:'#8e44ad', text:'#5e3370', textDark:'#eeccf3' },
+  'committed-green': { rgb:[47,122,79], border:'#2f7a4f', text:'#1f5233', textDark:'#c8f0cd' },
+  'likely-green':  { rgb:[31,158,142], border:'#1f9e8e', text:'#125f55', textDark:'#c2f2ec' },
+  'committed-blue': { rgb:[47,79,158], border:'#2f4f9e', text:'#1c2f5c', textDark:'#c8d8f5' },
+  'likely-blue': { rgb:[63,169,220], border:'#3fa9dc', text:'#1f5f78', textDark:'#c8eef5' }
+};
+const UNASSIGNED_TEXTURE = { rgb:[184,134,11], border:'#b8860b', text:'#5a4200', textDark:'#f5dfa0' };
+function isDarkModeActive(){
+  return document.documentElement.getAttribute('data-theme')==='dark';
+}
+
+function hatchBackground(rgb, shadeMult){
+  const m = shadeMult===undefined ? 1 : shadeMult;
+  const boost = isDarkModeActive() ? 1.4 : 1.3;
+  const a1 = Math.min(0.85, 0.42*m*boost);
+  const a2 = Math.min(0.55, 0.22*m*boost);
+  return `repeating-linear-gradient(135deg, rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a1.toFixed(2)}) 0 6px, rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a2.toFixed(2)}) 6px 12px)`;
+}
+
+// Proportional VERTICAL stacked bar showing each account's share of the
+// segment total, textured/colored to match the actual waterfall box for
+// that category+status, with a legend underneath naming each slice.
+function renderAcctVisualBar(){
+  const barEl = document.getElementById('acctVisualBar');
+  const legendEl = document.getElementById('acctVisualLegend');
+  if(!barEl || !legendEl) return;
+  barEl.innerHTML = '';
+  legendEl.innerHTML = '';
+
+  const rows = [...(accountData[currentAcctSegKey] || [])].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount));
+  const catStep = getCatStepForSegKey(currentAcctSegKey);
+  const segType = currentAcctSegKey.slice(currentAcctSegKey.lastIndexOf('__')+2);
+  const texture = SEG_TEXTURE[`${segType}-${getDisplayColor(catStep)}`] || SEG_TEXTURE['committed-green'];
+
+  // Use the live pending total (not the stale value captured when the
+  // modal opened) so that if accounts have been added/edited past the
+  // original amount, every segment still sums to 100% and nothing gets
+  // clipped by the bar's height.
+  const totalMagnitudeK = computePendingMagnitudeK();
+  if(totalMagnitudeK <= 1e-9) return;
+  const assignedMagnitudeK = currentAssignedMagnitudeK();
+  const unassignedMagnitudeK = totalMagnitudeK - assignedMagnitudeK;
+  const isHidden = !!unassignedHiddenMap[currentAcctSegKey];
+  // Different accounts within the same segment share the same base color
+  // family, but get progressively lighter shades so multiple accounts are
+  // still visually distinguishable directly in the bar, not just via the
+  // legend text.
+  const shades = [1, 0.82, 0.68, 0.58, 0.5, 0.44];
+
+  // Collect every slice first (name, magnitude, texture, shade) before
+  // laying anything out, so we can compute a height for each that always
+  // leaves room for its text, growing the bar's total height if needed
+  // rather than letting small slices get squeezed to invisibility.
+  const slices = [];
+  rows.forEach((r, i)=>{
+    const magnitude = Math.abs(r.amount)||0;
+    if(magnitude<=1e-9) return;
+    const name = r.name && r.name.trim() ? r.name : t('unassigned');
+    slices.push({ name, magnitude, tex:texture, shade:shades[Math.min(i, shades.length-1)] });
+  });
+  if(!isHidden && unassignedMagnitudeK > 1e-6){
+    slices.push({ name:t('unassigned'), magnitude:unassignedMagnitudeK, tex:UNASSIGNED_TEXTURE, shade:1 });
+  }
+  if(slices.length===0) return;
+
+  const isNegative = catStep && catStep.color==='red';
+  const MIN_SEG_PX = 26; // enough room for one line of the segment's text
+  const BASE_BAR_PX = 160;
+  const MAX_BAR_PX = 420; // cap so one extreme outlier can't make the bar absurdly tall
+
+  // Scale the WHOLE bar so the smallest slice's true proportional share
+  // reaches MIN_SEG_PX — this keeps every segment's height perfectly
+  // proportional to its real value (no distortion), it just makes the
+  // container taller when there's a long tail of small accounts. Only
+  // if that would need an unreasonably tall bar do we cap it and fall
+  // back to clamping the smallest slices (rare, extreme long-tail case).
+  const smallestValue = Math.min(...slices.map(s=>s.magnitude));
+  const neededForSmallest = MIN_SEG_PX * (totalMagnitudeK/smallestValue);
+  const barHeightPx = Math.min(MAX_BAR_PX, Math.max(BASE_BAR_PX, neededForSmallest));
+  barEl.style.height = barHeightPx + 'px';
+
+  const n = slices.length;
+  let heights = slices.map(s => s.magnitude/totalMagnitudeK*barHeightPx);
+  // Safety net for the rare case the height cap kicked in and some slice
+  // still falls under the minimum: pin it and redistribute the rest.
+  const fixed = new Array(n).fill(false);
+  let safety = 0;
+  while(safety++ < n+2){
+    let usedPx = 0;
+    let freeIdx = [];
+    let anyNewlyFixed = false;
+    for(let i=0;i<n;i++){
+      if(fixed[i]){ usedPx += heights[i]; continue; }
+      if(heights[i] < MIN_SEG_PX){
+        heights[i] = MIN_SEG_PX;
+        fixed[i] = true;
+        usedPx += MIN_SEG_PX;
+        anyNewlyFixed = true;
+      } else {
+        freeIdx.push(i);
+      }
+    }
+    if(!anyNewlyFixed) break;
+    const remainingPx = barHeightPx - usedPx;
+    const freeTotalValue = freeIdx.reduce((s,i)=>s+slices[i].magnitude, 0);
+    freeIdx.forEach(i=>{
+      heights[i] = freeTotalValue>0 ? (slices[i].magnitude/freeTotalValue*remainingPx) : (remainingPx/freeIdx.length);
+    });
+  }
+
+  slices.forEach((sl, i)=>{
+    const pct = sl.magnitude/totalMagnitudeK*100;
+    const displayAmount = isNegative ? -sl.magnitude : sl.magnitude;
+    const seg = document.createElement('div');
+    seg.className = 'acct-visual-seg';
+    seg.style.height = heights[i]+'px';
+    seg.style.background = hatchBackground(sl.tex.rgb, sl.shade);
+    seg.style.color = isDarkModeActive() ? sl.tex.textDark : sl.tex.text;
+    seg.textContent = `${sl.name} ${trimZeroDecimal(displayAmount.toFixed(1))}K (${trimZeroDecimal(pct.toFixed(0))}%)`;
+    seg.title = `${sl.name}: ${trimZeroDecimal(displayAmount.toFixed(1))}K (${trimZeroDecimal(pct.toFixed(1))}%)`;
+    barEl.appendChild(seg);
+
+    const legendRow = document.createElement('div');
+    legendRow.className = 'acct-visual-legend-row';
+    const swatch = document.createElement('div');
+    swatch.className = 'acct-visual-swatch';
+    swatch.style.background = hatchBackground(sl.tex.rgb, sl.shade);
+    swatch.style.border = `1.5px solid ${sl.tex.border}`;
+    const nameEl = document.createElement('div');
+    nameEl.className = 'acct-visual-legend-name';
+    nameEl.textContent = sl.name;
+    const valueEl = document.createElement('div');
+    valueEl.className = 'acct-visual-legend-value';
+    valueEl.textContent = `${trimZeroDecimal(displayAmount.toFixed(1))}K (${trimZeroDecimal(pct.toFixed(1))}%)`;
+    legendRow.appendChild(swatch);
+    legendRow.appendChild(nameEl);
+    legendRow.appendChild(valueEl);
+    legendEl.appendChild(legendRow);
+  });
+}
+
+function renderAcctModalList(){
+  acctModalList.innerHTML = '';
+  acctUnassignedAmtRef = null;
+  acctUnassignedRowRef = null;
+  const rows = [...(accountData[currentAcctSegKey] || [])].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount));
+  const catStep = getCatStepForSegKey(currentAcctSegKey);
+  const isNegative = catStep && catStep.color==='red'; // Churn/Erosion follow negative logic
+  const totalMagnitudeK = mToK(Math.abs(currentAcctTotalM));
+  const assignedMagnitudeK = currentAssignedMagnitudeK();
+  const unassignedMagnitudeK = totalMagnitudeK - assignedMagnitudeK;
+
+  rows.forEach(r=>{
+    const row = document.createElement('div');
+    row.className = 'acct-row';
+
+    const nameInput = document.createElement('input');
+    nameInput.className = 'acct-name';
+    nameInput.type = 'text';
+    nameInput.value = r.name;
+    nameInput.addEventListener('input', ()=>{
+      r.name = nameInput.value;
+      if(nameInput.value.trim()!=='') nameInput.classList.remove('acct-error');
+    });
+    nameInput.addEventListener('focus', ()=> nameInput.select());
+
+    const amtInput = document.createElement('input');
+    amtInput.className = 'acct-amount';
+    amtInput.type = 'text';
+    amtInput.inputMode = 'decimal';
+    // Display with the category's sign convention (negative for Churn/Erosion)
+    amtInput.value = isNegative ? -Math.abs(r.amount) : Math.abs(r.amount);
+    amtInput.addEventListener('focus', ()=> amtInput.select());
+    amtInput.addEventListener('blur', ()=>{
+      amtInput.value = (isNegative ? -Math.abs(r.amount) : Math.abs(r.amount)).toString();
+    });
+    amtInput.addEventListener('input', ()=>{
+      if(amtInput.value.trim()!=='' && parseFloat(amtInput.value)!==0) amtInput.classList.remove('acct-error');
+      // Don't rewrite amtInput.value here — mutating it mid-keystroke resets
+      // the cursor position and breaks typing past the first digit. Just
+      // track the magnitude live; the sign display gets normalized on blur.
+      r.amount = Math.abs(parseFloat(amtInput.value)||0);
+
+      const newRemainder = totalMagnitudeK - currentAssignedMagnitudeK();
+      const wasHidden = !!unassignedHiddenMap[currentAcctSegKey];
+      reevaluateUnassigned(newRemainder);
+      const nowHidden = !!unassignedHiddenMap[currentAcctSegKey];
+
+      if(wasHidden===nowHidden){
+        // No visibility change — just update the Unassigned number in
+        // place, never touching any named-account row (so focus/cursor
+        // in whichever field is being typed into is never disturbed).
+        if(acctUnassignedAmtRef){
+          const uDisplay = isNegative ? -newRemainder : newRemainder;
+          acctUnassignedAmtRef.value = uDisplay.toFixed(1);
+          acctUnassignedAmtRef.classList.toggle('neg', newRemainder < -1e-6);
+          acctUnassignedAmtRef.classList.remove('acct-error');
+        }
+      } else if(nowHidden && acctUnassignedRowRef){
+        // Crossed from shown -> hidden: remove just that one row.
+        acctUnassignedRowRef.remove();
+        acctUnassignedRowRef = null;
+        acctUnassignedAmtRef = null;
+      } else if(!nowHidden && !acctUnassignedRowRef){
+        // Crossed from hidden -> shown: add just that one row back.
+        acctModalList.appendChild(buildUnassignedRow(isNegative, newRemainder));
+      }
+      renderAcctVisualBar();
+      updateAcctHeaderPending();
+    });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'acct-remove';
+    removeBtn.textContent = '\u00d7';
+    removeBtn.addEventListener('click', ()=>{
+      accountData[currentAcctSegKey] = accountData[currentAcctSegKey].filter(x=>x.id!==r.id);
+      const newRemainder = totalMagnitudeK - currentAssignedMagnitudeK();
+      reevaluateUnassigned(newRemainder);
+      renderAcctModalList();
+      updateAcctHeaderPending();
+    });
+
+    const amtSuffix = document.createElement('span');
+    amtSuffix.className = 'acct-amount-suffix';
+    amtSuffix.textContent = 'K';
+
+    row.appendChild(nameInput);
+    row.appendChild(amtInput);
+    row.appendChild(amtSuffix);
+    row.appendChild(removeBtn);
+    acctModalList.appendChild(row);
+  });
+
+  // Generic "Unassigned" bucket: shown automatically whenever named
+  // accounts don't fully use up the segment total, hidden automatically
+  // once they meet or exceed it, and can also be dismissed manually at
+  // any time via its own remove button.
+  const isHidden = !!unassignedHiddenMap[currentAcctSegKey];
+  if(!isHidden){
+    acctModalList.appendChild(buildUnassignedRow(isNegative, unassignedMagnitudeK));
+  }
+  renderAcctVisualBar();
+}
+
+acctAddBtn.addEventListener('click', ()=>{
+  if(!currentAcctSegKey) return;
+  accountData[currentAcctSegKey].push({ id:'a'+(acctIdCounter++), name:'', amount:0 });
+  // A brand-new row starts at 0, so it never changes the actual allocation
+  // total — don't re-evaluate/reset Unassigned's visibility here, or a
+  // prior manual dismissal would get silently undone just by adding a
+  // placeholder row the user hasn't filled in yet.
+  renderAcctModalList();
+  updateAcctHeaderPending();
+});
+const acctConfirmBtn = document.getElementById('acctConfirmBtn');
+const acctCancelBtn = document.getElementById('acctCancelBtn');
+acctConfirmBtn.addEventListener('click', confirmAccountModal);
+acctCancelBtn.addEventListener('click', cancelAccountModal);
+acctCloseBtn.addEventListener('click', cancelAccountModal);
+acctOverlay.addEventListener('click', (e)=>{ if(e.target===acctOverlay) cancelAccountModal(); });
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && acctOverlay.classList.contains('open')) cancelAccountModal(); });
+
+function setLang(newLang){
+  lang = newLang;
+  langEnBtn.classList.toggle('active', lang==='en');
+  langEsBtn.classList.toggle('active', lang==='es');
+  langPtBtn.classList.toggle('active', lang==='pt');
+  langJaBtn.classList.toggle('active', lang==='ja');
+  applyStaticI18n();
+  applyTheme();
+  if(howToOverlay.classList.contains('open')) howToBody.innerHTML = t('howToContent');
+  render();
+}
+langEnBtn.addEventListener('click', ()=> setLang('en'));
+langEsBtn.addEventListener('click', ()=> setLang('es'));
+langPtBtn.addEventListener('click', ()=> setLang('pt'));
+langJaBtn.addEventListener('click', ()=> setLang('ja'));
+
+// Auto-select language based on the browser's preference, falling back to
+// English if it's not one of the supported languages.
+function detectBrowserLang(){
+  const candidates = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'en'];
+  const supported = ['en','es','pt','ja'];
+  for(const c of candidates){
+    const code = c.toLowerCase().slice(0,2);
+    if(supported.includes(code)) return code;
+  }
+  return 'en';
+}
+setLang(detectBrowserLang());
+
+// ---- Load a scenario straight from a URL parameter, if present ----
+// Two options, checked in this order:
+//   ?data=<URL-encoded JSON>       — the scenario JSON embedded right in the link
+//   ?dataUrl=<URL to a .json file> — fetched and imported (must allow CORS)
+function loadScenarioFromUrlParams(){
+  const params = new URLSearchParams(window.location.search);
+  const dataParam = params.get('data');
+  const dataUrlParam = params.get('dataUrl');
+  if(dataParam){
+    try{
+      applyImportedData(JSON.parse(decodeURIComponent(dataParam)));
+    }catch(err){
+      console.warn('Could not parse the "data" URL parameter as scenario JSON.', err);
+    }
+  } else if(dataUrlParam){
+    fetch(dataUrlParam)
+      .then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(json=> applyImportedData(json))
+      .catch(err=> console.warn('Could not fetch/parse the "dataUrl" URL parameter.', err));
+  }
+}
+loadScenarioFromUrlParams();
+window.addEventListener('resize', render);
+
+// ---- Custom tooltip (cursor-following, reads data-tooltip) ----
+// Uses event delegation on document so it keeps working across re-renders,
+// since bars are recreated on every render() call.
+const customTooltip = document.getElementById('customTooltip');
+document.addEventListener('mousemove', (e)=>{
+  const target = e.target.closest('[data-tooltip]');
+  if(target){
+    customTooltip.innerHTML = target.dataset.tooltip;
+    customTooltip.style.display = 'block';
+    const pad = 14;
+    let x = e.clientX + pad;
+    let y = e.clientY + pad;
+    const rect = customTooltip.getBoundingClientRect();
+    if(x + rect.width > window.innerWidth) x = e.clientX - rect.width - pad;
+    if(y + rect.height > window.innerHeight) y = e.clientY - rect.height - pad;
+    customTooltip.style.left = x+'px';
+    customTooltip.style.top = y+'px';
+  } else {
+    customTooltip.style.display = 'none';
+  }
+});
+document.addEventListener('mouseleave', ()=>{ customTooltip.style.display = 'none'; });
+
+// Select the entire value whenever any numeric field on the chart (Start
+// ARR, Actual, Committed/Likely %/$, Reported YTD, Target Growth) gains
+// focus — including via clicking its up/down spinner arrows — so typing
+// a digit replaces the old quantity instead of inserting into it. Uses
+// the capture phase since 'focus' doesn't bubble.
+document.addEventListener('focus', (e)=>{
+  const el = e.target;
+  if(el.tagName==='INPUT' && (el.classList.contains('base-input') || el.classList.contains('pct-input'))){
+    el.select();
+  }
+}, true);
+</script>
+</body>
+</html>

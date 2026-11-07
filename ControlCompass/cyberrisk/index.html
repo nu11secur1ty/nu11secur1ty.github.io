@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyber Risk · Cybersecurity Compass</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #000;
+      color: #fff;
+      font-family: 'Helvetica Neue', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic UI', 'Yu Gothic', 'Noto Sans JP', Meiryo, sans-serif;
+      overflow: hidden;
+    }
+
+    .stage {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+    }
+
+    .page-title {
+      position: fixed;
+      top: 30px;
+      left: 36px;
+      z-index: 10;
+      user-select: none;
+      max-width: 480px;
+      pointer-events: none;
+    }
+    .page-title .eyebrow {
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.24em;
+      color: #888;
+      margin-bottom: 18px;
+      pointer-events: auto;
+    }
+    .page-title .main {
+      font-size: clamp(24px, 2.8vw, 36px);
+      font-weight: 400;
+      color: #FFFFFF;
+      line-height: 1.12;
+      letter-spacing: -0.005em;
+      margin-bottom: 16px;
+      pointer-events: auto;
+    }
+    .page-title .main em {
+      font-style: normal;
+      color: #C4322B;
+      font-weight: 500;
+    }
+    .page-title .acronym {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.34em;
+      color: #C4322B;
+      text-decoration: none;
+      padding: 5px 12px 4px 14px;
+      border: 1px solid rgba(196, 50, 43, 0.4);
+      border-radius: 3px;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+    }
+    .page-title a.acronym:hover {
+      color: #FFFFFF;
+      border-color: #C4322B;
+      background-color: #C4322B;
+    }
+    /* Row holding the framework badges (CRML, CyberRiskOps) */
+    .page-title .acronym-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .svg-wrap {
+      position: relative;
+      width: 100%;
+      max-width: min(94vw, calc((100vh - 170px) * 16 / 9));
+      aspect-ratio: 16 / 9;
+    }
+
+    .svg-wrap svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Single info panel pinned to the bottom of the diagram. Each label, when hovered, populates this box rather than spawning a tooltip near the cursor. When a bottom-half label is hovered, the panel flips to the top to keep clear of the cursor. */
+    .info-panel {
+      position: absolute;
+      bottom: 4%;
+      left: 50%;
+      width: clamp(300px, 60%, 720px);
+      background: rgba(12, 12, 12, 0.96);
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 18px 28px 16px;
+      color: #d8d8d8;
+      font-size: 17px;
+      line-height: 1.55;
+      z-index: 20;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.7);
+      opacity: 0;
+      transform: translate(-50%, 12px);
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease, border-color 0.25s ease, top 0.25s ease, bottom 0.25s ease;
+    }
+    .info-panel.visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+      pointer-events: auto;
+    }
+    .info-panel.top {
+      bottom: auto;
+      top: 4%;
+      transform: translate(-50%, -12px);
+    }
+    .info-panel.top.visible {
+      transform: translate(-50%, 0);
+    }
+    .info-panel h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      font-weight: 900;
+    }
+    .info-panel p {
+      margin: 0;
+      color: #d0d0d0;
+    }
+    .info-panel .source {
+      margin-top: 10px;
+      font-size: 9.5px;
+      letter-spacing: 1.5px;
+      color: #5e5e5e;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .info-close {
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      padding: 4px 8px;
+      font-family: inherit;
+      transition: color 0.15s ease;
+    }
+    .info-close:hover { color: #fff; }
+
+    /* Smooth fill transition on the circles and lens overlays */
+    #cyberRiskSvg circle,
+    #cyberRiskSvg .lens {
+      transition: fill-opacity 0.35s ease;
+    }
+
+    /* Labels themselves transition smoothly when their colour changes */
+    #cyberRiskSvg .hot-label {
+      transition: fill 0.35s ease;
+    }
+
+    /* Outer labels turn white while the cursor is on their section (driven by JS via .label-hover,
+       since the actual pointer target is now the invisible hit-region shape, not the text itself) */
+    #cyberRiskSvg #threatLabel.label-hover,
+    #cyberRiskSvg #vulnerabilityLabel.label-hover,
+    #cyberRiskSvg #consequenceLabel.label-hover {
+      fill: #FFFFFF;
+    }
+
+    /* Heartbeat pulse on the Cyber Risk centre while the cursor is on the centre label */
+    @keyframes cyberRiskPulse {
+      0%, 100% { fill-opacity: 0; }
+      50%      { fill-opacity: 0.55; }
+    }
+    #cyberRiskPulse {
+      transition: fill-opacity 0.35s ease;
+    }
+    #cyberRiskPulse.pulsing {
+      animation: cyberRiskPulse 1.5s ease-in-out infinite;
+    }
+
+    /* Labels are purely visual now; the invisible .hit-region shapes beneath them own all pointer interaction */
+    .hot-label {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    /* Hit regions cover each full section (circle / lens / centre) so hovering or tapping anywhere
+       in that area — not just on the text — triggers the tooltip and wash. Inert until the intro
+       animation finishes (the script adds .active after the timeline ends, and removes it again
+       whenever Replay is pressed). */
+    .hit-region {
+      fill: transparent;
+      pointer-events: none;
+    }
+    .hit-region.active {
+      cursor: pointer;
+      pointer-events: all;
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+    }
+
+    button.replay {
+      background: transparent;
+      border: 1.5px solid #444;
+      color: #ccc;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      padding: 11px 24px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: border-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+    }
+
+    button.replay:hover { border-color: #F19A38; color: #F19A38; }
+    button.replay:active { transform: scale(0.97); }
+
+    .credit {
+      position: absolute;
+      bottom: 28px;
+      left: 32px;
+    }
+    .credit-eyebrow {
+      font-size: 9px;
+      letter-spacing: 2.5px;
+      color: #5a5a5a;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 1px;
+      line-height: 1.2;
+    }
+    .credit-name {
+      font-size: 11px;
+      color: #888;
+      font-weight: 400;
+      text-decoration: none;
+      display: inline-block;
+      line-height: 1.2;
+      transition: color 0.2s ease;
+    }
+    .credit-name:hover,
+    .credit-name:focus-visible {
+      color: #d0d0d0;
+      outline: none;
+    }
+
+    .reference {
+      position: absolute;
+      bottom: 28px;
+      right: 32px;
+      text-align: right;
+      max-width: 400px;
+    }
+    .reference-eyebrow {
+      font-size: 9px;
+      letter-spacing: 2.5px;
+      color: #5a5a5a;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 1px;
+      line-height: 1.2;
+    }
+    .reference a {
+      display: block;
+      color: #888;
+      text-decoration: none;
+      font-weight: 400;
+      line-height: 1.3;
+      transition: color 0.2s ease;
+    }
+    .reference a:hover,
+    .reference a:focus-visible {
+      color: #d0d0d0;
+      outline: none;
+    }
+    .reference-title { font-size: 11px; }
+    .reference-doi   { font-size: 10px; color: #6e6e6e !important; margin-top: 1px; }
+
+    /* Language selector (top-right) — dropdown menu */
+    .lang-selector {
+      position: fixed;
+      top: 22px;
+      right: 28px;
+      z-index: 30;
+      font-family: inherit;
+      user-select: none;
+    }
+    .lang-trigger {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 4px;
+      color: #b0b0b0;
+      padding: 6px 10px 5px 11px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .lang-trigger:hover { color: #FFFFFF; border-color: rgba(255, 255, 255, 0.38); }
+    .lang-trigger .caret {
+      font-size: 8px;
+      line-height: 1;
+      color: #777;
+      transition: transform 0.2s ease, color 0.15s ease;
+    }
+    .lang-selector.open .lang-trigger { color: #FFFFFF; border-color: #C4322B; }
+    .lang-selector.open .lang-trigger .caret { transform: rotate(180deg); color: #C4322B; }
+
+    .lang-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 152px;
+      background: rgba(10, 10, 10, 0.97);
+      border: 1px solid #333;
+      border-radius: 5px;
+      padding: 4px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.7);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      opacity: 0;
+      transform: translateY(-6px);
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    .lang-selector.open .lang-menu {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .lang-menu button {
+      display: flex;
+      width: 100%;
+      align-items: baseline;
+      gap: 10px;
+      background: none;
+      border: none;
+      color: #9a9a9a;
+      padding: 7px 9px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: left;
+      transition: color 0.15s ease, background-color 0.15s ease;
+    }
+    .lang-menu button .code {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      min-width: 22px;
+    }
+    .lang-menu button .name {
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      opacity: 0.72;
+    }
+    .lang-menu button:hover { background: rgba(255, 255, 255, 0.07); color: #FFFFFF; }
+    .lang-menu button.active { color: #C4322B; }
+    .lang-menu button.active .name { opacity: 0.9; }
+
+    /* Japanese runs tighter than the Latin scripts: relax the wide tracking */
+    html[lang="ja"] .page-title .main { letter-spacing: 0; }
+    html[lang="ja"] .info-panel h3 { letter-spacing: 1.5px; }
+
+    @media (max-width: 640px) {
+      .page-title { top: 18px; left: 20px; max-width: calc(100vw - 40px); }
+      .page-title .eyebrow { font-size: 9px; letter-spacing: 0.2em; margin-bottom: 10px; }
+      .credit { bottom: 22px; left: 20px; }
+      .credit-eyebrow { font-size: 9px; letter-spacing: 2.5px; }
+      .credit-name { font-size: 13px; }
+      .reference { display: none; }
+      .controls { bottom: 22px; }
+      button.replay { font-size: 10px; padding: 9px 18px; letter-spacing: 2px; }
+      .lang-selector { top: 14px; right: 16px; }
+      .lang-trigger { font-size: 9.5px; padding: 6px 9px 5px 10px; }
+      .lang-menu { min-width: 140px; }
+    }
+  
+  /* ===== Cybersecurity Compass modal (mirrors the Cyber Risk modal pattern) ===== */
+  #cc-modal { position: fixed; inset: 0; z-index: 999; display: none; align-items: center; justify-content: center; }
+  #cc-modal.open { display: flex; }
+  #cc-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.93); opacity: 0; transition: opacity 220ms ease; }
+  #cc-modal.open #cc-backdrop { opacity: 1; }
+  #cc-frame-wrap { position: relative; width: min(94vw, 94vh); aspect-ratio: 1/1; transform: scale(0.96); opacity: 0; transition: opacity 240ms ease 60ms, transform 240ms ease 60ms; }
+  #cc-modal.open #cc-frame-wrap { opacity: 1; transform: scale(1); }
+  #cc-iframe { width: 100%; height: 100%; border: 0; background: transparent; display: block; }
+  #cc-close { position: absolute; top: 14px; right: 14px; z-index: 1001; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.13); background: rgba(0,0,0,0.55); color: #f5f5f7; font-size: 22px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background 160ms ease, border-color 160ms ease; }
+  #cc-close:hover { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.30); }
+
+  /* Clickable "Cybersecurity Compass" inside the eyebrow */
+  .compass-link {
+    cursor: pointer;
+    transition: color 0.15s ease;
+    color: inherit;
+  }
+  .compass-link:hover { color: #C4322B; }
+
+  /* Hide host chrome when the Compass modal is open (same pattern as cr-modal-open) */
+  body.cc-modal-open .page-title,
+  body.cc-modal-open .credit,
+  body.cc-modal-open .publication,
+  body.cc-modal-open button.replay,
+  body.cc-modal-open .lang-selector {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* Hover indicator on the lower-right compass click target — soft transparent circle that fades in */
+  #lr-compass-hit { transition: fill 0.2s ease; fill: transparent; }
+  /* Hover fill only applies once the compass has appeared (class added via JS gate). */
+  #lr-compass-hit.compass-ready:hover { fill: rgba(255,255,255,0.10); }
+
+  .cta-tooltip {
+    position: fixed;
+    z-index: 100;
+    padding: 7px 14px;
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1.5px solid #C4322B;
+    border-radius: 999px;
+    color: #FFFFFF;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.015em;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    /* Anchor point: bottom-center of the pill sits at (left, top). 14px gap above cursor. */
+    transform: translate(-50%, -100%) translateY(-14px) scale(0.95);
+    transform-origin: center bottom;
+    transition: opacity 200ms ease, transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  }
+  .cta-tooltip.visible {
+    opacity: 1;
+    transform: translate(-50%, -100%) translateY(-14px) scale(1);
+  }
+  /* Flip-below variant: bottom-center anchor → top-center anchor when there's no room above */
+  .cta-tooltip.flipped {
+    transform: translate(-50%, 0) translateY(20px) scale(0.95);
+    transform-origin: center top;
+  }
+  .cta-tooltip.flipped.visible {
+    transform: translate(-50%, 0) translateY(20px) scale(1);
+  }
+</style>
+</head>
+<body>
+  <div class="lang-selector" id="langSelector">
+    <button type="button" class="lang-trigger" id="langTrigger"
+            aria-haspopup="listbox" aria-expanded="false" aria-label="Language">
+      <span id="langCurrentLabel">EN</span><span class="caret" aria-hidden="true">▾</span>
+    </button>
+    <div class="lang-menu" id="langMenu" role="listbox" aria-label="Language selector">
+      <button type="button" data-lang="en" role="option" aria-selected="true" class="active"><span class="code">EN</span><span class="name">English</span></button>
+      <button type="button" data-lang="es" role="option" aria-selected="false"><span class="code">ES</span><span class="name">Español</span></button>
+      <button type="button" data-lang="pt" role="option" aria-selected="false"><span class="code">PT</span><span class="name">Português</span></button>
+      <button type="button" data-lang="ja" role="option" aria-selected="false"><span class="code">JA</span><span class="name">日本語</span></button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="page-title">
+      <div class="eyebrow" data-i18n-html="page.eyebrow"><span id="compass-trigger" class="compass-link" role="button" tabindex="0" onclick="openCompass()">Cybersecurity Compass</span> · Before a Breach</div>
+      <div class="main" data-i18n-html="page.main">Cyber Risk:<br><em>A Visual Representation</em></div>
+      <div class="acronym-row">
+        <a class="acronym" href="https://cybersecuritycompass.github.io/crml/" target="_blank" rel="noopener">CRML</a>
+        <a class="acronym" href="https://cybersecuritycompass.github.io/cyberriskops/" target="_blank" rel="noopener">CyberRiskOps</a>
+      </div>
+    </div>
+
+    <div class="svg-wrap">
+      <svg id="cyberRiskSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"
+           font-family="'Helvetica Neue', 'Arial Black', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic UI', 'Yu Gothic', 'Noto Sans JP', Meiryo, sans-serif"
+           role="img" aria-label="Cyber Risk Venn diagram" aria-describedby="svg-desc">
+        <desc id="svg-desc">A Venn diagram showing Cyber Risk as the intersection of Threat, Vulnerability, and Consequence, with pairwise overlaps labelled Potential Cyber Risk, Theoretical Cyber Risk, and Cyber Risk Exposure.</desc>
+
+        <!-- Mask applied to the three pairwise lens overlays. White = lens visible, black = lens hidden. Punches out (a) the central Cyber Risk Reuleaux so the highlight wraps around the red centre, and (b) the three 16px Venn ring strokes so the orange/red/orange-red outlines stay crisp during hover instead of being recoloured by the wash. The stroke-width="16" here matches the visible ring group exactly. -->
+        <defs>
+          <mask id="excludeCenterMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1600" height="900">
+            <rect x="0" y="0" width="1600" height="900" fill="white"/>
+            <!-- Central Cyber Risk Reuleaux (triple intersection T ∩ V ∩ C) -->
+            <path d="M 800,326.2
+                     A 270,270 0 0,1 924.8,542.4
+                     A 270,270 0 0,1 675.2,542.4
+                     A 270,270 0 0,1 800,326.2 Z"
+                  fill="black"/>
+            <!-- Three Venn ring strokes (matches the visible 16px stroke ring group below) -->
+            <g fill="none" stroke="black" stroke-width="16">
+              <circle cx="800" cy="303" r="270"/>
+              <circle cx="655" cy="554" r="270"/>
+              <circle cx="945" cy="554" r="270"/>
+            </g>
+          </mask>
+        </defs>
+
+        <!-- Background -->
+        <rect width="1600" height="900" fill="#000000"/>
+
+        <!-- Cyber Risk filled center (fades in first) -->
+        <path d="M 800,326.2
+                 A 270,270 0 0,1 924.8,542.4
+                 A 270,270 0 0,1 675.2,542.4
+                 A 270,270 0 0,1 800,326.2 Z"
+              fill="#D6342E" opacity="0">
+          <animate attributeName="opacity" from="0" to="1" begin="0s" dur="1.4s" fill="freeze"/>
+        </path>
+
+        <!-- Three Venn rings (stroke-only intro animation). Threat keeps its fill on the same element; Vulnerability and Consequence have their fills moved later in document order so their labels sit behind the fill. -->
+        <g stroke-width="16" stroke-linecap="round">
+          <circle id="threatCircle" cx="800" cy="303" r="270"
+                  stroke="#F19A38" fill="#F19A38" fill-opacity="0"
+                  stroke-dasharray="1697" stroke-dashoffset="1697">
+            <animate attributeName="stroke-dashoffset" from="1697" to="0"
+                     begin="4.4s" dur="1s" fill="freeze"/>
+          </circle>
+          <circle cx="655" cy="554" r="270"
+                  stroke="#A8201D" fill="none"
+                  stroke-dasharray="1697" stroke-dashoffset="1697">
+            <animate attributeName="stroke-dashoffset" from="1697" to="0"
+                     begin="5.4s" dur="1s" fill="freeze"/>
+          </circle>
+          <circle cx="945" cy="554" r="270"
+                  stroke="#FF6A2C" fill="none"
+                  stroke-dasharray="1697" stroke-dashoffset="1697">
+            <animate attributeName="stroke-dashoffset" from="1697" to="0"
+                     begin="6.4s" dur="1s" fill="freeze"/>
+          </circle>
+        </g>
+
+        <!-- Black masks: punch a gap in the ring strokes where the outer labels sit. Width is sized dynamically per-language in setLanguage() so longer translations (ES "Vulnerabilidad", PT "Vulnerabilidade") don't overflow the mask. -->
+        <g fill="#000000">
+          <rect id="vulnMask" x="245" y="595" width="350" height="76"/>
+          <rect id="consMask" x="1005" y="595" width="350" height="76"/>
+        </g>
+
+        <!-- Outer labels: fade in sequentially -->
+        <g text-anchor="middle" font-size="52" font-weight="900" letter-spacing="0.5">
+          <text id="threatLabel" class="hot-label" data-i18n="venn.threat" x="800" y="215" fill="#F19A38" opacity="0">Threat<animate attributeName="opacity" from="0" to="1" begin="1.4s" dur="1s" fill="freeze"/></text>
+          <text id="vulnerabilityLabel" class="hot-label" data-i18n="venn.vuln" x="420" y="650" fill="#A8201D" opacity="0">Vulnerability<animate attributeName="opacity" from="0" to="1" begin="2.4s" dur="1s" fill="freeze"/></text>
+          <text id="consequenceLabel" class="hot-label" data-i18n="venn.consequence" x="1180" y="650" fill="#FF6A2C" opacity="0">Consequence<animate attributeName="opacity" from="0" to="1" begin="3.4s" dur="1s" fill="freeze"/></text>
+        </g>
+
+        <!-- Hover fills for Vulnerability and Consequence sit ABOVE their labels so the wash overlays the text -->
+        <g stroke="none" pointer-events="none">
+          <circle id="vulnerabilityCircle" cx="655" cy="554" r="270" fill="#A8201D" fill-opacity="0"/>
+          <circle id="consequenceCircle"   cx="945" cy="554" r="270" fill="#FF6A2C" fill-opacity="0"/>
+        </g>
+
+        <!-- Hover lens overlays: each path covers the full geometric intersection of its two circles, filled with the colour-mix of the two ring colours. Sits BELOW the pairwise labels so the labels stay crisp on top of the wash. The mask subtracts the central Cyber Risk Reuleaux so the highlight wraps AROUND the red centre instead of covering it. -->
+        <g stroke="none" pointer-events="none" mask="url(#excludeCenterMask)">
+          <!-- Potential = Threat ∩ Vulnerability  (#F19A38 ⊕ #A8201D = #CD5D2B) -->
+          <path id="potentialLens" class="lens"
+                d="M 530.2,314.6 A 270,270 0 0,0 924.8,542.4 A 270,270 0 0,0 530.2,314.6 Z"
+                fill="#CD5D2B" fill-opacity="0"/>
+          <!-- Theoretical = Threat ∩ Consequence  (#F19A38 ⊕ #FF6A2C = #F88232) -->
+          <path id="theoreticalLens" class="lens"
+                d="M 1069.8,314.6 A 270,270 0 0,1 675.2,542.4 A 270,270 0 0,1 1069.8,314.6 Z"
+                fill="#F88232" fill-opacity="0"/>
+          <!-- Cyber Risk Exposure = Vulnerability ∩ Consequence  (#A8201D ⊕ #FF6A2C = #D44524) -->
+          <path id="exposureLens" class="lens"
+                d="M 800,326.2 A 270,270 0 0,1 800,781.8 A 270,270 0 0,1 800,326.2 Z"
+                fill="#D44524" fill-opacity="0"/>
+        </g>
+
+        <!-- Pairwise intersection labels (fade in once all three circles are drawn). Placed above the lens fills so the white text stays sharp when a lens lights up. Weight 400 matches the iframe design in _14.html. -->
+        <g text-anchor="middle" font-weight="400" fill="#FFFFFF" opacity="0">
+          <animate attributeName="opacity" from="0" to="1" begin="7.4s" dur="1.2s" fill="freeze"/>
+          <text id="potentialLabel" class="hot-label" x="645" y="372" font-size="30">
+            <tspan x="645" data-i18n="venn.potential.l1">Potential</tspan>
+            <tspan x="645" dy="34" data-i18n="venn.potential.l2">Cyber</tspan>
+            <tspan x="645" dy="34" data-i18n="venn.potential.l3">Risk</tspan>
+          </text>
+          <text id="theoreticalLabel" class="hot-label" x="955" y="372" font-size="30">
+            <tspan x="955" data-i18n="venn.theoretical.l1">Theoretical</tspan>
+            <tspan x="955" dy="34" data-i18n="venn.theoretical.l2">Cyber</tspan>
+            <tspan x="955" dy="34" data-i18n="venn.theoretical.l3">Risk</tspan>
+          </text>
+          <text id="exposureLabel" class="hot-label" x="800" y="620" font-size="30">
+            <tspan x="800" data-i18n="venn.exposure.l1">Cyber</tspan>
+            <tspan x="800" dy="34" data-i18n="venn.exposure.l2">Risk</tspan>
+            <tspan x="800" dy="34" data-i18n="venn.exposure.l3">Exposure</tspan>
+          </text>
+        </g>
+
+        <!-- Cyber Risk pulse overlay: same Reuleaux shape as the red centre, but a white wash that breathes 0 → 0.55 → 0 when the centre label is hovered. -->
+        <path id="cyberRiskPulse"
+              d="M 800,326.2
+                 A 270,270 0 0,1 924.8,542.4
+                 A 270,270 0 0,1 675.2,542.4
+                 A 270,270 0 0,1 800,326.2 Z"
+              fill="#FFFFFF" fill-opacity="0" pointer-events="none"/>
+
+        <!-- Center label: Cyber Risk (fades in together with the red fill) -->
+        <g text-anchor="middle" fill="#FFFFFF" font-weight="900" font-size="40" opacity="0">
+          <animate attributeName="opacity" from="0" to="1" begin="0s" dur="1.4s" fill="freeze"/>
+          <text id="cyberRiskLabel" class="hot-label" x="800" y="460">
+            <tspan x="800" data-i18n="venn.cyberrisk.l1">Cyber</tspan>
+            <tspan x="800" dy="44" data-i18n="venn.cyberrisk.l2">Risk</tspan>
+          </text>
+        </g>
+
+        <!-- Hit regions: invisible shapes covering each FULL section (not just the label text) so
+             hover/tap works anywhere in Threat, Vulnerability, Consequence, the three pairwise
+             overlaps, or the centre. Stacking order matters: the three base circles sit at the
+             bottom, the pairwise lenses above them, and the centre on top — so a point inside an
+             overlap always resolves to the more specific (topmost) region instead of the plain
+             circle beneath it. -->
+        <g id="hitRegions" fill="transparent" stroke="none">
+          <circle id="threatHit"        class="hit-region" cx="800" cy="303" r="270"/>
+          <circle id="vulnerabilityHit" class="hit-region" cx="655" cy="554" r="270"/>
+          <circle id="consequenceHit"   class="hit-region" cx="945" cy="554" r="270"/>
+          <path id="potentialHit" class="hit-region"
+                d="M 530.2,314.6 A 270,270 0 0,0 924.8,542.4 A 270,270 0 0,0 530.2,314.6 Z"/>
+          <path id="theoreticalHit" class="hit-region"
+                d="M 1069.8,314.6 A 270,270 0 0,1 675.2,542.4 A 270,270 0 0,1 1069.8,314.6 Z"/>
+          <path id="exposureHit" class="hit-region"
+                d="M 800,326.2 A 270,270 0 0,1 800,781.8 A 270,270 0 0,1 800,326.2 Z"/>
+          <path id="cyberRiskHit" class="hit-region"
+                d="M 800,326.2
+                   A 270,270 0 0,1 924.8,542.4
+                   A 270,270 0 0,1 675.2,542.4
+                   A 270,270 0 0,1 800,326.2 Z"/>
+        </g>
+      
+          <!-- ============================================================
+               Lower-right Cybersecurity Compass (extracted from index_1.html).
+               Center moved from (800,470) to (1450,770) via translate(650,300).
+               Spinning red arrows + dial; click opens the Compass modal.
+               ============================================================ -->
+          <g id="lr-compass" transform="translate(650 300)" opacity="0">
+            <animate attributeName="opacity" from="0" to="1" begin="10s" dur="1.5s" fill="freeze"/>
+        
+            <g id="lr-compass-arrows">
+            <animateTransform attributeName="transform" attributeType="XML"
+              type="rotate"
+              from="0 800 470" to="360 800 470"
+              dur="12s" repeatCount="indefinite"/>
+            
+            <path d="M 805.23 420.27 A 50 50 0 0 1 848.06 483.78 L 851.91 484.88 L 839.84 493.00 L 836.53 480.47 L 840.37 481.58 A 42 42 0 0 0 804.39 428.23 Z" fill="#B71C1C" stroke="none"/>
+            <path d="M 840.45 499.39 A 50 50 0 0 1 764.03 504.73 L 761.16 507.51 L 760.16 493.00 L 772.67 496.40 L 769.79 499.18 A 42 42 0 0 0 833.98 494.69 Z" fill="#8B1418" stroke="none"/>
+            <path d="M 754.32 490.34 A 50 50 0 0 1 787.90 421.49 L 786.94 417.60 L 800.00 424.00 L 790.81 433.13 L 789.84 429.25 A 42 42 0 0 0 761.63 487.08 Z" fill="#E11B22" stroke="none"/>
+          </g>
+        
+            <g><circle cx="800" cy="470" r="34" fill="#0c0c0e" stroke="#2a2a30" stroke-width="1.2"/><circle cx="800" cy="470" r="30" fill="#f3f1ec" stroke="#d8d5cd" stroke-width="1"/><line x1="828.0" y1="470.0" x2="824.0" y2="470.0" stroke="#9a968c" stroke-width="1.2"/><line x1="827.8" y1="473.7" x2="826.3" y2="473.5" stroke="#9a968c" stroke-width="0.6"/><line x1="827.0" y1="477.2" x2="825.6" y2="476.9" stroke="#9a968c" stroke-width="0.6"/><line x1="825.9" y1="480.7" x2="824.5" y2="480.1" stroke="#9a968c" stroke-width="0.6"/><line x1="824.2" y1="484.0" x2="822.9" y2="483.2" stroke="#9a968c" stroke-width="0.6"/><line x1="822.2" y1="487.0" x2="821.0" y2="486.1" stroke="#9a968c" stroke-width="0.6"/><line x1="819.8" y1="489.8" x2="817.0" y2="487.0" stroke="#9a968c" stroke-width="1.2"/><line x1="817.0" y1="492.2" x2="816.1" y2="491.0" stroke="#9a968c" stroke-width="0.6"/><line x1="814.0" y1="494.2" x2="813.2" y2="492.9" stroke="#9a968c" stroke-width="0.6"/><line x1="810.7" y1="495.9" x2="810.1" y2="494.5" stroke="#9a968c" stroke-width="0.6"/><line x1="807.2" y1="497.0" x2="806.9" y2="495.6" stroke="#9a968c" stroke-width="0.6"/><line x1="803.7" y1="497.8" x2="803.5" y2="496.3" stroke="#9a968c" stroke-width="0.6"/><line x1="800.0" y1="498.0" x2="800.0" y2="494.0" stroke="#9a968c" stroke-width="1.2"/><line x1="796.3" y1="497.8" x2="796.5" y2="496.3" stroke="#9a968c" stroke-width="0.6"/><line x1="792.8" y1="497.0" x2="793.1" y2="495.6" stroke="#9a968c" stroke-width="0.6"/><line x1="789.3" y1="495.9" x2="789.9" y2="494.5" stroke="#9a968c" stroke-width="0.6"/><line x1="786.0" y1="494.2" x2="786.8" y2="492.9" stroke="#9a968c" stroke-width="0.6"/><line x1="783.0" y1="492.2" x2="783.9" y2="491.0" stroke="#9a968c" stroke-width="0.6"/><line x1="780.2" y1="489.8" x2="783.0" y2="487.0" stroke="#9a968c" stroke-width="1.2"/><line x1="777.8" y1="487.0" x2="779.0" y2="486.1" stroke="#9a968c" stroke-width="0.6"/><line x1="775.8" y1="484.0" x2="777.1" y2="483.2" stroke="#9a968c" stroke-width="0.6"/><line x1="774.1" y1="480.7" x2="775.5" y2="480.1" stroke="#9a968c" stroke-width="0.6"/><line x1="773.0" y1="477.2" x2="774.4" y2="476.9" stroke="#9a968c" stroke-width="0.6"/><line x1="772.2" y1="473.7" x2="773.7" y2="473.5" stroke="#9a968c" stroke-width="0.6"/><line x1="772.0" y1="470.0" x2="776.0" y2="470.0" stroke="#9a968c" stroke-width="1.2"/><line x1="772.2" y1="466.3" x2="773.7" y2="466.5" stroke="#9a968c" stroke-width="0.6"/><line x1="773.0" y1="462.8" x2="774.4" y2="463.1" stroke="#9a968c" stroke-width="0.6"/><line x1="774.1" y1="459.3" x2="775.5" y2="459.9" stroke="#9a968c" stroke-width="0.6"/><line x1="775.8" y1="456.0" x2="777.1" y2="456.8" stroke="#9a968c" stroke-width="0.6"/><line x1="777.8" y1="453.0" x2="779.0" y2="453.9" stroke="#9a968c" stroke-width="0.6"/><line x1="780.2" y1="450.2" x2="783.0" y2="453.0" stroke="#9a968c" stroke-width="1.2"/><line x1="783.0" y1="447.8" x2="783.9" y2="449.0" stroke="#9a968c" stroke-width="0.6"/><line x1="786.0" y1="445.8" x2="786.8" y2="447.1" stroke="#9a968c" stroke-width="0.6"/><line x1="789.3" y1="444.1" x2="789.9" y2="445.5" stroke="#9a968c" stroke-width="0.6"/><line x1="792.8" y1="443.0" x2="793.1" y2="444.4" stroke="#9a968c" stroke-width="0.6"/><line x1="796.3" y1="442.2" x2="796.5" y2="443.7" stroke="#9a968c" stroke-width="0.6"/><line x1="800.0" y1="442.0" x2="800.0" y2="446.0" stroke="#9a968c" stroke-width="1.2"/><line x1="803.7" y1="442.2" x2="803.5" y2="443.7" stroke="#9a968c" stroke-width="0.6"/><line x1="807.2" y1="443.0" x2="806.9" y2="444.4" stroke="#9a968c" stroke-width="0.6"/><line x1="810.7" y1="444.1" x2="810.1" y2="445.5" stroke="#9a968c" stroke-width="0.6"/><line x1="814.0" y1="445.8" x2="813.2" y2="447.1" stroke="#9a968c" stroke-width="0.6"/><line x1="817.0" y1="447.8" x2="816.1" y2="449.0" stroke="#9a968c" stroke-width="0.6"/><line x1="819.8" y1="450.2" x2="817.0" y2="453.0" stroke="#9a968c" stroke-width="1.2"/><line x1="822.2" y1="453.0" x2="821.0" y2="453.9" stroke="#9a968c" stroke-width="0.6"/><line x1="824.2" y1="456.0" x2="822.9" y2="456.8" stroke="#9a968c" stroke-width="0.6"/><line x1="825.9" y1="459.3" x2="824.5" y2="459.9" stroke="#9a968c" stroke-width="0.6"/><line x1="827.0" y1="462.8" x2="825.6" y2="463.1" stroke="#9a968c" stroke-width="0.6"/><line x1="827.8" y1="466.3" x2="826.3" y2="466.5" stroke="#9a968c" stroke-width="0.6"/><g id="lr-needle"><path d="M 780.7 457.5 L 802.7 465.8 L 797.3 474.2 Z" fill="#E11B22"/><path d="M 819.3 482.5 L 797.3 474.2 L 802.7 465.8 Z" fill="#1a1a1e"/></g><circle cx="800" cy="470" r="5" fill="#1a1a1e"/><path d="M 800 467 L 803 470 L 800 473 L 797 470 Z" fill="#E11B22"/></g>
+          </g>
+  <!-- Compass click/hover target: extracted from inside #lr-compass group (which has opacity=0 statically, blocking hit testing). Now a sibling at absolute coords, with inline handlers like the venn pattern. -->
+  <circle id="lr-compass-hit" cx="1450" cy="770" r="58" fill="transparent" pointer-events="all" style="cursor:pointer;" onclick="handleCompassClick()" onmouseenter="handleCompassEnter(event)" onmousemove="handleCompassMove(event)" onmouseleave="handleCompassLeave()" role="button" aria-label="Open Cybersecurity Compass"></circle>
+      </svg>
+
+      <!-- Single info panel pinned to the bottom of the diagram. Content is swapped in by the hover handler. -->
+      <div class="info-panel" id="infoPanel" role="region" aria-live="polite" aria-hidden="true">
+        <h3 id="infoTitle"></h3>
+        <p  id="infoBody"></p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="replay" onclick="replayAnimation()" aria-label="Replay animation">↻ <span data-i18n="replay">Replay</span></button>
+    </div>
+
+    <div class="credit">
+      <div class="credit-eyebrow" data-i18n="credit.eyebrow">Created and designed by</div>
+      <a class="credit-name" href="https://www.linkedin.com/in/jpcastro/" target="_blank" rel="noopener noreferrer">Juan Pablo Castro Vilaró</a>
+    </div>
+
+    <div class="reference">
+      <a class="reference-title" data-i18n="reference.title" href="https://www.researchgate.net/publication/388386953" target="_blank" rel="noopener noreferrer">Decoding Cyber Risk: A Visual Representation</a>
+      <a class="reference-doi" href="https://doi.org/10.13140/RG.2.2.33733.15849/1" target="_blank" rel="noopener noreferrer">DOI: 10.13140/RG.2.2.33733.15849/1</a>
+    </div>
+  </div>
+
+      <!-- Cybersecurity Compass modal: opens when clicking the eyebrow's "Cybersecurity Compass" text -->
+  <div id="cc-modal" role="dialog" aria-modal="true" aria-label="The Cybersecurity Compass">
+    <div id="cc-backdrop"></div>
+    <div id="cc-frame-wrap">
+      <button type="button" id="cc-close" aria-label="Close">×</button>
+      <iframe id="cc-iframe" title="The Cybersecurity Compass" allowtransparency="true" style="background:transparent;"></iframe>
+    </div>
+  </div>
+  <div id="cta-tip" class="cta-tooltip" role="status" aria-hidden="true" aria-live="polite">
+    <span data-i18n="cta.compass">Click for the Cyber Risk Visual Definition →</span>
+  </div>
+
+  <script>
+    // ---------------- I18N ----------------
+    // Static UI strings, SVG labels and info panel content for EN, ES, PT.
+    const I18N = {
+      en: {
+        'page.eyebrow':       '<span id="compass-trigger" class="compass-link" role="button" tabindex="0" onclick="openCompass()">Cybersecurity Compass</span> · Before a Breach',
+        'page.main':          'Cyber Risk:<br><em>A Visual Representation</em>',
+        'replay':             'Replay',
+        'credit.eyebrow':     'Created and designed by',
+        'reference.title':    'Decoding Cyber Risk: A Visual Representation',
+        'cta.compass':        'Click to Explore the Cybersecurity Compass →',
+        // SVG labels
+        'venn.threat':            'Threat',
+        'venn.vuln':              'Vulnerability',
+        'venn.consequence':       'Consequence',
+        'venn.potential.l1':      'Potential',
+        'venn.potential.l2':      'Cyber',
+        'venn.potential.l3':      'Risk',
+        'venn.theoretical.l1':    'Theoretical',
+        'venn.theoretical.l2':    'Cyber',
+        'venn.theoretical.l3':    'Risk',
+        'venn.exposure.l1':       'Cyber',
+        'venn.exposure.l2':       'Risk',
+        'venn.exposure.l3':       'Exposure',
+        'venn.cyberrisk.l1':      'Cyber',
+        'venn.cyberrisk.l2':      'Risk'
+      },
+      es: {
+        'page.eyebrow':       '<span id="compass-trigger" class="compass-link" role="button" tabindex="0" onclick="openCompass()">Cybersecurity Compass</span> · Antes de una Brecha',
+        'page.main':          'Ciber Riesgo:<br><em>Una Representación Visual</em>',
+        'replay':             'Reiniciar',
+        'credit.eyebrow':     'Creado y diseñado por',
+        'reference.title':    'Descifrando el Ciber Riesgo: Una Representación Visual',
+        'cta.compass':        'Clic para Explorar el Cybersecurity Compass →',
+        'venn.threat':            'Amenaza',
+        'venn.vuln':              'Vulnerabilidad',
+        'venn.consequence':       'Consecuencia',
+        'venn.potential.l1':      'Ciber',
+        'venn.potential.l2':      'Riesgo',
+        'venn.potential.l3':      'Potencial',
+        'venn.theoretical.l1':    'Ciber',
+        'venn.theoretical.l2':    'Riesgo',
+        'venn.theoretical.l3':    'Teórico',
+        'venn.exposure.l1':       'Exposición',
+        'venn.exposure.l2':       'al Ciber',
+        'venn.exposure.l3':       'Riesgo',
+        'venn.cyberrisk.l1':      'Ciber',
+        'venn.cyberrisk.l2':      'Riesgo'
+      },
+      pt: {
+        'page.eyebrow':       '<span id="compass-trigger" class="compass-link" role="button" tabindex="0" onclick="openCompass()">Cybersecurity Compass</span> · Antes de uma Brecha',
+        'page.main':          'Ciber Risco:<br><em>Uma Representação Visual</em>',
+        'replay':             'Reiniciar',
+        'credit.eyebrow':     'Criado e desenhado por',
+        'reference.title':    'Decifrando o Ciber Risco: Uma Representação Visual',
+        'cta.compass':        'Clique para Explorar o Cybersecurity Compass →',
+        'venn.threat':            'Ameaça',
+        'venn.vuln':              'Vulnerabilidade',
+        'venn.consequence':       'Consequência',
+        'venn.potential.l1':      'Ciber',
+        'venn.potential.l2':      'Risco',
+        'venn.potential.l3':      'Potencial',
+        'venn.theoretical.l1':    'Ciber',
+        'venn.theoretical.l2':    'Risco',
+        'venn.theoretical.l3':    'Teórico',
+        'venn.exposure.l1':       'Exposição',
+        'venn.exposure.l2':       'ao Ciber',
+        'venn.exposure.l3':       'Risco',
+        'venn.cyberrisk.l1':      'Ciber',
+        'venn.cyberrisk.l2':      'Risco'
+      },
+      ja: {
+        'page.eyebrow':       '<span id="compass-trigger" class="compass-link" role="button" tabindex="0" onclick="openCompass()">Cybersecurity Compass</span> · 侵害発生前',
+        'page.main':          'サイバーリスク：<br><em>視覚的表現</em>',
+        'replay':             'リプレイ',
+        'credit.eyebrow':     '作成・デザイン',
+        'reference.title':    'サイバーリスクの解読：視覚的表現',
+        'cta.compass':        'クリックして Cybersecurity Compass を見る →',
+        'venn.threat':            '脅威',
+        'venn.vuln':              '脆弱性',
+        'venn.consequence':       '結果',
+        'venn.potential.l1':      '潜在的',
+        'venn.potential.l2':      'サイバー',
+        'venn.potential.l3':      'リスク',
+        'venn.theoretical.l1':    '理論的',
+        'venn.theoretical.l2':    'サイバー',
+        'venn.theoretical.l3':    'リスク',
+        'venn.exposure.l1':       '',
+        'venn.exposure.l2':       'サイバーリスク',
+        'venn.exposure.l3':       'エクスポージャー',
+        'venn.cyberrisk.l1':      'サイバー',
+        'venn.cyberrisk.l2':      'リスク'
+      }
+    };
+
+    // ---------------- Info panel content ----------------
+    // Definitions for each label, in all three languages. Drawn from Juan Pablo Castro's "Decoding Cyber Risk: A Visual Representation" (ResearchGate, DOI 10.13140/RG.2.2.33733.15849/1).
+    const LABEL_INFO = {
+      en: {
+        threatLabel: {
+          title: 'Threat',
+          color: '#F19A38',
+          body:  'Anything that has the potential to cause harm or allow unauthorized access to an information system. This could be malicious actors, state-sponsored groups, cyber criminals or insider <span style="color:#F19A38">threats</span>. In the age of AI, <span style="color:#F19A38">threats</span> now include autonomous <strong style="color:#6366F1">adversarial</strong> agents that scale attacks at machine speed.'
+        },
+        vulnerabilityLabel: {
+          title: 'Vulnerability',
+          color: '#E63A37',
+          body:  'A technical, procedural, or human weakness that can be exploited by a <span style="color:#F19A38">threat</span>. Examples include unpatched software, misconfigured controls and users who may fall victim to social engineering.'
+        },
+        consequenceLabel: {
+          title: 'Consequence',
+          color: '#FF6A2C',
+          body:  'The impact or damage that would occur if a <span style="color:#F19A38">threat</span> successfully exploits a <span style="color:#E63A37">vulnerability</span>. Financial loss, reputational harm, loss of proprietary data, and business disruption are common <span style="color:#FF6A2C">consequences</span>.'
+        },
+        potentialLabel: {
+          title: 'Potential Cyber Risk',
+          color: '#E08050',
+          body:  'The intersection of <span style="color:#F19A38">Threat</span> and <span style="color:#E63A37">Vulnerability</span>, highlighting that there is a risk present if both a <span style="color:#F19A38">threat</span> exists and the system is vulnerable to it, even if a <span style="color:#FF6A2C">consequence</span> has not yet occurred. This zone is <strong style="color:#A5B4FC">dynamic</strong> by nature, with new <span style="color:#F19A38">threats</span> and exposures emerging in real time.'
+        },
+        theoreticalLabel: {
+          title: 'Theoretical Cyber Risk',
+          color: '#F88232',
+          body:  'The intersection of <span style="color:#F19A38">Threat</span> and <span style="color:#FF6A2C">Consequence</span>; there is a theoretical risk when a <span style="color:#F19A38">threat</span> could have serious <span style="color:#FF6A2C">consequences</span>, even if a current <span style="color:#E63A37">vulnerability</span> isn\u0027t identified. It is also <strong style="color:#6366F1">adversarial</strong>: an intelligent opponent may eventually discover a <span style="color:#E63A37">vulnerability</span> where none is currently visible.'
+        },
+        exposureLabel: {
+          title: 'Cyber Risk Exposure',
+          color: '#E55838',
+          body:  'Where <span style="color:#E63A37">Vulnerability</span> and <span style="color:#FF6A2C">Consequence</span> intersect, indicating that there is exposure to risk when a system is vulnerable and the <span style="color:#FF6A2C">consequences</span> of an exploit are potentially significant, regardless of the current level of <span style="color:#F19A38">threat</span>. This exposure is <strong style="color:#38BDF8">shared</strong> across the digital supply chain, propagating risk regardless of who the <span style="color:#F19A38">threat</span> actor turns out to be.'
+        },
+        cyberRiskLabel: {
+          title: 'Cyber Risk',
+          color: '#FF5552',
+          body:  'Represents the potential for losses or damages that may occur due to a <span style="color:#F19A38">threat</span> exploiting a <span style="color:#E63A37">vulnerability</span> and resulting in a <span style="color:#FF6A2C">consequence</span>. The overarching concept that encompasses all aspects of the potential negative outcomes of cyber events. Cyber risk is <strong style="color:#A5B4FC">dynamic</strong>, <strong style="color:#38BDF8">shared</strong>, <strong style="color:#3B82F6">continuous</strong>, and <strong style="color:#6366F1">adversarial</strong>: it evolves in real time, propagates across vendors, partners, customers, and the digital supply chain, never stops expanding, and unlike other risks, faces an intelligent opponent that learns and adapts to every defense.'
+        }
+      },
+      es: {
+        threatLabel: {
+          title: 'Amenaza',
+          color: '#F19A38',
+          body:  'Cualquier cosa que tenga el potencial de causar daño o permitir el acceso no autorizado a un sistema de información. Esto puede incluir actores maliciosos, grupos patrocinados por estados, ciber criminales o <span style="color:#F19A38">amenazas</span> internas. En la era de la IA, las <span style="color:#F19A38">amenazas</span> ahora incluyen agentes adversariales autónomos que escalan ataques a velocidad de máquina.'
+        },
+        vulnerabilityLabel: {
+          title: 'Vulnerabilidad',
+          color: '#E63A37',
+          body:  'Una debilidad técnica, procedimental o humana que puede ser explotada por una <span style="color:#F19A38">amenaza</span>. Algunos ejemplos incluyen software sin parches, controles mal configurados y usuarios que pueden ser víctimas de ingeniería social.'
+        },
+        consequenceLabel: {
+          title: 'Consecuencia',
+          color: '#FF6A2C',
+          body:  'El impacto o daño que ocurriría si una <span style="color:#F19A38">amenaza</span> explota exitosamente una <span style="color:#E63A37">vulnerabilidad</span>. La pérdida financiera, el daño reputacional, la pérdida de datos propietarios y la interrupción del negocio son <span style="color:#FF6A2C">consecuencias</span> comunes.'
+        },
+        potentialLabel: {
+          title: 'Ciber Riesgo Potencial',
+          color: '#E08050',
+          body:  'La intersección entre <span style="color:#F19A38">Amenaza</span> y <span style="color:#E63A37">Vulnerabilidad</span>, que destaca que existe un riesgo presente si tanto una <span style="color:#F19A38">amenaza</span> existe como el sistema es vulnerable a ella, incluso si aún no ha ocurrido una <span style="color:#FF6A2C">consecuencia</span>. Esta zona es <strong style="color:#A5B4FC">dinámica</strong> por naturaleza, con nuevas <span style="color:#F19A38">amenazas</span> y exposiciones surgiendo en tiempo real.'
+        },
+        theoreticalLabel: {
+          title: 'Ciber Riesgo Teórico',
+          color: '#F88232',
+          body:  'La intersección entre <span style="color:#F19A38">Amenaza</span> y <span style="color:#FF6A2C">Consecuencia</span>; existe un riesgo teórico cuando una <span style="color:#F19A38">amenaza</span> podría tener <span style="color:#FF6A2C">consecuencias</span> graves, incluso si no se identifica una <span style="color:#E63A37">vulnerabilidad</span> actual. También es <strong style="color:#6366F1">adversarial</strong>: un oponente inteligente puede eventualmente descubrir una <span style="color:#E63A37">vulnerabilidad</span> donde ninguna es actualmente visible.'
+        },
+        exposureLabel: {
+          title: 'Exposición al Ciber Riesgo',
+          color: '#E55838',
+          body:  'Donde <span style="color:#E63A37">Vulnerabilidad</span> y <span style="color:#FF6A2C">Consecuencia</span> se intersectan, indicando que existe exposición al riesgo cuando un sistema es vulnerable y las <span style="color:#FF6A2C">consecuencias</span> de una explotación son potencialmente significativas, independientemente del nivel actual de <span style="color:#F19A38">amenaza</span>. Esta exposición es <strong style="color:#38BDF8">compartida</strong> a través de la cadena de suministro digital, propagando el riesgo independientemente de quién resulte ser el actor de <span style="color:#F19A38">amenaza</span>.'
+        },
+        cyberRiskLabel: {
+          title: 'Ciber Riesgo',
+          color: '#FF5552',
+          body:  'Representa el potencial de pérdidas o daños que pueden ocurrir debido a una <span style="color:#F19A38">amenaza</span> que explota una <span style="color:#E63A37">vulnerabilidad</span> y resulta en una <span style="color:#FF6A2C">consecuencia</span>. El concepto general que abarca todos los aspectos de los posibles resultados negativos de los eventos cibernéticos. El ciber riesgo es <strong style="color:#A5B4FC">dinámico</strong>, <strong style="color:#38BDF8">compartido</strong>, <strong style="color:#3B82F6">continuo</strong> y <strong style="color:#6366F1">adversarial</strong>: evoluciona en tiempo real, se propaga a través de proveedores, socios, clientes y la cadena de suministro digital, nunca deja de expandirse, y a diferencia de otros riesgos, enfrenta un oponente inteligente que aprende y se adapta a cada defensa.'
+        }
+      },
+      pt: {
+        threatLabel: {
+          title: 'Ameaça',
+          color: '#F19A38',
+          body:  'Qualquer coisa que tenha o potencial de causar dano ou permitir o acesso não autorizado a um sistema de informação. Isso pode incluir atores maliciosos, grupos patrocinados por estados, ciber criminosos ou <span style="color:#F19A38">ameaças</span> internas. Na era da IA, as <span style="color:#F19A38">ameaças</span> agora incluem agentes adversariais autônomos que escalam ataques em velocidade de máquina.'
+        },
+        vulnerabilityLabel: {
+          title: 'Vulnerabilidade',
+          color: '#E63A37',
+          body:  'Uma fraqueza técnica, processual ou humana que pode ser explorada por uma <span style="color:#F19A38">ameaça</span>. Alguns exemplos incluem software sem patches, controles mal configurados e usuários que podem ser vítimas de engenharia social.'
+        },
+        consequenceLabel: {
+          title: 'Consequência',
+          color: '#FF6A2C',
+          body:  'O impacto ou dano que ocorreria se uma <span style="color:#F19A38">ameaça</span> explorasse com sucesso uma <span style="color:#E63A37">vulnerabilidade</span>. Perda financeira, dano reputacional, perda de dados proprietários e interrupção dos negócios são <span style="color:#FF6A2C">consequências</span> comuns.'
+        },
+        potentialLabel: {
+          title: 'Ciber Risco Potencial',
+          color: '#E08050',
+          body:  'A intersecção entre <span style="color:#F19A38">Ameaça</span> e <span style="color:#E63A37">Vulnerabilidade</span>, que destaca que existe um risco presente se tanto uma <span style="color:#F19A38">ameaça</span> existe quanto o sistema é vulnerável a ela, mesmo que ainda não tenha ocorrido uma <span style="color:#FF6A2C">consequência</span>. Esta zona é <strong style="color:#A5B4FC">dinâmica</strong> por natureza, com novas <span style="color:#F19A38">ameaças</span> e exposições surgindo em tempo real.'
+        },
+        theoreticalLabel: {
+          title: 'Ciber Risco Teórico',
+          color: '#F88232',
+          body:  'A intersecção entre <span style="color:#F19A38">Ameaça</span> e <span style="color:#FF6A2C">Consequência</span>; existe um risco teórico quando uma <span style="color:#F19A38">ameaça</span> pode ter <span style="color:#FF6A2C">consequências</span> graves, mesmo que uma <span style="color:#E63A37">vulnerabilidade</span> atual não seja identificada. Também é <strong style="color:#6366F1">adversarial</strong>: um oponente inteligente pode eventualmente descobrir uma <span style="color:#E63A37">vulnerabilidade</span> onde nenhuma é atualmente visível.'
+        },
+        exposureLabel: {
+          title: 'Exposição ao Ciber Risco',
+          color: '#E55838',
+          body:  'Onde <span style="color:#E63A37">Vulnerabilidade</span> e <span style="color:#FF6A2C">Consequência</span> se intersectam, indicando que existe exposição ao risco quando um sistema é vulnerável e as <span style="color:#FF6A2C">consequências</span> de uma exploração são potencialmente significativas, independentemente do nível atual de <span style="color:#F19A38">ameaça</span>. Esta exposição é <strong style="color:#38BDF8">compartilhada</strong> através da cadeia de suprimentos digital, propagando o risco independentemente de quem seja o ator de <span style="color:#F19A38">ameaça</span>.'
+        },
+        cyberRiskLabel: {
+          title: 'Ciber Risco',
+          color: '#FF5552',
+          body:  'Representa o potencial de perdas ou danos que podem ocorrer devido a uma <span style="color:#F19A38">ameaça</span> que explora uma <span style="color:#E63A37">vulnerabilidade</span> e resulta em uma <span style="color:#FF6A2C">consequência</span>. O conceito geral que engloba todos os aspectos dos possíveis resultados negativos dos eventos cibernéticos. O ciber risco é <strong style="color:#A5B4FC">dinâmico</strong>, <strong style="color:#38BDF8">compartilhado</strong>, <strong style="color:#3B82F6">contínuo</strong> e <strong style="color:#6366F1">adversarial</strong>: evolui em tempo real, propaga-se através de fornecedores, parceiros, clientes e a cadeia de suprimentos digital, nunca deixa de se expandir, e ao contrário de outros riscos, enfrenta um oponente inteligente que aprende e se adapta a cada defesa.'
+        }
+      },
+      ja: {
+        threatLabel: {
+          title: '脅威',
+          color: '#F19A38',
+          body:  '情報システムに損害を与え、または不正アクセスを可能にする潜在的な要因のすべてを指します。悪意のある攻撃者、国家支援型グループ、サイバー犯罪者、内部からの<span style="color:#F19A38">脅威</span>などが含まれます。AI の時代において、<span style="color:#F19A38">脅威</span>には、機械の速度で攻撃を拡大する自律型の<strong style="color:#6366F1">敵対的</strong>エージェントも含まれるようになりました。'
+        },
+        vulnerabilityLabel: {
+          title: '脆弱性',
+          color: '#E63A37',
+          body:  '<span style="color:#F19A38">脅威</span>によって悪用され得る、技術的・手続き的・人的な弱点です。未修正のソフトウェア、設定不備の管理策、ソーシャルエンジニアリングの被害者となり得る利用者などが例として挙げられます。'
+        },
+        consequenceLabel: {
+          title: '結果',
+          color: '#FF6A2C',
+          body:  '<span style="color:#F19A38">脅威</span>が<span style="color:#E63A37">脆弱性</span>の悪用に成功した場合に生じる影響や損害です。金銭的損失、レピュテーションの毀損、機密データの喪失、事業の停止などが一般的な<span style="color:#FF6A2C">結果</span>です。'
+        },
+        potentialLabel: {
+          title: '潜在的サイバーリスク',
+          color: '#E08050',
+          body:  '<span style="color:#F19A38">脅威</span>と<span style="color:#E63A37">脆弱性</span>が交差する領域です。<span style="color:#FF6A2C">結果</span>がまだ発生していなくても、<span style="color:#F19A38">脅威</span>が存在し、システムがそれに対して脆弱であれば、リスクはすでに存在することを示します。この領域は本質的に<strong style="color:#A5B4FC">動的</strong>であり、新たな<span style="color:#F19A38">脅威</span>とエクスポージャーがリアルタイムで生まれ続けます。'
+        },
+        theoreticalLabel: {
+          title: '理論的サイバーリスク',
+          color: '#F88232',
+          body:  '<span style="color:#F19A38">脅威</span>と<span style="color:#FF6A2C">結果</span>が交差する領域です。現時点で<span style="color:#E63A37">脆弱性</span>が特定されていなくても、<span style="color:#F19A38">脅威</span>が深刻な<span style="color:#FF6A2C">結果</span>をもたらし得る場合、理論的なリスクが存在します。これは<strong style="color:#6366F1">敵対的</strong>でもあります。知性を持つ攻撃者は、現在は見えていない<span style="color:#E63A37">脆弱性</span>をいずれ発見する可能性があるからです。'
+        },
+        exposureLabel: {
+          title: 'サイバーリスク・エクスポージャー',
+          color: '#E55838',
+          body:  '<span style="color:#E63A37">脆弱性</span>と<span style="color:#FF6A2C">結果</span>が交差する領域です。現在の<span style="color:#F19A38">脅威</span>の水準にかかわらず、システムが脆弱であり、悪用された場合の<span style="color:#FF6A2C">結果</span>が重大であれば、リスクへのエクスポージャーが存在することを意味します。このエクスポージャーはデジタルサプライチェーン全体で<strong style="color:#38BDF8">共有</strong>され、<span style="color:#F19A38">脅威</span>アクターが誰であるかにかかわらずリスクを伝播させます。'
+        },
+        cyberRiskLabel: {
+          title: 'サイバーリスク',
+          color: '#FF5552',
+          body:  '<span style="color:#F19A38">脅威</span>が<span style="color:#E63A37">脆弱性</span>を悪用し、<span style="color:#FF6A2C">結果</span>を招くことで生じ得る損失や損害の可能性を表します。サイバー事象がもたらす負の帰結のあらゆる側面を包含する上位概念です。サイバーリスクは<strong style="color:#A5B4FC">動的</strong>、<strong style="color:#38BDF8">共有</strong>、<strong style="color:#3B82F6">継続的</strong>、そして<strong style="color:#6366F1">敵対的</strong>です。リアルタイムに変化し、ベンダー、パートナー、顧客、デジタルサプライチェーン全体へ広がり、拡大が止まることはなく、他のリスクと異なり、あらゆる防御を学習し適応する知性を持つ相手と対峙します。'
+        }
+      }
+    };
+
+    const COMPASS_HTML = `<!DOCTYPE html>
+<!-- saved from url=(0069)file:///Users/jpcastro/Downloads/CybersecurityCompass_animated_4.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Cybersecurity Compass</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:#000;height:100%;}
+@keyframes waveDrift{from{background-position:0 0,0 0;}to{background-position:1200px 0,-900px 0;}}
+@keyframes hazeFloat{0%{transform:translate3d(-2%,0,0) scale(1.05);}50%{transform:translate3d(2%,-1%,0) scale(1.09);}100%{transform:translate3d(-2%,0,0) scale(1.05);}}
+#wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#000;}
+#stage{position:relative;width:min(96vw,96vh);aspect-ratio:1/1;overflow:hidden;background:#0a0c0e;border-radius:6px;box-shadow:0 30px 80px rgba(0,0,0,.6);}
+.bg1{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 16%,#22262c 0%,#14171b 38%,#0a0c0e 70%,#050607 100%);}
+.bg2{position:absolute;inset:0;opacity:.55;background:linear-gradient(180deg,rgba(40,46,54,0) 42%,rgba(58,68,80,.22) 72%,rgba(7,9,11,.92) 100%);}
+.bg3{position:absolute;left:-10%;top:-12%;width:120%;height:66%;opacity:.4;background:radial-gradient(60% 80% at 30% 40%,rgba(124,134,144,.18),transparent 60%),radial-gradient(50% 70% at 76% 28%,rgba(92,102,112,.16),transparent 60%);animation:hazeFloat 26s ease-in-out infinite;}
+.bg4{position:absolute;left:0;right:0;bottom:0;height:48%;opacity:.16;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 2px,transparent 2px 9px),repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 1px,transparent 1px 14px);background-size:1200px 100%,900px 100%;animation:waveDrift 18s linear infinite;mix-blend-mode:screen;}
+.bg5{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(4,5,7,.62) 32%,rgba(4,5,7,.2) 56%,rgba(4,5,7,0) 70%);}
+#compass-svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
+/* UI overlays */
+#lang-bar{position:absolute;top:10px;right:10px;z-index:100;display:flex;gap:4px;align-items:center;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:4px 6px;}
+#lang-bar button{padding:3px 9px;border-radius:5px;border:none;cursor:pointer;font-weight:600;font-size:10px;font-family:Inter,system-ui,sans-serif;transition:all .2s;letter-spacing:.04em;}
+#compass-title{position:absolute;top:12px;left:14px;z-index:100;font-family:Inter,Arial,sans-serif;font-size:clamp(16px,3.2vmin,35px);font-weight:600;color:#fff;letter-spacing:.2px;pointer-events:none;}
+#credit{position:absolute;bottom:10px;left:12px;z-index:100;font-family:Inter,Arial,sans-serif;font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.04em;line-height:1.6;pointer-events:auto;}
+#pub-link{position:absolute;bottom:10px;right:12px;z-index:100;font-family:Inter,Arial,sans-serif;font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.03em;line-height:1.6;text-align:right;max-width:52%;pointer-events:auto;}
+/* Tooltip */
+#tt{position:absolute;pointer-events:none;z-index:300;opacity:0;transition:opacity .2s ease;width:285px;background:rgba(8,10,12,.94);border:1px solid rgba(255,255,255,.13);border-radius:10px;padding:14px 16px;backdrop-filter:blur(12px);}
+#tt.on{opacity:1;}
+#tt-h{font-family:Inter,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#E01C24;margin-bottom:4px;}
+#tt-s{font-family:Inter,Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:10px;}
+#tt-b{font-family:Inter,Arial,sans-serif;font-size:11px;line-height:1.7;color:rgba(255,255,255,.78);}
+/* Hit areas */
+#hits{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:50;}
+#hits path{pointer-events:all;cursor:pointer;fill:transparent;}
+
+/* injected overrides for embedded use */
+svg text,#tt,#tt-h,#tt-s,#tt-b,#compass-title,#credit,#pub-link{font-family:Inter,Arial,'Hiragino Kaku Gothic ProN','Hiragino Sans','Yu Gothic UI','Yu Gothic','Noto Sans JP',Meiryo,sans-serif;}
+html,body,#wrap,#stage{background:transparent !important;}
+#stage{box-shadow:none !important;}
+.bg1,.bg2,.bg3,.bg4,.bg5{display:none !important;}
+#lang-bar{display:none !important;}
+#compass-title{left:0 !important; right:0 !important; text-align:center !important; font-size:clamp(26px,5.2vmin,58px) !important; font-weight:700 !important; letter-spacing:0.5px !important; text-shadow: 0 0 18px rgba(0,0,0,1), 0 0 42px rgba(0,0,0,0.95), 0 0 80px rgba(0,0,0,0.85), 0 0 130px rgba(0,0,0,0.6) !important;}
+</style>
+</head>
+<body>
+<div id="wrap">
+<div id="stage">
+  <div class="bg1"></div><div class="bg2"></div><div class="bg3"></div><div class="bg4"></div><div class="bg5"></div>
+
+  <svg id="compass-svg" viewBox="0 0 1080 1080" style="position:absolute;inset:0;width:100%;height:100%;display:block;">
+<defs><lineargradient id="bg0" gradientUnits="userSpaceOnUse" x1="885.8" y1="447.34" x2="742.84" y2="485.65"><stop offset="0" stop-color="#42454b"></stop><stop offset="1" stop-color="#0c0d10"></stop></lineargradient><lineargradient id="ag0" gradientUnits="userSpaceOnUse" x1="644.82" y1="148.8" x2="826.38" y2="826.38"><stop offset="0" stop-color="#4a1014"></stop><stop offset="1" stop-color="#E01C24"></stop></lineargradient><lineargradient id="bg1" gradientUnits="userSpaceOnUse" x1="447.34" y1="885.8" x2="485.65" y2="742.84"><stop offset="0" stop-color="#93989c"></stop><stop offset="1" stop-color="#494c50"></stop></lineargradient><lineargradient id="ag1" gradientUnits="userSpaceOnUse" x1="826.38" y1="826.38" x2="148.8" y2="644.82"><stop offset="0" stop-color="#4a1014"></stop><stop offset="1" stop-color="#E01C24"></stop></lineargradient><lineargradient id="bg2" gradientUnits="userSpaceOnUse" x1="286.86" y1="286.86" x2="391.51" y2="391.51"><stop offset="0" stop-color="#5a5e63"></stop><stop offset="1" stop-color="#2a2c30"></stop></lineargradient><lineargradient id="ag2" gradientUnits="userSpaceOnUse" x1="148.8" y1="644.82" x2="644.82" y2="148.8"><stop offset="0" stop-color="#4a1014"></stop><stop offset="1" stop-color="#E01C24"></stop></lineargradient><path id="pl0" d="M 679.63 288.11 A 288 288 0 0 1 786.86 688.33" fill="none"></path><path id="sl0" d="M 659.49 341.14 A 232 232 0 0 1 742.91 652.48" fill="none"></path><path id="ol0" d="M 723.87 179.14 A 405 405 0 0 1 879.66 760.58" fill="none"></path><path id="pl1" d="M 288.11 679.63 A 288 288 0 0 0 688.33 786.86" fill="none"></path><path id="sl1" d="M 341.14 659.49 A 232 232 0 0 0 652.48 742.91" fill="none"></path><path id="ol1" d="M 179.14 723.87 A 405 405 0 0 0 760.58 879.66" fill="none"></path><path id="pl2" d="M 252.04 545.03 A 288 288 0 0 1 545.03 252.04" fill="none"></path><path id="sl2" d="M 308.04 535.95 A 232 232 0 0 1 535.95 308.04" fill="none"></path><path id="ol2" d="M 135.56 561.2 A 405 405 0 0 1 561.2 135.56" fill="none"></path><path id="pz0" d="M 449.41 405.7 A 162 162 0 0 1 630.59 405.7" fill="none"></path><path id="pz1" d="M 611.02 685.6 A 162 162 0 0 0 701.61 528.7" fill="none"></path><path id="pz2" d="M 378.39 528.7 A 162 162 0 0 0 468.98 685.6" fill="none"></path></defs><g id="compassRoot" transform="translate(540,540) rotate(0.00) scale(1.000) translate(-540,-540)" opacity="1.000"><g class="grp" id="grp0" opacity="0.700"><path d="M 651.81 122.72 A 432 432 0 0 1 845.47 845.47 L 772.3 871.76 L 807.29 807.29 A 378 378 0 0 0 637.83 174.88 L 711.16 172.95 Z" fill="url(#ag0)"></path><path d="M 632.66 194.2 A 358 358 0 0 1 793.14 793.14 L 698.81 775.45 L 688.49 688.49 A 210 210 0 0 0 594.35 337.16 L 664.5 284.74 Z" fill="url(#bg0)"></path><path id="glow0" d="M 632.66 194.2 A 358 358 0 0 1 793.14 793.14 L 698.81 775.45 L 688.49 688.49 A 210 210 0 0 0 594.35 337.16 L 664.5 284.74 Z" fill="#ffffff" opacity="0.000"></path><text font-family="Inter,Arial" font-weight="600" font-size="35" fill="#ffffff" letter-spacing="0.2"><textpath href="#pl0" startOffset="50%" text-anchor="middle" id="t-crm">Gestión del Ciber Riesgo</textpath></text><text font-family="Inter,Arial" font-weight="500" font-size="17" fill="#d6d8da" letter-spacing="0.2"><textpath href="#sl0" startOffset="50%" text-anchor="middle" id="t-pap">Proactivo y Predictivo</textpath></text><text font-family="Inter,Arial" font-weight="600" font-size="25" fill="#ffffff" letter-spacing="0.2"><textpath href="#ol0" startOffset="50%" text-anchor="middle" dy="0.35em"><tspan dy="0.35em" id="t-bab">Antes de una Brecha</tspan></textpath></text></g><g class="grp" id="grp1" opacity="0.849"><path d="M 845.47 845.47 A 432 432 0 0 1 122.72 651.81 L 136.54 575.3 L 174.88 637.83 A 378 378 0 0 0 807.29 807.29 L 772.3 871.76 Z" fill="url(#ag1)"></path><path d="M 793.14 793.14 A 358 358 0 0 1 194.2 632.66 L 256.69 559.81 L 337.16 594.35 A 210 210 0 0 0 688.49 688.49 L 698.81 775.45 Z" fill="url(#bg1)"></path><path id="glow1" d="M 793.14 793.14 A 358 358 0 0 1 194.2 632.66 L 256.69 559.81 L 337.16 594.35 A 210 210 0 0 0 688.49 688.49 L 698.81 775.45 Z" fill="#ffffff" opacity="0.088"></path><text font-family="Inter,Arial" font-weight="600" font-size="35" fill="#ffffff" letter-spacing="0.2"><textpath href="#pl1" startOffset="50%" text-anchor="middle" id="t-dar">Detección y Respuesta</textpath></text><text font-family="Inter,Arial" font-weight="500" font-size="17" fill="#d6d8da" letter-spacing="0.2"><textpath href="#sl1" startOffset="50%" text-anchor="middle" id="t-rad">Reactivo y Defensivo</textpath></text><text font-family="Inter,Arial" font-weight="600" font-size="25" fill="#ffffff" letter-spacing="0.2"><textpath href="#ol1" startOffset="50%" text-anchor="middle" dy="0.35em"><tspan dy="0.35em" id="t-dub">Durante una Brecha</tspan></textpath></text></g><g class="grp" id="grp2" opacity="0.700"><path d="M 122.72 651.81 A 432 432 0 0 1 651.81 122.72 L 711.16 172.95 L 637.83 174.88 A 378 378 0 0 0 174.88 637.83 L 136.54 575.3 Z" fill="url(#ag2)"></path><path d="M 194.2 632.66 A 358 358 0 0 1 632.66 194.2 L 664.5 284.74 L 594.35 337.16 A 210 210 0 0 0 337.16 594.35 L 256.69 559.81 Z" fill="url(#bg2)"></path><path id="glow2" d="M 194.2 632.66 A 358 358 0 0 1 632.66 194.2 L 664.5 284.74 L 594.35 337.16 A 210 210 0 0 0 337.16 594.35 L 256.69 559.81 Z" fill="#ffffff" opacity="0.000"></path><text font-family="Inter,Arial" font-weight="600" font-size="35" fill="#ffffff" letter-spacing="0.2"><textpath href="#pl2" startOffset="50%" text-anchor="middle" id="t-cr">Ciber Resiliencia</textpath></text><text font-family="Inter,Arial" font-weight="500" font-size="17" fill="#d6d8da" letter-spacing="0.2"><textpath href="#sl2" startOffset="50%" text-anchor="middle" id="t-rai">Recuperar y Mejorar</textpath></text><text font-family="Inter,Arial" font-weight="600" font-size="25" fill="#ffffff" letter-spacing="0.2"><textpath href="#ol2" startOffset="50%" text-anchor="middle" dy="0.35em"><tspan dy="0.35em" id="t-aab">Después de una Brecha</tspan></textpath></text></g><circle cx="540" cy="540" r="372" fill="none" stroke="#ffffff" stroke-width="5"></circle><circle cx="540" cy="540" r="205" fill="none" stroke="#ffffff" stroke-width="5"></circle><g opacity="0.9"><line x1="540" y1="188" x2="540" y2="180" stroke="#ffffff" stroke-width="2"></line><line x1="564.55" y1="188.86" x2="565.11" y2="180.88" stroke="#ffffff" stroke-width="2"></line><line x1="588.99" y1="191.43" x2="590.1" y2="183.5" stroke="#ffffff" stroke-width="2"></line><line x1="613.18" y1="195.69" x2="614.85" y2="187.87" stroke="#ffffff" stroke-width="2"></line><line x1="637.02" y1="201.64" x2="639.23" y2="193.95" stroke="#ffffff" stroke-width="2"></line><line x1="660.39" y1="209.23" x2="663.13" y2="201.71" stroke="#ffffff" stroke-width="2"></line><line x1="683.17" y1="218.43" x2="686.43" y2="211.12" stroke="#ffffff" stroke-width="2"></line><line x1="705.25" y1="229.2" x2="709.01" y2="222.14" stroke="#ffffff" stroke-width="2"></line><line x1="726.53" y1="241.49" x2="730.77" y2="234.7" stroke="#ffffff" stroke-width="2"></line><line x1="746.9" y1="255.23" x2="751.6" y2="248.75" stroke="#ffffff" stroke-width="2"></line><line x1="766.26" y1="270.35" x2="771.4" y2="264.22" stroke="#ffffff" stroke-width="2"></line><line x1="784.52" y1="286.79" x2="790.08" y2="281.04" stroke="#ffffff" stroke-width="2"></line><line x1="801.59" y1="304.47" x2="807.53" y2="299.11" stroke="#ffffff" stroke-width="2"></line><line x1="817.38" y1="323.29" x2="823.68" y2="318.36" stroke="#ffffff" stroke-width="2"></line><line x1="831.82" y1="343.16" x2="838.45" y2="338.69" stroke="#ffffff" stroke-width="2"></line><line x1="844.84" y1="364" x2="851.77" y2="360" stroke="#ffffff" stroke-width="2"></line><line x1="856.38" y1="385.69" x2="863.57" y2="382.19" stroke="#ffffff" stroke-width="2"></line><line x1="866.37" y1="408.14" x2="873.79" y2="405.14" stroke="#ffffff" stroke-width="2"></line><line x1="874.77" y1="431.23" x2="882.38" y2="428.75" stroke="#ffffff" stroke-width="2"></line><line x1="881.54" y1="454.84" x2="889.31" y2="452.91" stroke="#ffffff" stroke-width="2"></line><line x1="886.65" y1="478.88" x2="894.53" y2="477.49" stroke="#ffffff" stroke-width="2"></line><line x1="890.07" y1="503.21" x2="898.03" y2="502.37" stroke="#ffffff" stroke-width="2"></line><line x1="891.79" y1="527.72" x2="899.78" y2="527.44" stroke="#ffffff" stroke-width="2"></line><line x1="891.79" y1="552.28" x2="899.78" y2="552.56" stroke="#ffffff" stroke-width="2"></line><line x1="890.07" y1="576.79" x2="898.03" y2="577.63" stroke="#ffffff" stroke-width="2"></line><line x1="886.65" y1="601.12" x2="894.53" y2="602.51" stroke="#ffffff" stroke-width="2"></line><line x1="881.54" y1="625.16" x2="889.31" y2="627.09" stroke="#ffffff" stroke-width="2"></line><line x1="874.77" y1="648.77" x2="882.38" y2="651.25" stroke="#ffffff" stroke-width="2"></line><line x1="866.37" y1="671.86" x2="873.79" y2="674.86" stroke="#ffffff" stroke-width="2"></line><line x1="856.38" y1="694.31" x2="863.57" y2="697.81" stroke="#ffffff" stroke-width="2"></line><line x1="844.84" y1="716" x2="851.77" y2="720" stroke="#ffffff" stroke-width="2"></line><line x1="831.82" y1="736.84" x2="838.45" y2="741.31" stroke="#ffffff" stroke-width="2"></line><line x1="817.38" y1="756.71" x2="823.68" y2="761.64" stroke="#ffffff" stroke-width="2"></line><line x1="801.59" y1="775.53" x2="807.53" y2="780.89" stroke="#ffffff" stroke-width="2"></line><line x1="784.52" y1="793.21" x2="790.08" y2="798.96" stroke="#ffffff" stroke-width="2"></line><line x1="766.26" y1="809.65" x2="771.4" y2="815.78" stroke="#ffffff" stroke-width="2"></line><line x1="746.9" y1="824.77" x2="751.6" y2="831.25" stroke="#ffffff" stroke-width="2"></line><line x1="726.53" y1="838.51" x2="730.77" y2="845.3" stroke="#ffffff" stroke-width="2"></line><line x1="705.25" y1="850.8" x2="709.01" y2="857.86" stroke="#ffffff" stroke-width="2"></line><line x1="683.17" y1="861.57" x2="686.43" y2="868.88" stroke="#ffffff" stroke-width="2"></line><line x1="660.39" y1="870.77" x2="663.13" y2="878.29" stroke="#ffffff" stroke-width="2"></line><line x1="637.02" y1="878.36" x2="639.23" y2="886.05" stroke="#ffffff" stroke-width="2"></line><line x1="613.18" y1="884.31" x2="614.85" y2="892.13" stroke="#ffffff" stroke-width="2"></line><line x1="588.99" y1="888.57" x2="590.1" y2="896.5" stroke="#ffffff" stroke-width="2"></line><line x1="564.55" y1="891.14" x2="565.11" y2="899.12" stroke="#ffffff" stroke-width="2"></line><line x1="540" y1="892" x2="540" y2="900" stroke="#ffffff" stroke-width="2"></line><line x1="515.45" y1="891.14" x2="514.89" y2="899.12" stroke="#ffffff" stroke-width="2"></line><line x1="491.01" y1="888.57" x2="489.9" y2="896.5" stroke="#ffffff" stroke-width="2"></line><line x1="466.82" y1="884.31" x2="465.15" y2="892.13" stroke="#ffffff" stroke-width="2"></line><line x1="442.98" y1="878.36" x2="440.77" y2="886.05" stroke="#ffffff" stroke-width="2"></line><line x1="419.61" y1="870.77" x2="416.87" y2="878.29" stroke="#ffffff" stroke-width="2"></line><line x1="396.83" y1="861.57" x2="393.57" y2="868.88" stroke="#ffffff" stroke-width="2"></line><line x1="374.75" y1="850.8" x2="370.99" y2="857.86" stroke="#ffffff" stroke-width="2"></line><line x1="353.47" y1="838.51" x2="349.23" y2="845.3" stroke="#ffffff" stroke-width="2"></line><line x1="333.1" y1="824.77" x2="328.4" y2="831.25" stroke="#ffffff" stroke-width="2"></line><line x1="313.74" y1="809.65" x2="308.6" y2="815.78" stroke="#ffffff" stroke-width="2"></line><line x1="295.48" y1="793.21" x2="289.92" y2="798.96" stroke="#ffffff" stroke-width="2"></line><line x1="278.41" y1="775.53" x2="272.47" y2="780.89" stroke="#ffffff" stroke-width="2"></line><line x1="262.62" y1="756.71" x2="256.32" y2="761.64" stroke="#ffffff" stroke-width="2"></line><line x1="248.18" y1="736.84" x2="241.55" y2="741.31" stroke="#ffffff" stroke-width="2"></line><line x1="235.16" y1="716" x2="228.23" y2="720" stroke="#ffffff" stroke-width="2"></line><line x1="223.62" y1="694.31" x2="216.43" y2="697.81" stroke="#ffffff" stroke-width="2"></line><line x1="213.63" y1="671.86" x2="206.21" y2="674.86" stroke="#ffffff" stroke-width="2"></line><line x1="205.23" y1="648.77" x2="197.62" y2="651.25" stroke="#ffffff" stroke-width="2"></line><line x1="198.46" y1="625.16" x2="190.69" y2="627.09" stroke="#ffffff" stroke-width="2"></line><line x1="193.35" y1="601.12" x2="185.47" y2="602.51" stroke="#ffffff" stroke-width="2"></line><line x1="189.93" y1="576.79" x2="181.97" y2="577.63" stroke="#ffffff" stroke-width="2"></line><line x1="188.21" y1="552.28" x2="180.22" y2="552.56" stroke="#ffffff" stroke-width="2"></line><line x1="188.21" y1="527.72" x2="180.22" y2="527.44" stroke="#ffffff" stroke-width="2"></line><line x1="189.93" y1="503.21" x2="181.97" y2="502.37" stroke="#ffffff" stroke-width="2"></line><line x1="193.35" y1="478.88" x2="185.47" y2="477.49" stroke="#ffffff" stroke-width="2"></line><line x1="198.46" y1="454.84" x2="190.69" y2="452.91" stroke="#ffffff" stroke-width="2"></line><line x1="205.23" y1="431.23" x2="197.62" y2="428.75" stroke="#ffffff" stroke-width="2"></line><line x1="213.63" y1="408.14" x2="206.21" y2="405.14" stroke="#ffffff" stroke-width="2"></line><line x1="223.62" y1="385.69" x2="216.43" y2="382.19" stroke="#ffffff" stroke-width="2"></line><line x1="235.16" y1="364" x2="228.23" y2="360" stroke="#ffffff" stroke-width="2"></line><line x1="248.18" y1="343.16" x2="241.55" y2="338.69" stroke="#ffffff" stroke-width="2"></line><line x1="262.62" y1="323.29" x2="256.32" y2="318.36" stroke="#ffffff" stroke-width="2"></line><line x1="278.41" y1="304.47" x2="272.47" y2="299.11" stroke="#ffffff" stroke-width="2"></line><line x1="295.48" y1="286.79" x2="289.92" y2="281.04" stroke="#ffffff" stroke-width="2"></line><line x1="313.74" y1="270.35" x2="308.6" y2="264.22" stroke="#ffffff" stroke-width="2"></line><line x1="333.1" y1="255.23" x2="328.4" y2="248.75" stroke="#ffffff" stroke-width="2"></line><line x1="353.47" y1="241.49" x2="349.23" y2="234.7" stroke="#ffffff" stroke-width="2"></line><line x1="374.75" y1="229.2" x2="370.99" y2="222.14" stroke="#ffffff" stroke-width="2"></line><line x1="396.83" y1="218.43" x2="393.57" y2="211.12" stroke="#ffffff" stroke-width="2"></line><line x1="419.61" y1="209.23" x2="416.87" y2="201.71" stroke="#ffffff" stroke-width="2"></line><line x1="442.98" y1="201.64" x2="440.77" y2="193.95" stroke="#ffffff" stroke-width="2"></line><line x1="466.82" y1="195.69" x2="465.15" y2="187.87" stroke="#ffffff" stroke-width="2"></line><line x1="491.01" y1="191.43" x2="489.9" y2="183.5" stroke="#ffffff" stroke-width="2"></line><line x1="515.45" y1="188.86" x2="514.89" y2="180.88" stroke="#ffffff" stroke-width="2"></line></g><polyline points="632.66 194.2 L 664.5 284.74 L 594.35 337.16" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"></polyline><polyline points="793.14 793.14 L 698.81 775.45 L 688.49 688.49" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"></polyline><polyline points="194.2 632.66 L 256.69 559.81 L 337.16 594.35" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"></polyline><g id="puzzle" transform="rotate(255.69 540 540)"><path d="M 366.79 440 A 200 200 0 0 1 713.21 440 L 687.66 454.75 A 15 15 0 1 1 672.07 463.75 L 646.52 478.5 A 123 123 0 0 0 433.48 478.5 L 407.93 463.75 A 15 15 0 1 0 392.34 454.75 L 366.79 440 Z" fill="#a4a8ac"></path><path d="M 713.21 440 A 200 200 0 0 1 540 740 L 540 710.5 A 15 15 0 1 1 540 692.5 L 540 663 A 123 123 0 0 0 646.52 478.5 L 672.07 463.75 A 15 15 0 1 0 687.66 454.75 L 713.21 440 Z" fill="#6a6e72"></path><path d="M 540 740 A 200 200 0 0 1 366.79 440 L 392.34 454.75 A 15 15 0 1 1 407.93 463.75 L 433.48 478.5 A 123 123 0 0 0 540 663 L 540 692.5 A 15 15 0 1 0 540 710.5 L 540 740 Z" fill="#878b8f"></path><text font-family="Inter,Arial" font-weight="600" font-size="29" fill="#ffffff" letter-spacing="0.2"><textpath href="#pz0" startOffset="50%" text-anchor="middle" dy="0.35em"><tspan dy="0.35em" id="t-ppl">Personas</tspan></textpath></text><text font-family="Inter,Arial" font-weight="600" font-size="29" fill="#ffffff" letter-spacing="0.2"><textpath href="#pz1" startOffset="50%" text-anchor="middle" dy="0.35em"><tspan dy="0.35em" id="t-prc">Procesos</tspan></textpath></text><text font-family="Inter,Arial" font-weight="600" font-size="29" fill="#ffffff" letter-spacing="0.2"><textpath href="#pz2" startOffset="50%" text-anchor="middle" dy="0.35em"><tspan dy="0.35em" id="t-tch">Tecnología</tspan></textpath></text></g><circle cx="540" cy="540" r="122" fill="#f4f4f3"></circle><g opacity="0.5"><line x1="540" y1="434" x2="540" y2="427" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="551.08" y1="434.58" x2="551.81" y2="427.62" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="562.04" y1="436.32" x2="563.49" y2="429.47" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="572.76" y1="439.19" x2="574.92" y2="432.53" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="583.11" y1="443.16" x2="585.96" y2="436.77" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="593" y1="448.2" x2="596.5" y2="442.14" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="602.31" y1="454.24" x2="606.42" y2="448.58" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="610.93" y1="461.23" x2="615.61" y2="456.02" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="618.77" y1="469.07" x2="623.98" y2="464.39" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="625.76" y1="477.69" x2="631.42" y2="473.58" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="631.8" y1="487" x2="637.86" y2="483.5" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="636.84" y1="496.89" x2="643.23" y2="494.04" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="640.81" y1="507.24" x2="647.47" y2="505.08" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="643.68" y1="517.96" x2="650.53" y2="516.51" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="645.42" y1="528.92" x2="652.38" y2="528.19" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="646" y1="540" x2="653" y2="540" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="645.42" y1="551.08" x2="652.38" y2="551.81" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="643.68" y1="562.04" x2="650.53" y2="563.49" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="640.81" y1="572.76" x2="647.47" y2="574.92" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="636.84" y1="583.11" x2="643.23" y2="585.96" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="631.8" y1="593" x2="637.86" y2="596.5" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="625.76" y1="602.31" x2="631.42" y2="606.42" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="618.77" y1="610.93" x2="623.98" y2="615.61" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="610.93" y1="618.77" x2="615.61" y2="623.98" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="602.31" y1="625.76" x2="606.42" y2="631.42" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="593" y1="631.8" x2="596.5" y2="637.86" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="583.11" y1="636.84" x2="585.96" y2="643.23" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="572.76" y1="640.81" x2="574.92" y2="647.47" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="562.04" y1="643.68" x2="563.49" y2="650.53" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="551.08" y1="645.42" x2="551.81" y2="652.38" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="540" y1="646" x2="540" y2="653" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="528.92" y1="645.42" x2="528.19" y2="652.38" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="517.96" y1="643.68" x2="516.51" y2="650.53" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="507.24" y1="640.81" x2="505.08" y2="647.47" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="496.89" y1="636.84" x2="494.04" y2="643.23" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="487" y1="631.8" x2="483.5" y2="637.86" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="477.69" y1="625.76" x2="473.58" y2="631.42" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="469.07" y1="618.77" x2="464.39" y2="623.98" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="461.23" y1="610.93" x2="456.02" y2="615.61" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="454.24" y1="602.31" x2="448.58" y2="606.42" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="448.2" y1="593" x2="442.14" y2="596.5" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="443.16" y1="583.11" x2="436.77" y2="585.96" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="439.19" y1="572.76" x2="432.53" y2="574.92" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="436.32" y1="562.04" x2="429.47" y2="563.49" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="434.58" y1="551.08" x2="427.62" y2="551.81" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="434" y1="540" x2="427" y2="540" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="434.58" y1="528.92" x2="427.62" y2="528.19" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="436.32" y1="517.96" x2="429.47" y2="516.51" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="439.19" y1="507.24" x2="432.53" y2="505.08" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="443.16" y1="496.89" x2="436.77" y2="494.04" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="448.2" y1="487" x2="442.14" y2="483.5" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="454.24" y1="477.69" x2="448.58" y2="473.58" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="461.23" y1="469.07" x2="456.02" y2="464.39" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="469.07" y1="461.23" x2="464.39" y2="456.02" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="477.69" y1="454.24" x2="473.58" y2="448.58" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="487" y1="448.2" x2="483.5" y2="442.14" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="496.89" y1="443.16" x2="494.04" y2="436.77" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="507.24" y1="439.19" x2="505.08" y2="432.53" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="517.96" y1="436.32" x2="516.51" y2="429.47" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="528.92" y1="434.58" x2="528.19" y2="427.62" stroke="#9a9ea2" stroke-width="1.6"></line></g><g id="rose"><path d="M 540 448 L 538.44 530.12 L 540 540 Z" fill="#dcdee0"></path><path d="M 540 448 L 541.56 530.12 L 540 540 Z" fill="#b9bcbf"></path><path d="M 605.05 474.95 L 545.88 531.91 L 540 540 Z" fill="#dcdee0"></path><path d="M 605.05 474.95 L 548.09 534.12 L 540 540 Z" fill="#b9bcbf"></path><path d="M 632 540 L 549.88 538.44 L 540 540 Z" fill="#dcdee0"></path><path d="M 632 540 L 549.88 541.56 L 540 540 Z" fill="#b9bcbf"></path><path d="M 605.05 605.05 L 548.09 545.88 L 540 540 Z" fill="#dcdee0"></path><path d="M 605.05 605.05 L 545.88 548.09 L 540 540 Z" fill="#b9bcbf"></path><path d="M 540 632 L 541.56 549.88 L 540 540 Z" fill="#dcdee0"></path><path d="M 540 632 L 538.44 549.88 L 540 540 Z" fill="#b9bcbf"></path><path d="M 474.95 605.05 L 534.12 548.09 L 540 540 Z" fill="#dcdee0"></path><path d="M 474.95 605.05 L 531.91 545.88 L 540 540 Z" fill="#b9bcbf"></path><path d="M 448 540 L 530.12 541.56 L 540 540 Z" fill="#dcdee0"></path><path d="M 448 540 L 530.12 538.44 L 540 540 Z" fill="#b9bcbf"></path><path d="M 474.95 474.95 L 531.91 534.12 L 540 540 Z" fill="#dcdee0"></path><path d="M 474.95 474.95 L 534.12 531.91 L 540 540 Z" fill="#b9bcbf"></path><path d="M 557.6 497.5 L 541.63 533.19 L 540 540 Z" fill="#e3e5e7"></path><path d="M 557.6 497.5 L 543.66 534.03 L 540 540 Z" fill="#cbced1"></path><path d="M 582.5 522.4 L 545.97 536.34 L 540 540 Z" fill="#e3e5e7"></path><path d="M 582.5 522.4 L 546.81 538.37 L 540 540 Z" fill="#cbced1"></path><path d="M 582.5 557.6 L 546.81 541.63 L 540 540 Z" fill="#e3e5e7"></path><path d="M 582.5 557.6 L 545.97 543.66 L 540 540 Z" fill="#cbced1"></path><path d="M 557.6 582.5 L 543.66 545.97 L 540 540 Z" fill="#e3e5e7"></path><path d="M 557.6 582.5 L 541.63 546.81 L 540 540 Z" fill="#cbced1"></path><path d="M 522.4 582.5 L 538.37 546.81 L 540 540 Z" fill="#e3e5e7"></path><path d="M 522.4 582.5 L 536.34 545.97 L 540 540 Z" fill="#cbced1"></path><path d="M 497.5 557.6 L 534.03 543.66 L 540 540 Z" fill="#e3e5e7"></path><path d="M 497.5 557.6 L 533.19 541.63 L 540 540 Z" fill="#cbced1"></path><path d="M 497.5 522.4 L 533.19 538.37 L 540 540 Z" fill="#e3e5e7"></path><path d="M 497.5 522.4 L 534.03 536.34 L 540 540 Z" fill="#cbced1"></path><path d="M 522.4 497.5 L 536.34 534.03 L 540 540 Z" fill="#e3e5e7"></path><path d="M 522.4 497.5 L 538.37 533.19 L 540 540 Z" fill="#cbced1"></path></g><g id="needle" transform="rotate(195.95 540 540)">
+  <!-- South: dark -->
+  <path d="M 540 540 L 526 540 L 540 632 L 554 540 Z" fill="#1a1c1f"></path>
+  <!-- North: red -->
+  <path d="M 540 540 L 526 540 L 540 448 L 554 540 Z" fill="#E01C24"></path>
+  <!-- Center diamond cap -->
+  <path d="M 540 526 L 554 540 L 540 554 L 526 540 Z" fill="#1a1c1f"></path>
+  <path d="M 540 531 L 549 540 L 540 549 L 531 540 Z" fill="#E01C24"></path>
+  <circle cx="540" cy="540" r="4" fill="#fff"></circle>
+</g></g>
+    </svg>
+
+  <svg id="hits" viewBox="0 0 1080 1080" style="pointer-events: all;">
+    <path id="hit0" d="M 651.81 122.72 A 432 432 0 0 1 845.47 845.47 L 688.49 688.49 A 210 210 0 0 0 594.35 337.16 Z" style="pointer-events: none;"></path>
+    <path id="hit1" d="M 845.47 845.47 A 432 432 0 0 1 122.72 651.81 L 337.16 594.35 A 210 210 0 0 0 688.49 688.49 Z" style="pointer-events: none;"></path>
+    <path id="hit2" d="M 122.72 651.81 A 432 432 0 0 1 651.81 122.72 L 594.35 337.16 A 210 210 0 0 0 337.16 594.35 Z" style="pointer-events: none;"></path>
+
+  </svg>
+
+  <div id="lang-bar">
+    <button id="btn-en" onclick="setLang(&#39;en&#39;)" style="background: rgba(255, 255, 255, 0.1); color: rgb(136, 136, 136);">EN</button>
+    <button id="btn-es" onclick="setLang(&#39;es&#39;)" style="background: rgb(224, 28, 36); color: rgb(255, 255, 255);">ES</button>
+    <button id="btn-pt" onclick="setLang(&#39;pt&#39;)" style="background: rgba(255, 255, 255, 0.1); color: rgb(136, 136, 136);">PT</button>
+    <button id="btn-ja" onclick="setLang(&#39;ja&#39;)" style="background: rgba(255, 255, 255, 0.1); color: rgb(136, 136, 136);">JA</button>
+  </div>
+
+  <div id="compass-title">La Brújula de Ciberseguridad</div>
+  <div id="credit">Creado y Diseñado por:<br><a href="https://www.linkedin.com/in/jpcastro/" target="_blank" style="color:rgba(255,255,255,.5);text-decoration:none;">Juan Pablo Castro Vilaró</a></div>
+  <div id="pub-link"><a href="https://www.researchgate.net/publication/389631500" target="_blank" style="color:rgba(255,255,255,.45);text-decoration:none;display:block;margin-bottom:3px;"><span style="display:inline;white-space:nowrap;">La Brújula de la Ciberseguridad:</span> <span style="display:inline;white-space:nowrap;">Navegando Estratégicamente el Tormentoso Océano Digital</span></a><a href="https://doi.org/10.13140/RG.2.2.20733.68322" target="_blank" style="color:rgba(255,255,255,.28);text-decoration:none;">DOI: 10.13140/RG.2.2.20733.68322</a></div>
+  <div id="tt" class="" style="left: 732.203px; top: 160.203px;"><div id="tt-h">Gestión del Ciber Riesgo</div><div id="tt-s">Antes de una Brecha · Proactivo y Predictivo</div><div id="tt-b">El norte verdadero de tu brújula de ciberseguridad. Sin él, las organizaciones derivan de crisis en crisis, reaccionando, recuperándose, sin reducir nunca el riesgo de forma real. La Gestión del Ciber Riesgo es la disciplina proactiva y predictiva que anticipa las amenazas antes de que se materialicen, prioriza lo que más importa, optimiza las inversiones en seguridad y da a los ejecutivos un lenguaje claro para tomar decisiones estratégicas. Los ciberdelincuentes no solo buscan vulnerabilidades técnicas. Buscan la incertidumbre y la indecisión que genera no tener un norte. Esto es lo que cierra esa brecha.</div></div>
+</div>
+</div>
+
+<script>
+const T={
+  en:{
+    crm:"Cyber Risk Management",pap:"Proactive and Predictive",bab:"Before a Breach",
+    dar:"Detection and Response",rad:"Reactive and Defensive",dub:"During a Breach",
+    cr:"Cyber Resilience",rai:"Recover and Improve",aab:"After a Breach",
+    ppl:"People",prc:"Process",tch:"Technology",
+    title:"The Cybersecurity Compass",credit:"Created and Designed by:",
+    pubLine1:"The Cybersecurity Compass:",pubLine2:"Strategically Navigating the Stormy Digital Ocean",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  },
+  es:{
+    crm:"Gestión del Ciber Riesgo",pap:"Proactivo y Predictivo",bab:"Antes de una Brecha",
+    dar:"Detección y Respuesta",rad:"Reactivo y Defensivo",dub:"Durante una Brecha",
+    cr:"Ciber Resiliencia",rai:"Recuperar y Mejorar",aab:"Después de una Brecha",
+    ppl:"Personas",prc:"Procesos",tch:"Tecnología",
+    title:"La Brújula de Ciberseguridad",credit:"Creado y Diseñado por:",
+    pubLine1:"La Brújula de la Ciberseguridad:",pubLine2:"Navegando Estratégicamente el Tormentoso Océano Digital",
+    pubUrl:"https://www.researchgate.net/publication/389631500",
+    pubDoi:"10.13140/RG.2.2.20733.68322",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.20733.68322"
+  },
+  pt:{
+    crm:"Gestão de Ciber Riscos",pap:"Proativo e Preditivo",bab:"Antes de uma Brecha",
+    dar:"Detecção e Resposta",rad:"Reativo e Defensivo",dub:"Durante uma Brecha",
+    cr:"Ciber Resiliência",rai:"Recuperar e Melhorar",aab:"Após uma Brecha",
+    ppl:"Pessoas",prc:"Processos",tch:"Tecnologia",
+    title:"A Bússola da Cibersegurança",credit:"Criado e Projetado por:",
+    pubLine1:"A Bússola da Cibersegurança:",pubLine2:"Navegando Estrategicamente pelo Tempestuoso Oceano Digital",
+    pubUrl:"https://www.researchgate.net/publication/389631493",
+    pubDoi:"10.13140/RG.2.2.14022.79687",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.14022.79687"
+  },
+  ja:{
+    crm:"サイバーリスク管理",pap:"予防的かつ予測的",bab:"侵害発生前",
+    dar:"検知と対応",rad:"事後対応的かつ防御的",dub:"侵害発生中",
+    cr:"サイバーレジリエンス",rai:"復旧と改善",aab:"侵害発生後",
+    ppl:"人材",prc:"プロセス",tch:"テクノロジー",
+    title:"サイバーセキュリティ・コンパス",credit:"作成・デザイン：",
+    pubLine1:"サイバーセキュリティ・コンパス：",pubLine2:"荒れ狂うデジタルの海を戦略的に航海する",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  }
+};
+
+const TT={
+  en:[
+    {h:"Cyber Risk Management",s:"Before a Breach · Proactive & Predictive",
+     b:"The true north of your cybersecurity compass. Without it, organizations drift from crisis to crisis, reacting, recovering, never truly reducing risk. Cyber Risk Management is the proactive and predictive discipline that anticipates threats before they materialize, prioritizes what matters most, optimizes security investments, and gives executives a clear language to make strategic decisions. Cybercriminals are not only searching for technical vulnerabilities. They are looking for the uncertainty and indecision that comes from having no north. This is what closes that gap."},
+    {h:"Detection and Response",s:"During a Breach · Reactive & Defensive",
+     b:"In cybersecurity, it is not a matter of if storms will strike, but when. Detection and Response is your crew in the heart of the tempest: eyes on every signal, hands on every control. It identifies threats as they unfold, contains the breach before it spreads, and responds with speed and precision. Essential, but never sufficient alone. The organizations that only know how to weather storms will spend their entire voyage waiting for the next one. The compass demands more."},
+    {h:"Cyber Resilience",s:"After a Breach · Recover & Improve · An Outcome",
+     b:"Cyber Resilience is not a phase you enter after an incident. It is the outcome of doing everything else right. When your north is set through proactive risk management, and your crew responds with precision during the storm, resilience is what you earn. It means restoring operations faster, learning from what failed, hardening what was exposed, and feeding that intelligence back into your compass. Organizations that achieve true cyber resilience do not just survive storms. They become harder to sink with every one they weather."}
+  ],
+  es:[
+    {h:"Gestión del Ciber Riesgo",s:"Antes de una Brecha · Proactivo y Predictivo",
+     b:"El norte verdadero de tu brújula de ciberseguridad. Sin él, las organizaciones derivan de crisis en crisis, reaccionando, recuperándose, sin reducir nunca el riesgo de forma real. La Gestión del Ciber Riesgo es la disciplina proactiva y predictiva que anticipa las amenazas antes de que se materialicen, prioriza lo que más importa, optimiza las inversiones en seguridad y da a los ejecutivos un lenguaje claro para tomar decisiones estratégicas. Los ciberdelincuentes no solo buscan vulnerabilidades técnicas. Buscan la incertidumbre y la indecisión que genera no tener un norte. Esto es lo que cierra esa brecha."},
+    {h:"Detección y Respuesta",s:"Durante una Brecha · Reactivo y Defensivo",
+     b:"En ciberseguridad, no es cuestión de si las tormentas llegarán, sino de cuándo. La Detección y Respuesta es tu tripulación en el corazón del temporal: ojos en cada señal, manos en cada control. Identifica las amenazas a medida que se desarrollan, contiene la brecha antes de que se propague y responde con velocidad y precisión. Esencial, pero nunca suficiente por sí sola. Las organizaciones que solo saben capear tormentas pasarán todo su viaje esperando la siguiente. La brújula exige más."},
+    {h:"Ciber Resiliencia",s:"Después de una Brecha · Recuperar y Mejorar · Un Resultado",
+     b:"La Ciber Resiliencia no es una fase en la que entras después de un incidente. Es el resultado de haber hecho todo lo demás bien. Cuando tu norte está definido mediante una gestión proactiva del riesgo y tu equipo responde con precisión durante la tormenta, la resiliencia es lo que obtienes. Significa restaurar operaciones más rápido, aprender de lo que falló, endurecer lo que quedó expuesto y retroalimentar esa inteligencia en tu brújula. Las organizaciones que logran una verdadera Ciber Resiliencia no solo sobreviven las tormentas. Se vuelven más difíciles de hundir con cada una que capean."}
+  ],
+  pt:[
+    {h:"Gestão de Ciber Riscos",s:"Antes de uma Brecha · Proativo e Preditivo",
+     b:"O norte verdadeiro da sua bússola de cibersegurança. Sem ele, as organizações derivam de crise em crise, reagindo, recuperando, sem jamais reduzir o risco de forma real. A Gestão de Ciber Riscos é a disciplina proativa e preditiva que antecipa as ameaças antes de se materializarem, prioriza o que mais importa, otimiza os investimentos em segurança e oferece aos executivos uma linguagem clara para tomar decisões estratégicas. Os cibercriminosos não buscam apenas vulnerabilidades técnicas. Buscam a incerteza e a indecisão que vêm de não ter um norte. É isso que fecha essa lacuna."},
+    {h:"Detecção e Resposta",s:"Durante uma Brecha · Reativo e Defensivo",
+     b:"Em cibersegurança, não é uma questão de se as tempestades vão chegar, mas de quando. A Detecção e Resposta é a sua tripulação no coração da tempestade: olhos em cada sinal, mãos em cada controle. Identifica as ameaças à medida que se desenvolvem, contém a brecha antes que se espalhe e responde com velocidade e precisão. Essencial, mas nunca suficiente sozinha. As organizações que só sabem enfrentar tempestades passarão toda a sua viagem esperando pela próxima. A bússola exige mais."},
+    {h:"Ciber Resiliência",s:"Após uma Brecha · Recuperar e Melhorar · Um Resultado",
+     b:"A Ciber Resiliência não é uma fase que você entra após um incidente. É o resultado de ter feito tudo o mais certo. Quando o seu norte está definido por uma gestão proativa de riscos e sua equipe responde com precisão durante a tempestade, a resiliência é o que você conquista. Significa restaurar operações mais rápido, aprender com o que falhou, fortalecer o que foi exposto e retroalimentar essa inteligência na sua bússola. As organizações que alcançam a verdadeira Ciber Resiliência não apenas sobrevivem às tempestades. Tornam-se mais difíceis de afundar a cada uma que enfrentam."}
+  ],
+  ja:[
+    {h:"サイバーリスク管理",s:"侵害発生前 · 予防的かつ予測的",
+     b:"サイバーセキュリティのコンパスが指し示す真北です。これがなければ、組織は危機から危機へと漂流し、対応と復旧を繰り返すだけで、リスクを実際に低減することはできません。サイバーリスク管理とは、脅威が現実化する前に予測し、最も重要なものに優先順位を付け、セキュリティ投資を最適化し、経営層が戦略的な意思決定を行うための明確な言語を与える、予防的かつ予測的な規律です。サイバー犯罪者が探しているのは技術的な脆弱性だけではありません。進むべき方向を持たない組織に生じる不確実性と決断の遅れを狙っています。その隙を埋めるのがサイバーリスク管理です。"},
+    {h:"検知と対応",s:"侵害発生中 · 事後対応的かつ防御的",
+     b:"サイバーセキュリティにおいて、嵐が来るかどうかは問題ではありません。いつ来るかが問題です。検知と対応は、嵐の中心にいる乗組員です。あらゆる兆候に目を向け、あらゆる制御に手を掛けます。脅威が展開するその瞬間に特定し、侵害が広がる前に封じ込め、迅速かつ的確に対応します。不可欠ですが、それだけでは決して十分ではありません。嵐を乗り切る方法しか知らない組織は、航海のすべてを次の嵐を待つことに費やすことになります。コンパスはそれ以上を求めます。"},
+    {h:"サイバーレジリエンス",s:"侵害発生後 · 復旧と改善 · 成果",
+     b:"サイバーレジリエンスは、インシデントの後に入る段階ではありません。それ以外のすべてを正しく行った結果として得られる成果です。予防的なリスク管理によって真北が定まり、嵐の最中に乗組員が的確に対応したとき、レジリエンスは獲得されます。それは、業務をより速く復旧し、失敗から学び、露呈した弱点を強化し、その知見をコンパスへ還元することを意味します。真のサイバーレジリエンスを実現する組織は、単に嵐を生き延びるだけではありません。乗り切るたびに、沈みにくくなっていきます。"}
+  ]
+};
+
+const TTP={
+  en:[
+    {h:"People",s:"The Human Layer",
+     b:"Technology does not defend organizations. People do. The People dimension of the compass represents the human layer that makes every other investment meaningful: the security analysts who interpret signals, the executives who make risk decisions, the employees who are either the first line of defense or the first point of failure. And on the other side of every attack, there is also a person. Cybercriminals are not automated forces of nature. They are individuals with intentions, motivations, and strategies of their own. They study their targets, exploit indecision, and move with purpose. Defending against them requires the same human qualities they possess: awareness, judgment, and the will to act before they do. A compass without skilled, aware, and empowered people is an instrument no one knows how to read. Culture, training, accountability, and leadership are not soft factors. They are the hands on the wheel."},
+    {h:"Process",s:"The Operational Backbone",
+     b:"Process is the operational backbone that connects people to technology and strategy to execution. Without it, even the best tools produce noise, and even the best talent operates in silos. At the core of a mature process layer sit the CyberRiskOps discipline and its operational nerve center, the Cyber Risk Operations Center (CROC), where risk intelligence is continuously measured, prioritized, and acted upon. Security Operations (SecOps) bridges that risk intelligence with real-time action, while the Security Operations Center (SOC) executes detection, investigation, and response at speed. Together, they transform cybersecurity from a set of isolated reactions into a continuous, measurable, and improving operation. Process is what ensures the compass keeps moving."},
+    {h:"Technology",s:"The Force Multiplier",
+     b:"Technology is the force multiplier of your cybersecurity strategy, but only when it serves a clear purpose. Cyber Risk Quantification (CRQ) translates technical risk into financial language that executives can act on. Cyber Risk Exposure Management (CREM) continuously maps and prioritizes your attack surface before adversaries can exploit it. Extended Detection and Response (XDR) unifies visibility across endpoints, networks, cloud, and identity into a single, correlated picture. Threat Intelligence feeds your compass with adversary context, turning reactive alerts into proactive decisions. Automation eliminates the manual friction that slows response and allows your teams to operate at machine speed without burning out. A unified platform ties all of this together, replacing fragmented point solutions with integrated intelligence. Artificial Intelligence extends what human teams can do across every layer. Technology does not define your strategy. It executes it."}
+  ],
+  es:[
+    {h:"Personas",s:"La Capa Humana",
+     b:"La tecnología no defiende organizaciones. Las personas sí. La dimensión de Personas representa la capa humana que da sentido a cada otra inversión: los analistas que interpretan señales, los ejecutivos que toman decisiones de riesgo, los empleados que son la primera línea de defensa o el primer punto de falla. Y al otro lado de cada ataque también hay una persona. Los ciberdelincuentes no son fuerzas automatizadas de la naturaleza. Son individuos con intenciones, motivaciones y estrategias propias. Estudian sus objetivos, explotan la indecisión y actúan con propósito. Defenderse de ellos requiere las mismas cualidades humanas que ellos poseen: conciencia, juicio y voluntad de actuar antes que ellos. Una brújula sin personas capacitadas y empoderadas es un instrumento que nadie sabe leer. La cultura, la formación, la responsabilidad y el liderazgo no son factores blandos. Son las manos en el timón."},
+    {h:"Procesos",s:"La Columna Vertebral Operacional",
+     b:"El proceso es la columna vertebral operacional que conecta a las personas con la tecnología y la estrategia con la ejecución. Sin él, incluso las mejores herramientas generan ruido y el mejor talento opera en silos. En el núcleo de una capa de proceso madura se encuentran la disciplina CyberRiskOps y su centro neurálgico operacional, el Centro de Operaciones de Ciber Riesgo (CROC), donde la inteligencia de riesgo se mide, prioriza y actúa continuamente. Security Operations (SecOps) conecta esa inteligencia de riesgo con la acción en tiempo real, mientras que el Centro de Operaciones de Seguridad (SOC) ejecuta la detección, investigación y respuesta con velocidad. Juntos, transforman la ciberseguridad de un conjunto de reacciones aisladas en una operación continua, medible y en mejora constante. El proceso es lo que garantiza que la brújula siga en movimiento."},
+    {h:"Tecnología",s:"El Multiplicador de Fuerza",
+     b:"La tecnología es el multiplicador de fuerza de tu estrategia de ciberseguridad, pero solo cuando sirve a un propósito claro. La Cuantificación del Ciber Riesgo (CRQ) traduce el riesgo técnico a un lenguaje financiero que los ejecutivos pueden utilizar. La Gestión de Exposición al Ciber Riesgo (CREM) mapea y prioriza continuamente tu superficie de ataque antes de que los adversarios puedan explotarla. La Detección y Respuesta Extendida (XDR) unifica la visibilidad en endpoints, redes, nube e identidad en una imagen única y correlacionada. La Inteligencia de Amenazas alimenta tu brújula con contexto del adversario, convirtiendo alertas reactivas en decisiones proactivas. La automatización elimina la fricción manual que ralentiza la respuesta y permite a tus equipos operar a la velocidad de las máquinas. Una plataforma unificada integra todo esto, reemplazando soluciones puntuales fragmentadas con inteligencia integrada. La Inteligencia Artificial amplía lo que los equipos humanos pueden hacer en cada capa. La tecnología no define tu estrategia. La ejecuta."}
+  ],
+  pt:[
+    {h:"Pessoas",s:"A Camada Humana",
+     b:"A tecnologia não defende organizações. As pessoas sim. A dimensão de Pessoas representa a camada humana que dá sentido a cada outro investimento: os analistas que interpretam sinais, os executivos que tomam decisões de risco, os funcionários que são a primeira linha de defesa ou o primeiro ponto de falha. E do outro lado de cada ataque também há uma pessoa. Os cibercriminosos não são forças automatizadas da natureza. São indivíduos com intenções, motivações e estratégias próprias. Estudam seus alvos, exploram a indecisão e agem com propósito. Defendê-los exige as mesmas qualidades humanas que eles possuem: consciência, julgamento e vontade de agir antes deles. Uma bússola sem pessoas capacitadas e empoderadas é um instrumento que ninguém sabe ler. Cultura, treinamento, responsabilidade e liderança não são fatores suaves. São as mãos no leme."},
+    {h:"Processos",s:"A Espinha Dorsal Operacional",
+     b:"O processo é a espinha dorsal operacional que conecta pessoas à tecnologia e estratégia à execução. Sem ele, até as melhores ferramentas geram ruído e o melhor talento opera em silos. No núcleo de uma camada de processo madura estão a disciplina CyberRiskOps e seu centro operacional, o Centro de Operações de Ciber Risco (CROC), onde a inteligência de risco é continuamente medida, priorizada e executada. Security Operations (SecOps) conecta essa inteligência de risco com ação em tempo real, enquanto o Centro de Operações de Segurança (SOC) executa detecção, investigação e resposta com velocidade. Juntos, transformam a cibersegurança de um conjunto de reações isoladas em uma operação contínua, mensurável e em melhoria constante. O processo é o que garante que a bússola continue em movimento."},
+    {h:"Tecnologia",s:"O Multiplicador de Força",
+     b:"A tecnologia é o multiplicador de força da sua estratégia de cibersegurança, mas apenas quando serve a um propósito claro. A Quantificação do Ciber Risco (CRQ) traduz o risco técnico em linguagem financeira que os executivos podem utilizar. A Gestão de Exposição ao Ciber Risco (CREM) mapeia e prioriza continuamente sua superfície de ataque antes que os adversários possam explorá-la. A Detecção e Resposta Estendida (XDR) unifica a visibilidade em endpoints, redes, nuvem e identidade em uma imagem única e correlacionada. A Inteligência de Ameaças alimenta sua bússola com contexto do adversário, transformando alertas reativos em decisões proativas. A automação elimina o atrito manual que atrasa a resposta e permite que suas equipes operem na velocidade das máquinas. Uma plataforma unificada integra tudo isso, substituindo soluções pontuais fragmentadas por inteligência integrada. A Inteligência Artificial amplia o que as equipes humanas podem fazer em cada camada. A tecnologia não define sua estratégia. Ela a executa."}
+  ],
+  ja:[
+    {h:"人材",s:"ヒューマンレイヤー",
+     b:"組織を守るのはテクノロジーではありません。人です。コンパスにおける「人材」の次元は、他のあらゆる投資に意味を与えるヒューマンレイヤーを表します。兆候を読み解くセキュリティアナリスト、リスクに関する判断を下す経営層、そして最初の防衛線にも最初の弱点にもなり得る従業員です。そして、あらゆる攻撃の向こう側にも人がいます。サイバー犯罪者は自動化された自然の力ではありません。独自の意図、動機、戦略を持つ個人です。標的を研究し、決断の遅れを突き、目的を持って動きます。彼らに対抗するには、彼らが備えているものと同じ人間的な資質が求められます。認識力、判断力、そして先に動く意志です。熟練し、意識が高く、権限を与えられた人がいないコンパスは、誰も読み方を知らない計器にすぎません。文化、教育、説明責任、リーダーシップは副次的な要素ではありません。舵を握る手そのものです。"},
+    {h:"プロセス",s:"運用の基盤",
+     b:"プロセスは、人とテクノロジー、戦略と実行を結ぶ運用の基盤です。これがなければ、最良のツールもノイズを生み、最良の人材もサイロの中で働くことになります。成熟したプロセス層の中核にあるのが CyberRiskOps という規律と、その運用上の中枢であるサイバーリスク運用センター（CROC）です。ここではリスクインテリジェンスが継続的に測定され、優先順位付けされ、実行に移されます。セキュリティ運用（SecOps）はそのリスクインテリジェンスをリアルタイムの行動へと橋渡しし、セキュリティオペレーションセンター（SOC）は検知、調査、対応を高速で実行します。両者が組み合わさることで、サイバーセキュリティは孤立した反応の集まりから、継続的で測定可能かつ改善し続ける運用へと変わります。コンパスを動かし続けるのがプロセスです。"},
+    {h:"テクノロジー",s:"戦力の増幅装置",
+     b:"テクノロジーはサイバーセキュリティ戦略の戦力を増幅させますが、それは明確な目的に沿って使われる場合に限られます。サイバーリスク定量化（CRQ）は、技術的なリスクを経営層が行動に移せる財務の言語へと翻訳します。サイバーリスクエクスポージャー管理（CREM）は、攻撃者に悪用される前にアタックサーフェスを継続的に可視化し、優先順位を付けます。Extended Detection and Response（XDR）は、エンドポイント、ネットワーク、クラウド、アイデンティティにまたがる可視性を、相関付けられた一つの全体像に統合します。脅威インテリジェンスは攻撃者の文脈をコンパスに与え、受動的なアラートを能動的な意思決定へと変えます。自動化は対応を遅らせる手作業の摩擦を取り除き、チームが疲弊することなく機械の速度で動けるようにします。統合プラットフォームはこれらすべてを結び付け、断片化した個別製品を統合されたインテリジェンスに置き換えます。人工知能は、あらゆる層で人のチームができることを拡張します。テクノロジーは戦略を定義するものではありません。戦略を実行するものです。"}
+  ]
+};
+
+const IDS={crm:'t-crm',pap:'t-pap',bab:'t-bab',dar:'t-dar',rad:'t-rad',dub:'t-dub',cr:'t-cr',rai:'t-rai',aab:'t-aab',ppl:'t-ppl',prc:'t-prc',tch:'t-tch'};
+
+let lang=(()=>{const n=(navigator.language||'en').slice(0,2).toLowerCase();return T[n]?n:'en';})();
+
+function applyLang(l){
+  lang=l;
+  const t=T[l];
+  Object.entries(IDS).forEach(([k,id])=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=t[k];
+    else console.warn('Missing element:',id);
+  });
+  document.getElementById('compass-title').textContent=t.title;
+  document.getElementById('credit').innerHTML=t.credit+'<br><a href="https://www.linkedin.com/in/jpcastro/" target="_blank" style="color:rgba(255,255,255,.5);text-decoration:none;">Juan Pablo Castro Vilaró</a>';
+  // Line1 stays on its own line; line2 follows on same line if space allows,
+  // otherwise breaks cleanly below line1 (never mid-word)
+  document.getElementById('pub-link').innerHTML=
+    '<a href="'+t.pubUrl+'" target="_blank" style="color:rgba(255,255,255,.45);text-decoration:none;display:block;margin-bottom:3px;">'+
+      '<span style="display:inline;white-space:nowrap;">'+t.pubLine1+'</span> '+
+      '<span style="display:inline;white-space:nowrap;">'+t.pubLine2+'</span>'+
+    '</a>'+
+    '<a href="'+t.pubDoiUrl+'" target="_blank" style="color:rgba(255,255,255,.28);text-decoration:none;">DOI: '+t.pubDoi+'</a>';
+  Object.keys(T).forEach(c=>{
+    const b=document.getElementById('btn-'+c);
+    if(!b) return;
+    b.style.background=c===l?'#E01C24':'rgba(255,255,255,0.1)';
+    b.style.color=c===l?'#fff':'#888';
+  });
+}
+
+function setLang(l){applyLang(l);}
+
+// Tooltip
+const tt=document.getElementById('tt');
+const tth=document.getElementById('tt-h');
+const tts=document.getElementById('tt-s');
+const ttb=document.getElementById('tt-b');
+const stage=document.getElementById('stage');
+
+function posTT(cx,cy){
+  const W=285,H=tt.offsetHeight||220;
+  const sw=stage.offsetWidth,sh=stage.offsetHeight;
+  let x=cx+14,y=cy+14;
+  if(x+W>sw) x=cx-W-14;
+  if(y+H>sh) y=cy-H-14;
+  if(x<6) x=6;
+  if(y<6) y=6;
+  tt.style.left=x+'px';
+  tt.style.top=y+'px';
+}
+
+// Unified mouse handler - single source of truth
+// All tooltip logic driven from one mousemove on the stage overlay
+let puzzleAngle=0;
+let lastCX=0, lastCY=0;
+let hoverState=-1; // -1=none, 0/1/2=sector, 3/4/5=puzzle piece
+
+const CX=540, CY=540;
+const PUZZLE_OUTER=200, PUZZLE_INNER=122;
+const SECTOR_OUTER=432, SECTOR_INNER=210;
+
+function getZone(svgX, svgY){
+  const dx=svgX-CX, dy=svgY-CY;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  // Angle 0=top, clockwise
+  const angle=(Math.atan2(dx,-dy)*180/Math.PI+360)%360;
+
+  // Puzzle ring
+  if(dist>=PUZZLE_INNER && dist<=PUZZLE_OUTER){
+    // At rotation=0: People=300°-60°, Process=60°-180°, Technology=180°-300°
+    // Subtract puzzleAngle to get piece-local angle, then offset by 300° so People starts at 0
+    const local=((angle-puzzleAngle)%360+360)%360;
+    const adjusted=(local-300+360)%360;
+    return 3+Math.floor(adjusted/120); // 3=People,4=Process,5=Technology
+  }
+
+  // Outer sector ring
+  if(dist>=SECTOR_INNER && dist<=SECTOR_OUTER){
+    // Boundaries at 15°, 135°, 255° (from SVG path endpoints)
+    // Sector 0 (CRM):         15°-135°  (top-right)
+    // Sector 1 (D&R):        135°-255°  (bottom)
+    // Sector 2 (Resilience): 255°-360° and 0°-15° (top-left, wraps)
+    if(angle>=15  && angle<135) return 0;
+    if(angle>=135 && angle<255) return 1;
+    return 2;
+  }
+  return -1;
+}
+
+function showTT(zone, cx, cy){
+  const d = zone<3 ? TT[lang][zone] : TTP[lang][zone-3];
+  tth.textContent=d.h; tts.textContent=d.s; ttb.textContent=d.b;
+  tt.classList.add('on');
+  posTT(cx, cy);
+}
+
+// Single mousemove listener on the hits SVG (sits above everything)
+const hitsSvg=document.getElementById('hits');
+hitsSvg.style.pointerEvents='all';
+// Remove individual hit path pointer events - we handle everything here
+[0,1,2].forEach(i=>{
+  const el=document.getElementById('hit'+i);
+  if(el) el.style.pointerEvents='none';
+});
+
+hitsSvg.addEventListener('mousemove', function(e){
+  const r=stage.getBoundingClientRect();
+  const cx=e.clientX-r.left, cy=e.clientY-r.top;
+  lastCX=cx; lastCY=cy;
+  const scale=1080/r.width;
+  const zone=getZone(cx*scale, cy*scale);
+  // If in puzzle ring, mark as -2 so tick loop keeps refreshing even when not moving
+  hoverState=(zone>=3)?-2:zone;
+  if(zone===-1){ tt.classList.remove('on'); hitsSvg.style.cursor='default'; }
+  else { showTT(zone, cx, cy); hoverState=zone; hitsSvg.style.cursor='pointer'; }
+});
+
+hitsSvg.addEventListener('mouseleave', function(){
+  tt.classList.remove('on');
+  hoverState=-1;
+  hitsSvg.style.cursor='default';
+});
+
+// Animation
+const A={T:31.8,t:0,spin:0,needle:0,lastActive:75,centers:[75,195,315],cd:6.0,pc:[1.0,3.0,5.0],W:1.3,last:0};
+function easeOut(x){return 1-Math.pow(1-x,3);}
+function pulse(cp,c){let d=Math.abs(cp-c);d=Math.min(d,A.cd-d);return d>A.W?0:0.5*(1+Math.cos(Math.PI*d/A.W));}
+function lerp(a,b,p){return a+(b-a)*p;}
+
+function tick(now){
+  const dt=Math.min(0.05,(now-A.last)/1000);
+  A.last=now; A.t+=dt; if(A.t>=A.T)A.t-=A.T; A.spin+=dt;
+
+  const root=document.getElementById('compassRoot');
+  const needleEl=document.getElementById('needle');
+  const grps=[document.getElementById('grp0'),document.getElementById('grp1'),document.getElementById('grp2')];
+  const glows=[document.getElementById('glow0'),document.getElementById('glow1'),document.getElementById('glow2')];
+  const puzzle=document.getElementById('puzzle');
+
+  const id=1.8,p=Math.max(0,Math.min(1,A.t/id)),e=easeOut(p);
+  if(root){
+    root.setAttribute('transform','translate(540,540) rotate('+lerp(-150,0,e).toFixed(2)+') scale('+lerp(0.80,1,e).toFixed(3)+') translate(-540,-540)');
+    root.setAttribute('opacity',Math.max(0,Math.min(1,p*1.7)).toFixed(3));
+  }
+
+  const tc=A.t-id,cp=tc<0?-99:((tc%A.cd+A.cd)%A.cd);
+  const ps=[0,1,2].map(i=>tc<0?0:pulse(cp,A.pc[i]));
+  const sum=ps.reduce((a,b)=>a+b,0);
+
+  grps.forEach((g,i)=>{if(g)g.setAttribute('opacity',lerp(0.40,1.0,Math.min(1,0.50+(0.50)*ps[i])).toFixed(3));});
+  glows.forEach((g,i)=>{if(g){const gw=Math.max(0,Math.min(1,(Math.min(1,0.50+(0.50)*ps[i])-0.55)/0.45));g.setAttribute('opacity',(gw*0.20).toFixed(3));}});
+
+  let target=A.lastActive;
+  if(sum>0.04){
+    let sx=0,sy=0;
+    ps.forEach((v,i)=>{const a=A.centers[i]*Math.PI/180;sx+=v*Math.sin(a);sy+=v*Math.cos(a);});
+    target=Math.atan2(sx,sy)*180/Math.PI;
+    let mi=0;ps.forEach((v,i)=>{if(v>ps[mi])mi=i;});A.lastActive=A.centers[mi];
+  }
+  let diff=((target-A.needle+540)%360)-180;
+  A.needle+=diff*0.10;
+  const sway=(sum<0.15?4:1.2)*Math.sin(A.t*2.0);
+  if(needleEl)needleEl.setAttribute('transform','rotate('+((A.needle+sway).toFixed(2))+' 540 540)');
+  const pAngle=(A.spin*13)%360;
+  puzzleAngle=pAngle;
+  if(puzzle)puzzle.setAttribute('transform','rotate('+pAngle.toFixed(2)+' 540 540)');
+  // Refresh tooltip live every frame when cursor is over puzzle ring
+  if(hoverState>=3 || hoverState===-2){
+    const scale=1080/stage.offsetWidth;
+    const zone=getZone(lastCX*scale, lastCY*scale);
+    if(zone!==hoverState){
+      hoverState=zone;
+      if(zone===-1) tt.classList.remove('on');
+      else showTT(zone, lastCX, lastCY);
+    }
+  }
+
+  requestAnimationFrame(tick);
+}
+
+// Init
+applyLang(lang);
+A.last=performance.now();
+requestAnimationFrame(tick);
+
+// --- injected: receive language from parent ---
+window.addEventListener('message', function(e){
+  if (e && e.data && e.data.type === 'setLang' && e.data.lang) {
+    try { setLang(e.data.lang); } catch (err) {}
+  }
+});
+<\/script>
+
+</body></html>`;
+
+    const _ccModal    = document.getElementById('cc-modal');
+    const _ccIframe   = document.getElementById('cc-iframe');
+    const _ccBackdrop = document.getElementById('cc-backdrop');
+    const _ccClose    = document.getElementById('cc-close');
+
+    function openCompass() {
+      _ccIframe.srcdoc = COMPASS_HTML;
+      _ccModal.classList.add('open');
+      document.body.classList.add('cc-modal-open');
+      document.body.style.overflow = 'hidden';
+      // Sync language with the embedded Compass via postMessage as soon as the iframe is ready
+      _ccIframe.onload = function () {
+        try {
+          _ccIframe.contentWindow.postMessage({ type: 'setLang', lang: _currentLang }, '*');
+        } catch (e) {}
+      };
+    }
+    function closeCompass() {
+      _ccModal.classList.remove('open');
+      document.body.classList.remove('cc-modal-open');
+      document.body.style.overflow = '';
+      // Teardown the inner animation by clearing srcdoc shortly after the fade-out
+      setTimeout(function () { _ccIframe.srcdoc = ''; }, 240);
+    }
+    _ccClose.addEventListener('click', closeCompass);
+    _ccBackdrop.addEventListener('click', closeCompass);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && _ccModal.classList.contains('open')) closeCompass();
+    });
+    window.openCompass = openCompass;
+    // -- Keyboard accessibility for the compass-trigger (Enter/Space opens the Compass modal) --
+    (function() {
+      const trigger = document.getElementById('compass-trigger');
+      if (!trigger) return;
+      trigger.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCompass(); }
+      });
+    })();
+
+
+    
+    // JS-driven needle animation. Replaces SMIL because SMIL chaining/value
+    // mutation is unreliable across browsers. We keep the original stepped
+    // motion (10 keyTimes) and alternate direction CW -> CCW -> CW -> ... at
+    // every 16-second cycle boundary.
+    (function () {
+      const needle = document.getElementById('lr-needle');
+      if (!needle) return;
+      const TIMES   = [0, 0.19, 0.205, 0.42, 0.435, 0.65, 0.665, 0.88, 0.895, 1];
+      const CW      = [0, 430, 430, 920, 920, 1390, 1390, 1940, 1940, 2160];
+      const CCW     = CW.map(function (a) { return -a; });
+      // Per-segment easing: SMIL had spline curves for moves and linear for
+      // pauses. Approximate with ease-out for moves, identity for pauses.
+      // Each entry is [x1, y1, x2, y2] for cubic-bezier(x1,y1,x2,y2).
+      const SPL = [
+        [0.25, 0.10, 0.18, 1.00], // move
+        [0.00, 0.00, 1.00, 1.00], // pause (linear, no movement anyway)
+        [0.30, 0.10, 0.20, 1.00],
+        [0.00, 0.00, 1.00, 1.00],
+        [0.22, 0.10, 0.18, 1.00],
+        [0.00, 0.00, 1.00, 1.00],
+        [0.30, 0.10, 0.20, 1.00],
+        [0.00, 0.00, 1.00, 1.00],
+        [0.25, 0.10, 0.20, 1.00]
+      ];
+      const CYCLE_MS = 16000;
+    
+      // Solve y on a cubic-bezier curve given x (Newton's method).
+      function bezier(t, x1, y1, x2, y2) {
+        let u = t;
+        for (let i = 0; i < 8; i++) {
+          const cx = 3*(1-u)*(1-u)*u*x1 + 3*(1-u)*u*u*x2 + u*u*u;
+          const dx = 3*(1-u)*(1-u)*x1 - 6*u*(1-u)*x1
+                   + 6*(1-u)*u*x2 - 3*u*u*x2 + 3*u*u;
+          if (Math.abs(dx) < 1e-6) break;
+          u -= (cx - t) / dx;
+          if (u < 0) u = 0; else if (u > 1) u = 1;
+        }
+        return 3*(1-u)*(1-u)*u*y1 + 3*(1-u)*u*u*y2 + u*u*u;
+      }
+    
+      const startTime = performance.now();
+    
+      function frame(now) {
+        const elapsed     = now - startTime;
+        const cycleIndex  = Math.floor(elapsed / CYCLE_MS);   // 0, 1, 2, 3, ...
+        const t           = (elapsed % CYCLE_MS) / CYCLE_MS;  // 0..1 within current cycle
+        // Alternate every cycle. Even cycle = CW, odd cycle = CCW.
+        const useCW       = cycleIndex % 2 === 0;
+        const angles = useCW ? CW : CCW;
+        // Locate current segment
+        let i = 0;
+        while (i < TIMES.length - 1 && TIMES[i+1] <= t) i++;
+        if (i >= TIMES.length - 1) i = TIMES.length - 2;
+        const segStart = TIMES[i];
+        const segEnd   = TIMES[i+1];
+        const segT     = (t - segStart) / (segEnd - segStart);
+        const eased    = bezier(segT, SPL[i][0], SPL[i][1], SPL[i][2], SPL[i][3]);
+        const angle    = angles[i] + (angles[i+1] - angles[i]) * eased;
+        needle.setAttribute('transform', 'rotate(' + angle.toFixed(2) + ' 800 470)');
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    })();
+
+    let _currentLang = 'en';
+    // Visibility checks tied to the SVG SMIL clock (NOT wall-clock).
+    // The SVG clock pauses when the tab is hidden and restarts on Replay,
+    // so this stays in sync with what the user actually sees.
+    // The animation's begin time is read from the <animate> element at runtime
+    // (different files use different begin times: 10s, 12s, 30s, etc).
+    function _svgRoot() {
+      return document.querySelector('.stage svg') || document.querySelector('svg');
+    }
+    function _animBeginSec(animEl, fallback) {
+      if (!animEl) return fallback;
+      var s = (animEl.getAttribute('begin') || '').trim();
+      // Accept formats like "30s", "30", "10s", etc. — strip trailing 's'.
+      if (s.endsWith('s')) s = s.slice(0, -1);
+      var n = parseFloat(s);
+      return isNaN(n) ? fallback : n;
+    }
+    function _compassVisible() {
+      var svg = _svgRoot();
+      if (!svg || typeof svg.getCurrentTime !== 'function') {
+        // Fallback: read live opacity (flaky but better than nothing)
+        var g = document.getElementById('lr-compass');
+        return g ? parseFloat(getComputedStyle(g).opacity) > 0.5 : false;
+      }
+      var anim = document.querySelector('#lr-compass > animate[attributeName="opacity"]');
+      var beginSec = _animBeginSec(anim, 30);
+      return svg.getCurrentTime() >= beginSec;
+    }
+    function _vennVisible() {
+      var svg = _svgRoot();
+      var venn = document.getElementById('venn-pulse-group');
+      if (!venn || !venn.parentElement) return false;
+      if (!svg || typeof svg.getCurrentTime !== 'function') {
+        return parseFloat(getComputedStyle(venn.parentElement).opacity) > 0.5;
+      }
+      var anim = venn.parentElement.querySelector('animate[attributeName="opacity"]');
+      var beginSec = _animBeginSec(anim, 12);
+      return svg.getCurrentTime() >= beginSec;
+    }
+
+    // Compass click/hover handlers (inline-attribute style, like handleVennClick).
+    // Each handler queries _compassVisible() at call time, so the gate is always
+    // in sync with the SVG SMIL clock (the user's actual visual state).
+    function handleCompassClick() {
+      if (!_compassVisible()) return;
+      if (typeof openCompass === 'function') openCompass();
+    }
+    function handleCompassEnter(e) {
+      if (!_compassVisible()) return;
+      var cta = document.getElementById('cta-tip');
+      if (!cta) return;
+      var inner = cta.querySelector('span');
+      var dict = (typeof I18N !== 'undefined' && I18N) ? I18N : {};
+      var lang = (typeof _currentLang !== 'undefined') ? _currentLang : 'en';
+      if (inner) inner.textContent = (dict[lang] && dict[lang]['cta.compass']) || (dict.en && dict.en['cta.compass']) || 'Open Cybersecurity Compass';
+      cta.style.left = e.clientX + 'px';
+      cta.style.top  = e.clientY + 'px';
+      cta.classList.remove('flipped');
+      cta.classList.add('visible');
+      cta.classList.add('cta-tooltip--compass');
+      cta.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(function() {
+        var r = cta.getBoundingClientRect();
+        if (r.top < 8) cta.classList.add('flipped');
+        var halfW = r.width / 2;
+        if (e.clientX - halfW < 12) cta.style.left = (12 + halfW) + 'px';
+        else if (e.clientX + halfW > window.innerWidth - 12) cta.style.left = (window.innerWidth - 12 - halfW) + 'px';
+      });
+    }
+    function handleCompassMove(e) {
+      if (!_compassVisible()) return;
+      var cta = document.getElementById('cta-tip');
+      if (!cta) return;
+      cta.style.left = e.clientX + 'px';
+      cta.style.top  = e.clientY + 'px';
+    }
+    function handleCompassLeave() {
+      var cta = document.getElementById('cta-tip');
+      if (!cta) return;
+      cta.classList.remove('visible');
+      cta.classList.remove('cta-tooltip--compass');
+      cta.setAttribute('aria-hidden', 'true');
+    }
+
+    // Toggle the .compass-ready class on the hit target so the hover fill only
+    // activates after the compass has actually appeared. Polls the SMIL clock so
+    // it stays in sync with Replay/tab-visibility pauses.
+    (function watchCompassReady() {
+      var hit = document.getElementById('lr-compass-hit');
+      if (!hit) return;
+      function tick() {
+        if (_compassVisible()) hit.classList.add('compass-ready');
+        else hit.classList.remove('compass-ready');
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    })();
+
+    function setLanguage(lang) {
+      if (!I18N[lang]) lang = 'en';
+      _currentLang = lang;
+      const dict = I18N[lang];
+
+      // Update plain-text data-i18n elements.
+      // For an SVG <text> that contains element children (like <animate>), only update the text-node child; for everything else, textContent is safe.
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key] === undefined) return;
+        if (el.children.length > 0) {
+          // Element has child elements; update only the first text-node child to preserve siblings (e.g. <animate>)
+          let updated = false;
+          for (const node of el.childNodes) {
+            if (node.nodeType === Node.TEXT_NODE) {
+              node.nodeValue = dict[key];
+              updated = true;
+              break;
+            }
+          }
+          if (!updated) {
+            el.insertBefore(document.createTextNode(dict[key]), el.firstChild);
+          }
+        } else {
+          el.textContent = dict[key];
+        }
+      });
+
+      // Update HTML data-i18n-html elements (the title block uses <em> and <br>)
+      document.querySelectorAll('[data-i18n-html]').forEach(el => {
+        const key = el.getAttribute('data-i18n-html');
+        if (dict[key] !== undefined) el.innerHTML = dict[key];
+      });
+
+      // Update active state on selector buttons and mirror the choice on the dropdown trigger
+      document.querySelectorAll('.lang-selector button[data-lang]').forEach(btn => {
+        const isActive = btn.getAttribute('data-lang') === lang;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      const _langLabel = document.getElementById('langCurrentLabel');
+      if (_langLabel) _langLabel.textContent = LANG_CODES[lang] || lang.toUpperCase();
+
+      document.documentElement.lang = lang;
+
+      // Language-conditional positioning for the pairwise labels. ES/PT words ("Potencial", "Exposición", "Exposição") are longer than the EN originals, so they switch to a lighter, slightly smaller treatment and reposition for better vertical centering in their lens.
+      adjustLabelsForLanguage(lang);
+
+      // If the info panel is currently visible, refresh its content in the new language
+      if (activeLabelId) showInfo(activeLabelId);
+
+      // Resize the black masks behind the outer labels so the ring-stroke gap matches the actual width of the translated text (PT "Vulnerabilidade" is 15 chars, considerably wider than EN "Vulnerability"). Wait one frame so the browser has actually laid out the new text before we measure it.
+      requestAnimationFrame(adjustMasks);
+    }
+
+    // Per-language geometry for the three pairwise labels. EN uses the diagram's stock 30pt bold-700 with wider vertical spacing; ES/PT downsize to 25pt weight 400 and shift to keep the longer words centered in each lens.
+    const LABEL_GEOMETRY = {
+      potentialLabel: {
+        en: { x: 645, y: 372, fontSize: 30, fontWeight: null },
+        es: { x: 640, y: 352, fontSize: 25, fontWeight: '400' },
+        pt: { x: 640, y: 352, fontSize: 25, fontWeight: '400' },
+        ja: { x: 645, y: 358, fontSize: 26, fontWeight: '500' }
+      },
+      theoreticalLabel: {
+        en: { x: 955, y: 372, fontSize: 30, fontWeight: null },
+        es: { x: 955, y: 352, fontSize: 25, fontWeight: '400' },
+        pt: { x: 955, y: 352, fontSize: 25, fontWeight: '400' },
+        ja: { x: 955, y: 358, fontSize: 26, fontWeight: '500' }
+      },
+      exposureLabel: {
+        en: { x: 800, y: 620, fontSize: 30, fontWeight: null },
+        es: { x: 800, y: 640, fontSize: 25, fontWeight: '400' },
+        pt: { x: 800, y: 640, fontSize: 25, fontWeight: '400' },
+        ja: { x: 800, y: 580, fontSize: 23, fontWeight: '500' }
+      }
+    };
+
+    function adjustLabelsForLanguage(lang) {
+      for (const [id, configs] of Object.entries(LABEL_GEOMETRY)) {
+        const c = configs[lang] || configs.en;
+        const label = document.getElementById(id);
+        if (!label) continue;
+        label.setAttribute('x', c.x);
+        label.setAttribute('y', c.y);
+        label.setAttribute('font-size', c.fontSize);
+        if (c.fontWeight === null) {
+          label.removeAttribute('font-weight');
+        } else {
+          label.setAttribute('font-weight', c.fontWeight);
+        }
+        // Tspans inside have their own x attribute; update them too so they inherit the new horizontal alignment
+        label.querySelectorAll('tspan').forEach(t => {
+          if (t.hasAttribute('x')) t.setAttribute('x', c.x);
+        });
+      }
+    }
+
+    // Measure the rendered width of Vulnerability and Consequence labels and resize their masks to match. Called after every language switch.
+    function adjustMasks() {
+      const pairs = [
+        { labelId: 'vulnerabilityLabel', maskId: 'vulnMask' },
+        { labelId: 'consequenceLabel',   maskId: 'consMask' }
+      ];
+      pairs.forEach(({ labelId, maskId }) => {
+        const label = document.getElementById(labelId);
+        const mask  = document.getElementById(maskId);
+        if (!label || !mask) return;
+        try {
+          const bbox = label.getBBox();
+          if (!bbox || !bbox.width) return;
+          const padding = 30;
+          const minWidth = 320;
+          const width = Math.max(minWidth, bbox.width + padding * 2);
+          const cx = parseFloat(label.getAttribute('x'));
+          mask.setAttribute('x', cx - width / 2);
+          mask.setAttribute('width', width);
+        } catch (e) {
+          // getBBox can throw on SVG elements that aren't yet laid out — ignore and rely on the static fallback width.
+        }
+      });
+    }
+
+    // Labels whose own position is in the bottom half of the diagram. Hovering any of these flips the info panel up to the top edge so the panel stays clear of the cursor.
+    const BOTTOM_LABELS = new Set(['vulnerabilityLabel', 'consequenceLabel', 'exposureLabel']);
+
+    let activeLabelId = null;
+    let infoHideTimer = null;
+
+    function cancelInfoHide() {
+      if (infoHideTimer) { clearTimeout(infoHideTimer); infoHideTimer = null; }
+    }
+    function queueInfoHide() {
+      cancelInfoHide();
+      infoHideTimer = setTimeout(() => { hideInfo(); infoHideTimer = null; }, 120);
+    }
+
+    function hideInfo() {
+      const panel = document.getElementById('infoPanel');
+      if (panel) {
+        panel.classList.remove('visible');
+        panel.setAttribute('aria-hidden', 'true');
+      }
+      activeLabelId = null;
+    }
+
+    function showInfo(labelId) {
+      const info = LABEL_INFO[_currentLang][labelId] || LABEL_INFO.en[labelId];
+      const panel = document.getElementById('infoPanel');
+      const titleEl = document.getElementById('infoTitle');
+      const bodyEl  = document.getElementById('infoBody');
+      if (!info || !panel || !titleEl || !bodyEl) return;
+      titleEl.textContent = info.title;
+      titleEl.style.color = info.color;
+      bodyEl.innerHTML  = info.body;
+      panel.style.borderColor = info.color;
+      panel.classList.toggle('top', BOTTOM_LABELS.has(labelId));
+      panel.classList.add('visible');
+      panel.setAttribute('aria-hidden', 'false');
+      activeLabelId = labelId;
+    }
+
+    // Short code shown on the dropdown trigger for each supported language
+    const LANG_CODES = { en: 'EN', es: 'ES', pt: 'PT', ja: 'JA' };
+
+    // Language dropdown: trigger toggles the menu; picking an option applies the
+    // language and closes it. Click-outside and Escape also close it.
+    const closeLangMenu = (function setupLangDropdown() {
+      const selector = document.getElementById('langSelector');
+      const trigger  = document.getElementById('langTrigger');
+      if (!selector || !trigger) return function () {};
+
+      function close() {
+        selector.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+      }
+      function toggle() {
+        const open = !selector.classList.contains('open');
+        selector.classList.toggle('open', open);
+        trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+
+      trigger.addEventListener('click', (e) => { e.stopPropagation(); toggle(); });
+      document.addEventListener('click', (e) => { if (!selector.contains(e.target)) close(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+      return close;
+    })();
+
+    // Wire up language selector buttons
+    document.querySelectorAll('.lang-selector button[data-lang]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setLanguage(btn.getAttribute('data-lang'));
+        closeLangMenu();
+      });
+    });
+
+    // Auto-detect browser language. Walk navigator.languages in preference order and pick the first one that maps to a supported language; otherwise default to EN.
+    (function autoDetectLanguage() {
+      const supported = new Set(['en', 'es', 'pt', 'ja']);
+      const prefs = (navigator.languages && navigator.languages.length)
+        ? navigator.languages
+        : [navigator.language || navigator.userLanguage || 'en'];
+      for (const raw of prefs) {
+        if (!raw) continue;
+        const code = raw.toLowerCase().slice(0, 2);
+        if (supported.has(code)) {
+          setLanguage(code);
+          return;
+        }
+      }
+      setLanguage('en');
+    })();
+
+    // Tap anywhere outside a hit region or the panel closes it (mobile)
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.info-panel')) return;
+      if (e.target.closest('.hit-region')) return;
+      hideInfo();
+    });
+
+    // ---------------- Hover / Pulse ----------------
+    // Length of the intro timeline, in ms. Matches the last SMIL animation end (pairwise labels fade-in: begin 7.4s + dur 1.2s = 8.6s). 100ms cushion so the activation can never beat the final frame.
+    const INTRO_MS = 8700;
+
+    // Hover: light up each circle/lens (or pulse the centre) while the cursor is anywhere over its
+    // FULL section — the invisible .hit-region shape, not just the text label. The label itself is
+    // now purely visual (its 'label-hover' class is toggled here so the outer labels can still turn
+    // white on hover). Hover/tap is only armed once the intro animation finishes; pressing Replay re-arms it.
+    const restartHovers = (function setupHovers() {
+      const entries = [
+        { labelId: 'threatLabel',        hitId: 'threatHit',        targetId: 'threatCircle',        kind: 'fill'  },
+        { labelId: 'vulnerabilityLabel', hitId: 'vulnerabilityHit', targetId: 'vulnerabilityCircle', kind: 'fill'  },
+        { labelId: 'consequenceLabel',   hitId: 'consequenceHit',   targetId: 'consequenceCircle',   kind: 'fill'  },
+        { labelId: 'potentialLabel',     hitId: 'potentialHit',     targetId: 'potentialLens',       kind: 'fill'  },
+        { labelId: 'theoreticalLabel',   hitId: 'theoreticalHit',   targetId: 'theoreticalLens',     kind: 'fill'  },
+        { labelId: 'exposureLabel',      hitId: 'exposureHit',      targetId: 'exposureLens',        kind: 'fill'  },
+        { labelId: 'cyberRiskLabel',     hitId: 'cyberRiskHit',     targetId: 'cyberRiskPulse',      kind: 'pulse' }
+      ];
+
+      const wired = entries
+        .map(e => ({
+          hit:     document.getElementById(e.hitId),
+          label:   document.getElementById(e.labelId),
+          labelId: e.labelId,
+          target:  document.getElementById(e.targetId),
+          kind:    e.kind
+        }))
+        .filter(p => p.hit && p.target);
+
+      const showOf = ({ target, kind }) => kind === 'pulse'
+        ? () => target.classList.add('pulsing')
+        : () => target.setAttribute('fill-opacity', '0.4');
+
+      const hideOf = ({ target, kind }) => kind === 'pulse'
+        ? () => target.classList.remove('pulsing')
+        : () => target.setAttribute('fill-opacity', '0');
+
+      wired.forEach((p) => {
+        const show = showOf(p);
+        const hide = hideOf(p);
+
+        // Hover anywhere in the section shows the wash/pulse, lights up the label, and populates the info panel.
+        p.hit.addEventListener('mouseenter', () => {
+          show();
+          if (p.label) p.label.classList.add('label-hover');
+          cancelInfoHide();
+          showInfo(p.labelId);
+        });
+        p.hit.addEventListener('mouseleave', () => {
+          hide();
+          if (p.label) p.label.classList.remove('label-hover');
+          queueInfoHide();
+        });
+
+        // Mobile: tap behaves like hover. The synthetic click fires too, but the document click handler ignores hit-region targets, so nothing bad happens.
+        p.hit.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          if (p.hit.classList.contains('active')) {
+            show();
+            if (p.label) p.label.classList.add('label-hover');
+            cancelInfoHide();
+            showInfo(p.labelId);
+          }
+        }, { passive: false });
+      });
+
+      // Touch devices: tapping anywhere outside a hit region clears hover effects (tooltip itself handles its own dismissal via close-on-outside-click).
+      document.addEventListener('touchstart', (e) => {
+        const onHit = wired.some(({ hit }) => hit.contains(e.target));
+        if (!onHit) wired.forEach(p => { hideOf(p)(); if (p.label) p.label.classList.remove('label-hover'); });
+      });
+
+      const setArmed = (armed) => {
+        wired.forEach(({ hit }) => hit.classList.toggle('active', armed));
+        if (!armed) wired.forEach(p => { hideOf(p)(); if (p.label) p.label.classList.remove('label-hover'); });
+      };
+
+      let armTimer = setTimeout(() => setArmed(true), INTRO_MS);
+
+      return function rearmAfterReplay() {
+        setArmed(false);
+        clearTimeout(armTimer);
+        armTimer = setTimeout(() => setArmed(true), INTRO_MS);
+      };
+    })();
+
+    function replayAnimation() {
+      const svg = document.getElementById('cyberRiskSvg');
+      if (svg && typeof svg.setCurrentTime === 'function') {
+        svg.setCurrentTime(0);
+        restartHovers();
+        hideInfo();
+      }
+    }
+  </script>
+</body>
+</html>

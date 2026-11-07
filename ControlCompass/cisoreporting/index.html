@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The CISO Reporting Structure Builder</title>
+<style>
+  :root{
+    --bg:#0B0E14;--panel:#11151F;--panel-2:#0E121A;--line:#1E2530;
+    --red:#E10600;--red-dim:#7A0B0B;--ink:#E8EAED;--ink-dim:#8A92A0;--ink-faint:#565E6B;
+    --good:#3FB68B;--warn:#E8A13F;--bad:#E1463C;
+    --mono:'SFMono-Regular',ui-monospace,'Cascadia Mono','Roboto Mono',Menlo,Consolas,monospace;
+    --sans:'Inter','Helvetica Neue',Arial,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased;background-image:radial-gradient(circle at 82% 0%,rgba(225,6,0,0.07),transparent 44%);}
+  .wrap{max-width:1240px;margin:0 auto;padding:30px 24px 70px;}
+
+  header{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:26px;}
+  .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--red);margin:0 0 13px;display:flex;align-items:center;gap:10px;}
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--red);display:inline-block;}
+  h1{font-size:clamp(26px,4.3vw,42px);line-height:1.05;margin:0 0 12px;font-weight:800;letter-spacing:-.02em;}
+  h1 em{color:var(--red);font-style:normal;}
+  .lede{font-size:15.5px;color:var(--ink-dim);max-width:64ch;margin:0;}
+
+  .lang{display:flex;gap:2px;flex-shrink:0;border:1px solid var(--line);border-radius:4px;overflow:hidden;}
+  .lang button{font-family:var(--mono);font-size:11px;letter-spacing:.08em;font-weight:600;color:var(--ink-faint);background:var(--panel-2);border:none;padding:7px 11px;cursor:pointer;transition:color .15s,background .15s;}
+  .lang button:hover{color:var(--ink);}
+  .lang button.on{color:#ffd9d6;background:rgba(225,6,0,0.16);}
+
+  .stage{display:grid;grid-template-columns:1fr 410px;gap:22px;align-items:start;}
+  @media(max-width:980px){.stage{grid-template-columns:1fr;}}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;}
+  .panel-h{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);padding:13px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+  .panel-h b{color:var(--ink-dim);font-weight:600;}
+
+  .tree{padding:26px 20px 30px;min-height:480px;overflow-x:auto;}
+  .tree-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:420px;text-align:center;color:var(--ink-faint);}
+  .tree-empty svg{margin-bottom:16px;opacity:.5;}
+  .tree-empty p{font-size:13px;max-width:34ch;margin:0;}
+
+  .node-wrap{display:flex;flex-direction:column;align-items:center;min-width:min-content;}
+  .node{font-family:var(--mono);font-size:12.5px;letter-spacing:.03em;font-weight:600;padding:11px 18px;border-radius:4px;border:1px solid var(--line);background:#161B25;color:var(--ink);text-align:center;position:relative;animation:pop .34s cubic-bezier(.2,.9,.3,1.2);white-space:nowrap;}
+  .node.board{border-color:#2a3340;background:#10161f;color:var(--ink-dim);}
+  .node.ceo{border-color:#34404f;background:#141b26;}
+  .node.ciso{border-color:var(--red);background:rgba(225,6,0,0.14);color:#ffd9d6;box-shadow:0 0 18px rgba(225,6,0,.20);}
+  .node.peer{border-color:#283442;background:#11171f;color:var(--ink-dim);font-size:11px;padding:8px 12px;}
+  .node.peer.csuite{opacity:.6;border-style:dashed;}
+  .node.pathnode{border-color:#3a4654;background:#161d28;color:var(--ink);}
+  .node.fn{border-color:#243042;background:#0f141d;color:var(--ink);font-size:10.5px;padding:7px 11px;}
+  .node.fn .tag{display:block;font-family:var(--sans);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-top:3px;}
+  .stem{width:1px;background:var(--line);height:20px;animation:grow .3s ease;}
+  @keyframes pop{from{opacity:0;transform:translateY(-8px) scale(.96);}to{opacity:1;transform:none;}}
+  @keyframes grow{from{height:0;}to{height:20px;}}
+
+  .peer-row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;}
+  .csuite-row{align-items:flex-start;}
+  .pathcol{display:flex;flex-direction:column;align-items:center;}
+  .peer-bracket{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:7px;}
+  .fn-wrap{margin-top:4px;display:flex;flex-direction:column;align-items:center;}
+  .fn-cap{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase;margin:6px 0 10px;}
+  .fn-grid{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:540px;}
+  .fn-rail{width:1px;background:var(--line);height:14px;}
+  .dep-wrap{margin-top:22px;width:100%;border-top:1px dashed var(--line);padding-top:16px;display:flex;flex-direction:column;align-items:center;}
+  .dep-caphdr{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:14px;}
+  .dep-grid{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;align-items:flex-start;}
+  .dep-group{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .dep-owner{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:4px;padding-bottom:5px;border-bottom:1px solid var(--line);}
+  .dep-owner.danger{color:var(--bad);border-color:var(--bad);}
+  .node.dep{opacity:.5;border-style:dashed;font-size:10px;padding:6px 10px;}
+  .node.dep.orphan{opacity:.85;border-color:var(--bad);border-style:solid;color:#f4b4af;background:rgba(225,70,60,.08);}
+  .node.dep.na{opacity:.32;}
+
+  .convo{padding:0;display:flex;flex-direction:column;}
+  .progress{display:flex;gap:4px;padding:12px 18px;border-bottom:1px solid var(--line);}
+  .pstep{flex:1;height:3px;border-radius:2px;background:#1a2029;transition:background .3s;}
+  .pstep.done{background:var(--red);}
+  .pstep.active{background:#ff5a52;}
+  .chat{padding:18px 18px 8px;}
+  .msg{margin-bottom:14px;animation:fade .3s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .bubble{font-size:13.5px;line-height:1.55;padding:12px 14px;border-radius:4px;max-width:94%;}
+  .bubble.q{background:var(--panel-2);border:1px solid var(--line);color:var(--ink);}
+  .bubble.q b{color:#ffd9d6;font-weight:600;}
+  .bubble.a{background:rgba(225,6,0,0.10);border:1px solid var(--red-dim);color:#ffd9d6;margin-left:auto;font-family:var(--mono);font-size:12px;}
+  .bubble.note{background:none;border:none;padding:8px 2px;color:var(--ink-dim);font-size:12.5px;}
+  .bubble.note .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);display:block;margin-bottom:5px;}
+
+  .options{display:flex;flex-direction:column;gap:8px;padding:6px 18px 18px;border-top:1px solid var(--line);background:var(--panel-2);}
+  .opt-label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin:8px 0 2px;}
+  .opt{text-align:left;font-family:var(--sans);font-size:13px;color:var(--ink);background:#141a24;border:1px solid var(--line);border-radius:4px;padding:11px 13px;cursor:pointer;transition:border-color .14s,background .14s,transform .1s;display:flex;align-items:center;gap:10px;}
+  .opt:hover{border-color:var(--red);background:#191f2a;}
+  .opt:active{transform:translateY(1px);}
+  .opt .k{font-family:var(--mono);font-size:11px;color:var(--ink-faint);flex-shrink:0;}
+  .opt.ciso-opt{border-color:var(--red-dim);background:rgba(225,6,0,0.08);color:#ffd9d6;}
+  .opt.sel{border-color:var(--good);background:rgba(63,182,139,.08);}
+  .opt .chk{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--good);opacity:0;white-space:nowrap;}
+  .opt.sel .chk{opacity:1;}
+  .opt-done{margin-top:4px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:#ffd9d6;background:rgba(225,6,0,0.12);border:1px solid var(--red-dim);border-radius:4px;padding:11px 13px;cursor:pointer;text-align:center;transition:background .14s;}
+  .opt-done:hover{background:rgba(225,6,0,0.2);}
+
+  .restart{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);background:none;border:1px solid var(--line);border-radius:3px;padding:6px 12px;cursor:pointer;transition:color .15s,border-color .15s;}
+  .restart:hover{color:var(--ink);border-color:var(--ink-faint);}
+
+  .analysis-panel{margin-top:22px;display:none;}
+  .analysis-panel.show{display:block;animation:fade .4s ease;}
+  .analysis-body{padding:22px;}
+  .result-cols{display:grid;grid-template-columns:1fr 1fr;gap:28px;}
+  @media(max-width:760px){.result-cols{grid-template-columns:1fr;gap:0;}}
+  .result-col{min-width:0;}
+  .verdict-name{font-size:21px;font-weight:800;letter-spacing:-.01em;margin:0 0 3px;}
+  .verdict-sub{font-size:13px;color:var(--ink-dim);margin:0 0 20px;max-width:80ch;}
+  .half-h{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin:14px 0 10px;display:flex;align-items:center;gap:8px;}
+  .half-h::after{content:"";flex:1;height:1px;background:var(--line);}
+  .metric{margin-bottom:13px;}
+  .metric-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;gap:10px;}
+  .metric-name{font-size:12.5px;font-weight:600;flex:1;min-width:0;}
+  .metric-num{font-family:var(--mono);font-size:11px;color:var(--ink-dim);flex-shrink:0;white-space:nowrap;}
+  .bar{height:5px;border-radius:3px;background:#1a2029;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.1,1),background .3s;width:0;}
+
+  .seam{margin:24px 0 22px;}
+  .seam-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+  .seam-title{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);}
+  .seam-val{font-family:var(--mono);font-size:13px;font-weight:700;}
+  .seam-track{height:26px;border-radius:3px;background:linear-gradient(90deg,#0f1a16,#1a0f0f);border:1px solid var(--line);position:relative;overflow:hidden;}
+  .seam-fill{position:absolute;top:0;bottom:0;left:0;width:0;background:linear-gradient(90deg,rgba(225,6,0,.25),var(--red));transition:width .7s cubic-bezier(.4,0,.1,1);border-right:2px solid #ff5a52;}
+  .seam-cap{font-size:11.5px;color:var(--ink-faint);margin-top:7px;line-height:1.45;}
+  .failmode{margin-top:14px;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:4px;background:var(--panel-2);padding:12px 14px;}
+  .fm-head{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--warn);margin-bottom:6px;}
+  .fm-why{font-size:12.5px;color:var(--ink-dim);line-height:1.55;margin:0 0 7px;}
+  .fm-fail{font-size:12.5px;color:var(--ink);line-height:1.55;margin:0;}
+  .fm-fail b{color:#ffe2b0;font-weight:600;}
+
+  .unguarded{display:none;border:1px solid var(--bad);border-radius:4px;background:rgba(225,70,60,.07);padding:14px 16px;margin:0 0 4px;}
+  .unguarded.show{display:block;animation:fade .4s ease;}
+  .ug-h{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--bad);font-weight:700;margin:0 0 8px;}
+  .ug-mark{flex-shrink:0;width:17px;height:17px;border-radius:50%;background:var(--bad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;}
+  .ug-body{font-size:12.5px;color:var(--ink-dim);line-height:1.5;margin:0 0 11px;}
+  .ug-list{display:flex;flex-wrap:wrap;gap:7px;}
+  .ug-chip{font-family:var(--mono);font-size:11px;color:#f4b4af;background:rgba(225,70,60,.12);border:1px solid var(--bad);border-radius:3px;padding:5px 10px;}
+
+  .flags{margin-top:0;padding-top:0;}
+  .flags-h{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--red);margin-bottom:14px;}
+  .flag{display:flex;gap:10px;font-size:12.5px;line-height:1.5;margin-bottom:11px;color:var(--ink-dim);}
+  .flag .mark{flex-shrink:0;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;font-family:var(--mono);margin-top:1px;}
+  .flag.pos .mark{background:rgba(63,182,139,.16);color:var(--good);}
+  .flag.neg .mark{background:rgba(225,70,60,.16);color:var(--bad);}
+  .flag.neu .mark{background:rgba(232,161,63,.16);color:var(--warn);}
+  .flag b{color:var(--ink);font-weight:600;}
+
+  .questions{margin-top:0;}
+  .q-head{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--red);margin-bottom:4px;}
+  .q-sub{font-size:12px;color:var(--ink-faint);margin:0 0 16px;line-height:1.5;}
+  .q-group{margin-bottom:18px;}
+  .q-group-h{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .q-group-h::after{content:"";flex:1;height:1px;background:var(--line);}
+  .q-item{display:flex;gap:11px;font-size:13px;line-height:1.55;margin-bottom:13px;color:var(--ink);align-items:flex-start;}
+  .q-item .qn{flex-shrink:0;font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:3px;width:18px;}
+  .q-item .qt{flex:1;}
+  .q-item .qt em{color:var(--ink-dim);font-style:normal;display:block;font-size:11.5px;margin-top:3px;}
+  .whatif{background:var(--panel-2);border:1px solid var(--line);border-left:2px solid var(--red);border-radius:3px;padding:11px 13px;margin-bottom:10px;font-size:12.5px;line-height:1.55;color:var(--ink-dim);}
+  .whatif b{color:#ffd9d6;font-weight:600;display:block;margin-bottom:3px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;}
+
+  .phases{margin-top:24px;padding-top:18px;border-top:1px solid var(--line);}
+  .phases-h{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--red);margin:0 0 4px;}
+  .phases-sub{font-size:12px;color:var(--ink-faint);margin:0 0 16px;line-height:1.5;}
+  .phase-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+  @media(max-width:760px){.phase-grid{grid-template-columns:1fr;}}
+  .phase-card{border:1px solid var(--line);border-radius:4px;background:var(--panel-2);overflow:hidden;}
+  .phase-top{padding:11px 13px 10px;border-bottom:1px solid var(--line);}
+  .phase-domain{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:3px;}
+  .phase-name{font-size:13.5px;font-weight:700;color:var(--ink);}
+  .phase-edge{padding:10px 13px;font-size:11.5px;line-height:1.5;}
+  .phase-edge .who{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;}
+  .phase-edge .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .phase-att{border-bottom:1px solid var(--line);}
+  .phase-att .who{color:var(--bad);}.phase-att .dot{background:var(--bad);}
+  .phase-def .who{color:var(--good);}.phase-def .dot{background:var(--good);}
+  .phase-edge p{margin:0;color:var(--ink-dim);}
+  .phase-tilt{padding:8px 13px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;text-align:center;border-top:1px solid var(--line);}
+  .phase-tilt.att{color:var(--bad);background:rgba(225,70,60,.06);}
+  .phase-tilt.def{color:var(--good);background:rgba(63,182,139,.06);}
+  .phase-tilt.even{color:var(--warn);background:rgba(232,161,63,.06);}
+
+  .standards{margin-top:24px;padding-top:18px;border-top:1px solid var(--line);}
+  .standards-h{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--red);margin:0 0 4px;}
+  .standards-sub{font-size:12px;color:var(--ink-faint);margin:0 0 16px;line-height:1.5;}
+  .standards-list{display:flex;flex-direction:column;gap:12px;}
+  .std-card{border:1px solid var(--line);border-left:3px solid var(--red);border-radius:4px;background:var(--panel-2);padding:13px 15px;}
+  .std-org{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:2px;}
+  .std-prov{font-size:11px;color:var(--ink-faint);margin-bottom:8px;}
+  .std-quote{font-size:12px;color:var(--ink-dim);line-height:1.55;border-left:2px solid var(--line);padding-left:11px;margin:0 0 9px;font-style:italic;}
+  .std-rec{font-size:12.5px;color:var(--ink);line-height:1.55;margin:0;}
+  .std-rec b{color:#ffd9d6;font-weight:600;}
+
+  .footnote{margin-top:28px;font-size:11.5px;color:var(--ink-faint);max-width:82ch;line-height:1.6;border-top:1px solid var(--line);padding-top:16px;}
+  .page-footer{max-width:1240px;margin:18px auto 30px;padding:0 24px;display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap;}
+  .pf-credit{font-family:var(--sans);font-size:11.5px;line-height:1.6;color:var(--ink-faint);text-align:left;}
+  .pf-cite{font-family:var(--sans);font-size:11.5px;line-height:1.6;color:var(--ink-faint);text-align:right;}
+  .pf-credit a,.pf-cite a{color:var(--ink-faint);text-decoration:none;border-bottom:none;transition:color .15s;}
+  .pf-credit a:hover,.pf-cite a:hover{color:var(--red);}
+  .footnote b{color:var(--ink-dim);font-weight:600;}
+  .footnote a{color:#d98a86;text-decoration:none;border-bottom:1px solid rgba(217,138,134,.35);transition:color .15s,border-color .15s;}
+  .footnote a:hover{color:#ffd9d6;border-color:#ffd9d6;}
+  .footnote a b{color:inherit;}
+
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+
+  .export-btn{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#ffd9d6;background:rgba(225,6,0,0.14);border:1px solid var(--red-dim);border-radius:3px;padding:6px 12px;cursor:pointer;transition:background .15s;display:inline-flex;align-items:center;gap:7px;}
+  .export-btn:hover{background:rgba(225,6,0,0.26);}
+  .export-btn svg{width:13px;height:13px;}
+
+  /* ============ print / PDF export ============ */
+  .report{display:none;}
+
+  @media print{
+    @page{margin:16mm;}
+    body{background:#fff!important;color:#111!important;background-image:none!important;}
+    /* hide the entire interactive app; show only the executive report */
+    .wrap{display:none!important;}
+    .page-footer{display:none!important;}
+    .report{display:block!important;font-family:var(--sans);color:#1a1a1a;}
+    .rep-cover{border-bottom:3px solid #b00;padding-bottom:18px;margin-bottom:22px;}
+    .rep-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#b00;margin-bottom:10px;}
+    .rep-title{font-size:26px;font-weight:700;line-height:1.15;color:#111;margin:0 0 12px;letter-spacing:-.01em;}
+    .rep-meta{font-size:12px;color:#555;line-height:1.7;}
+    .rep-meta b{color:#222;font-weight:600;}
+    .rep-section{margin-bottom:22px;break-inside:avoid;}
+    .rep-avoid{break-inside:avoid;}
+    .rep-h{font-size:11px;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#b00;margin:0 0 12px;padding-bottom:6px;border-bottom:1px solid #ddd;}
+    .rep-verdict{font-size:18px;font-weight:700;color:#111;line-height:1.3;margin-bottom:10px;}
+    .rep-summary{font-size:13px;line-height:1.65;color:#333;margin:0;}
+    .rep-tree{display:flex;justify-content:center;padding:8px 0 4px;overflow:visible;}
+    .rep-tree .node-wrap{display:flex;flex-direction:column;align-items:center;}
+    .rep-tree .node{font-size:10px;padding:7px 12px;}
+    .rep-tree .stem,.rep-tree .fn-rail{height:12px;}
+    .rep-tree .peer-bracket,.rep-tree .fn-cap,.rep-tree .dep-caphdr,.rep-tree .dep-owner{font-size:8px;}
+    .rep-tree .fn-grid{max-width:480px;}
+    .rep-tree .dep-wrap{margin-top:14px;padding-top:10px;}
+    .rep-tree .peer-row,.rep-tree .dep-grid,.rep-tree .fn-grid{gap:6px;}
+    .rep-tree .node,.rep-tree .stem,.rep-tree .fn-rail{animation:none!important;}
+    .rep-scoregrid{display:grid;grid-template-columns:1fr 1fr;gap:18px 28px;margin-bottom:14px;}
+    .rep-scorecol-h{font-size:10px;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:8px;}
+    .rep-score{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+    .rep-score-label{font-size:11.5px;color:#333;flex:1;}
+    .rep-score-track{width:90px;height:6px;background:#eee;border-radius:3px;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .rep-score-fill{height:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .rep-score-num{font-family:var(--mono);font-size:10.5px;color:#666;width:46px;text-align:right;}
+    .rep-gap{border:1px solid #ddd;border-left:3px solid #b00;border-radius:4px;padding:11px 14px;font-size:12.5px;color:#333;line-height:1.55;}
+    .rep-gap b{color:#111;}
+    .rep-gap .g-val{font-family:var(--mono);font-weight:700;}
+    .rep-fail-why{font-size:13px;color:#444;line-height:1.6;margin:0 0 8px;}
+    .rep-fail-fail{font-size:13px;color:#111;line-height:1.6;margin:0;}
+    .rep-fail-fail b{font-weight:700;}
+    .rep-orphan-body{font-size:13px;color:#333;line-height:1.6;margin:0 0 8px;}
+    .rep-orphan-list{display:flex;flex-wrap:wrap;gap:6px;}
+    .rep-orphan-chip{font-family:var(--mono);font-size:10px;color:#b00;border:1px solid #b00;border-radius:3px;padding:3px 7px;}
+    .rep-phasegrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+    .rep-phase{border:1px solid #ddd;border-radius:4px;padding:11px 12px;break-inside:avoid;}
+    .rep-phase-dom{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:2px;}
+    .rep-phase-name{font-size:13px;font-weight:700;color:#111;margin-bottom:8px;}
+    .rep-phase-edge{font-size:11px;line-height:1.5;color:#333;margin-bottom:6px;}
+    .rep-phase-edge .who{font-family:var(--mono);font-size:8px;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:2px;}
+    .rep-phase-att .who{color:#b00;}.rep-phase-def .who{color:#138a5e;}
+    .rep-phase-tilt{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;text-align:center;padding:5px;border-radius:3px;margin-top:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .rep-phase-tilt.att{color:#b00;background:#fbeceb;}
+    .rep-phase-tilt.def{color:#138a5e;background:#e8f5ef;}
+    .rep-phase-tilt.even{color:#9a6a00;background:#fdf3e0;}
+    .rep-finding{font-size:12.5px;color:#333;line-height:1.55;margin-bottom:8px;padding-left:16px;position:relative;break-inside:avoid;}
+    .rep-finding::before{content:"";position:absolute;left:0;top:6px;width:6px;height:6px;background:#b00;border-radius:50%;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .rep-finding b{color:#111;font-weight:600;}
+    .rep-std-sub{font-size:12px;color:#555;line-height:1.55;margin:0 0 14px;}
+    .rep-std-item{border:1px solid #ddd;border-left:3px solid #b00;border-radius:4px;padding:11px 14px;margin-bottom:10px;break-inside:avoid;}
+    .rep-std-org{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#b00;margin-bottom:2px;}
+    .rep-std-prov{font-size:11px;color:#666;margin-bottom:7px;}
+    .rep-std-quote{font-size:12px;color:#333;font-style:italic;border-left:2px solid #ddd;padding-left:10px;margin:0 0 8px;line-height:1.5;}
+    .rep-std-rec{font-size:12.5px;color:#1a1a1a;line-height:1.55;margin:0;}
+    .rep-std-rec b{font-weight:600;}
+    .rep-foot{font-size:10.5px;color:#777;line-height:1.55;border-top:1px solid #ddd;padding-top:12px;margin-top:8px;}
+  }
+
+  @media print{ /* legacy app-print rules retained but app is hidden, kept harmless */
+    @page{margin:14mm;}
+    body{background:#fff!important;color:#111!important;background-image:none!important;}
+    .wrap{max-width:100%;padding:0;}
+    /* hide everything that is not the printable report */
+    .lang,.convo,.export-btn,.tree-empty,.restart{display:none!important;}
+    .footnote{color:#555!important;border-color:#ccc!important;break-inside:avoid;}
+    .footnote b{color:#222!important;}
+    .footnote a{color:#b00!important;border-color:rgba(176,0,0,.35)!important;}
+    header{border-color:#ccc;margin-bottom:14px;padding-bottom:12px;}
+    .eyebrow{color:#b00!important;}
+    .eyebrow::before{background:#b00!important;}
+    h1,h1 em{color:#111!important;}
+    .lede{color:#444!important;}
+    #lede2{display:none;} /* keep print concise: drop the second intro paragraph */
+    .stage{display:block!important;}
+    .panel{border:1px solid #ccc!important;background:#fff!important;break-inside:avoid;}
+    .panel:first-of-type{margin-bottom:14px;}
+    .panel-h{color:#666!important;border-color:#ccc!important;}
+    .panel-h b{color:#333!important;}
+    .analysis-panel{display:block!important;margin-top:14px;}
+    .tree{min-height:0!important;}
+    /* nodes: outline style for print legibility */
+    .node{background:#fff!important;color:#111!important;border-color:#999!important;box-shadow:none!important;}
+    .node.board{background:#f3f3f3!important;color:#333!important;}
+    .node.ceo{background:#f7f7f7!important;}
+    .node.ciso{background:#fff!important;color:#b00!important;border-color:#b00!important;border-width:2px!important;}
+    .node.peer{background:#fafafa!important;color:#555!important;}
+    .node.fn{background:#fff!important;color:#222!important;border-color:#bbb!important;}
+    .node.fn .tag{color:#888!important;}
+    .node.dep{opacity:1!important;border-style:dashed!important;color:#777!important;border-color:#bbb!important;}
+    .node.dep.orphan{color:#b00!important;border-color:#b00!important;background:#fff!important;}
+    .stem,.fn-rail{background:#bbb!important;}
+    .peer-bracket,.fn-cap,.dep-caphdr,.dep-owner{color:#666!important;}
+    .dep-owner.danger{color:#b00!important;border-color:#b00!important;}
+    .dep-wrap{border-color:#ccc!important;}
+    .half-h{color:#666!important;}
+    .half-h::after{background:#ccc!important;}
+    .verdict-name{color:#111!important;}
+    .verdict-sub{color:#444!important;}
+    .metric-name{color:#111!important;}
+    .metric-num{color:#555!important;}
+    .bar{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .bar-fill{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .seam{break-inside:avoid;}
+    .seam-title{color:#555!important;}
+    .seam-track{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .seam-fill{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .seam-cap{color:#555!important;}
+    .failmode{border-color:#ccc!important;border-left-color:#c77d00!important;background:#fff!important;break-inside:avoid;}
+    .fm-head{color:#c77d00!important;}.fm-why{color:#333!important;}.fm-fail{color:#111!important;}.fm-fail b{color:#c77d00!important;}
+    .result-cols{display:grid!important;grid-template-columns:1fr 1fr!important;gap:24px!important;break-inside:avoid;}
+    .flags-h,.q-head{color:#b00!important;}
+    .flag{color:#333!important;break-inside:avoid;}
+    .flag b{color:#111!important;}
+    .flag .mark{-webkit-print-color-adjust:exact;print-color-adjust:exact;border:1px solid #999;}
+    .q-sub,.q-item .qt em{color:#666!important;}
+    .q-group-h{color:#444!important;}
+    .q-group-h::after{background:#ccc!important;}
+    .q-item,.q-item .qt{color:#111!important;break-inside:avoid;}
+    .q-item .qn{color:#999!important;}
+    .whatif{background:#f7f7f7!important;border-color:#ddd!important;border-left:2px solid #b00!important;color:#333!important;break-inside:avoid;}
+    .whatif b{color:#b00!important;}
+    .phases{border-color:#ccc!important;break-inside:avoid;}
+    .phases-h{color:#b00!important;}
+    .phase-card{border-color:#ccc!important;background:#fff!important;break-inside:avoid;}
+    .phase-top,.phase-att,.phase-tilt{border-color:#ccc!important;}
+    .phase-name{color:#111!important;}.phase-edge p{color:#333!important;}
+    .phase-att .who{color:#b00!important;}.phase-att .dot{background:#b00!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .phase-def .who{color:#138a5e!important;}.phase-def .dot{background:#138a5e!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .phase-tilt{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .standards{border-color:#ccc!important;}
+    .standards-h{color:#b00!important;}
+    .std-card{border-color:#ccc!important;border-left-color:#b00!important;background:#fff!important;break-inside:avoid;}
+    .std-org{color:#b00!important;}.std-quote{color:#333!important;border-left-color:#ccc!important;}
+    .std-rec{color:#111!important;}.std-rec b{color:#b00!important;}
+    .print-stamp{display:block!important;}
+    .unguarded{border-color:#b00!important;background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;break-inside:avoid;}
+    .ug-h{color:#b00!important;}
+    .ug-mark{background:#b00!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .ug-body{color:#444!important;}
+    .ug-chip{color:#b00!important;background:#fff!important;border-color:#b00!important;}
+  }
+  .print-stamp{display:none;font-size:10px;color:#888;margin-top:18px;font-family:var(--mono);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="topbar">
+      <div>
+        <p class="eyebrow" id="eyebrow"></p>
+        <h1 id="h1"></h1>
+      </div>
+      <div class="lang" id="lang">
+        <button data-l="en" class="on">EN</button>
+        <button data-l="es">ES</button>
+        <button data-l="pt">PT</button>
+      </div>
+    </div>
+    <p class="lede" id="lede1"></p>
+    <p class="lede" id="lede2" style="margin-top:14px;"></p>
+  </header>
+
+  <div class="stage">
+    <div class="panel">
+      <div class="panel-h"><span id="ph-structure"></span><b id="depth-tag"></b></div>
+      <div class="tree" id="tree">
+        <div class="tree-empty" id="tree-empty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="9" y="2" width="6" height="5" rx="1"/><line x1="12" y1="7" x2="12" y2="11"/><rect x="3" y="11" width="6" height="5" rx="1"/><rect x="15" y="11" width="6" height="5" rx="1"/><line x1="6" y1="16" x2="6" y2="18"/><line x1="18" y1="16" x2="18" y2="18"/></svg>
+          <p id="tree-empty-p"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel convo">
+      <div class="panel-h"><span id="ph-convo"></span><button class="restart" id="restart"></button></div>
+      <div class="progress" id="progress">
+        <div class="pstep" data-s="line"></div>
+        <div class="pstep" data-s="ceorep"></div>
+        <div class="pstep" data-s="peers"></div>
+        <div class="pstep" data-s="fn"></div>
+        <div class="pstep" data-s="deps"></div>
+        <div class="pstep" data-s="done"></div>
+      </div>
+      <div class="chat" id="chat"></div>
+      <div class="options" id="options"></div>
+    </div>
+  </div>
+
+  <div class="panel analysis-panel" id="analysis">
+    <div class="panel-h"><span id="ph-verdict"></span><span style="display:flex;align-items:center;gap:14px;"><b id="verdict-tag"></b><button class="export-btn" id="export"></button></span></div>
+    <div class="analysis-body">
+      <p class="verdict-name" id="v-name"></p>
+      <p class="verdict-sub" id="v-sub"></p>
+      <div class="result-cols">
+        <div class="result-col">
+          <p class="half-h" id="half-above"></p>
+          <div class="metric"><div class="metric-top"><span class="metric-name" id="mn-independence"></span><span class="metric-num" id="n-independence">–</span></div><div class="bar"><div class="bar-fill" id="b-independence"></div></div></div>
+          <div class="metric"><div class="metric-top"><span class="metric-name" id="mn-conflict"></span><span class="metric-num" id="n-conflict">–</span></div><div class="bar"><div class="bar-fill" id="b-conflict"></div></div></div>
+          <div class="metric"><div class="metric-top"><span class="metric-name" id="mn-speed"></span><span class="metric-num" id="n-speed">–</span></div><div class="bar"><div class="bar-fill" id="b-speed"></div></div></div>
+          <div class="metric"><div class="metric-top"><span class="metric-name" id="mn-board"></span><span class="metric-num" id="n-board">–</span></div><div class="bar"><div class="bar-fill" id="b-board"></div></div></div>
+          <div class="metric"><div class="metric-top"><span class="metric-name" id="mn-alignment"></span><span class="metric-num" id="n-alignment">–</span></div><div class="bar"><div class="bar-fill" id="b-alignment"></div></div></div>
+        </div>
+        <div class="result-col">
+          <p class="half-h" id="half-below"></p>
+          <div class="metric"><div class="metric-top"><span class="metric-name" id="mn-soc"></span><span class="metric-num" id="n-soc">–</span></div><div class="bar"><div class="bar-fill" id="b-soc"></div></div></div>
+          <div class="metric"><div class="metric-top"><span class="metric-name" id="mn-gov"></span><span class="metric-num" id="n-gov">–</span></div><div class="bar"><div class="bar-fill" id="b-gov"></div></div></div>
+          <div class="metric"><div class="metric-top"><span class="metric-name" id="mn-cro"></span><span class="metric-num" id="n-cro">–</span></div><div class="bar"><div class="bar-fill" id="b-cro"></div></div></div>
+          <div class="metric"><div class="metric-top"><span class="metric-name" id="mn-strat"></span><span class="metric-num" id="n-strat">–</span></div><div class="bar"><div class="bar-fill" id="b-strat"></div></div></div>
+          <div class="metric"><div class="metric-top"><span class="metric-name" id="mn-comp"></span><span class="metric-num" id="n-comp">–</span></div><div class="bar"><div class="bar-fill" id="b-comp"></div></div></div>
+        </div>
+      </div>
+      <div class="seam">
+        <div class="seam-top"><span class="seam-title" id="seam-title"></span><span class="seam-val" id="seam-val">—</span></div>
+        <div class="seam-track"><div class="seam-fill" id="seam-fill"></div></div>
+        <p class="seam-cap" id="seam-cap"></p>
+      </div>
+      <div class="failmode" id="failmode">
+        <div class="fm-head" id="fm-head"></div>
+        <p class="fm-why" id="fm-why"></p>
+        <p class="fm-fail" id="fm-fail"></p>
+      </div>
+      <div class="unguarded" id="unguarded">
+        <p class="ug-h"><span class="ug-mark">!</span><span id="ug-head"></span></p>
+        <p class="ug-body" id="ug-body"></p>
+        <div class="ug-list" id="ug-list"></div>
+      </div>
+      <div class="result-cols">
+        <div class="result-col"><div class="flags" id="flags"></div></div>
+        <div class="result-col"><div class="questions" id="questions"></div></div>
+      </div>
+      <div class="phases" id="phases">
+        <p class="phases-h" id="phases-h"></p>
+        <p class="phases-sub" id="phases-sub"></p>
+        <div class="phase-grid" id="phase-grid"></div>
+      </div>
+      <div class="standards" id="standards">
+        <p class="standards-h" id="standards-h"></p>
+        <p class="standards-sub" id="standards-sub"></p>
+        <div class="standards-list" id="standards-list"></div>
+      </div>
+      <p class="print-stamp" id="print-stamp"></p>
+    </div>
+  </div>
+
+  <p class="footnote" id="footnote"></p>
+</div>
+
+<div class="page-footer">
+  <div class="pf-credit">Created and Designed by:<br><a href="https://www.linkedin.com/in/jpcastro/" target="_blank" rel="noopener">Juan Pablo Castro Vilaró</a></div>
+  <div class="pf-cite"><a href="https://www.researchgate.net/publication/408316374" target="_blank" rel="noopener">The CISO Reporting Structure Is the Starting Point of Cyber Resilience Failure</a><br>DOI:<a href="https://doi.org/10.13140/RG.2.2.14467.67362" target="_blank" rel="noopener">10.13140/RG.2.2.14467.67362</a></div>
+</div>
+
+<!-- Executive report: built on export, shown only in print -->
+<div id="report" class="report" aria-hidden="true">
+  <div class="rep-cover">
+    <div class="rep-eyebrow" id="rep-eyebrow"></div>
+    <h1 class="rep-title" id="rep-title"></h1>
+    <div class="rep-meta" id="rep-meta"></div>
+  </div>
+  <div class="rep-section">
+    <div class="rep-verdict" id="rep-verdict"></div>
+    <p class="rep-summary" id="rep-summary"></p>
+  </div>
+  <div class="rep-section rep-avoid" id="rep-tree-wrap">
+    <h2 class="rep-h" id="rep-tree-h"></h2>
+    <div class="rep-tree" id="rep-tree"></div>
+  </div>
+  <div class="rep-section">
+    <h2 class="rep-h" id="rep-scores-h"></h2>
+    <div class="rep-scoregrid" id="rep-scoregrid"></div>
+    <div class="rep-gap" id="rep-gap"></div>
+  </div>
+  <div class="rep-section rep-avoid">
+    <h2 class="rep-h" id="rep-fail-h"></h2>
+    <p class="rep-fail-why" id="rep-fail-why"></p>
+    <p class="rep-fail-fail" id="rep-fail-fail"></p>
+  </div>
+  <div class="rep-section rep-avoid" id="rep-orphan-wrap">
+    <h2 class="rep-h" id="rep-orphan-h"></h2>
+    <p class="rep-orphan-body" id="rep-orphan-body"></p>
+    <div class="rep-orphan-list" id="rep-orphan-list"></div>
+  </div>
+  <div class="rep-section">
+    <h2 class="rep-h" id="rep-phase-h"></h2>
+    <div class="rep-phasegrid" id="rep-phasegrid"></div>
+  </div>
+  <div class="rep-section">
+    <h2 class="rep-h" id="rep-find-h"></h2>
+    <div class="rep-findings" id="rep-findings"></div>
+  </div>
+  <div class="rep-section">
+    <h2 class="rep-h" id="rep-std-h"></h2>
+    <p class="rep-std-sub" id="rep-std-sub"></p>
+    <div class="rep-std-list" id="rep-std-list"></div>
+  </div>
+  <p class="rep-foot" id="rep-foot"></p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =================== i18n dictionary =================== */
+  var T={
+    en:{
+      eyebrow:"Cybersecurity Compass · Strategy",
+      h1:'The <em>CISO</em> Reporting Structure Stress Test',
+      lede1:"This tool builds your reporting structure with you, from the top down, by asking one question at a time. Start with the board, place the CEO, then work down until you find where the CISO actually reports. Next you mark the CISO's peers, then choose what reports into the CISO, and finally say where the functions you do not own actually live. Your org chart draws itself on the left as you answer.",
+      lede2:"When the structure is complete, the tool puts it under pressure. It scores the line above the CISO on authority and the function below on capability, names how that specific reporting line tends to fail, measures the exposure gap your structure leaves open, shows where the attacker holds the advantage before, during, and after a breach, and grounds every recommendation in NIST CSF 2.0, NIS2, DORA, and the NACD-ISA handbook. Nothing is saved and nothing is graded. Build the structure you have today, then build the one you are considering, and compare what each one costs under stress. Use the buttons on the right. Start over anytime.",
+      phStructure:"Your Structure",phConvo:"The Conversation",phVerdict:"The Verdict",
+      restart:"Start over",treeEmpty:"Answer the first question and your org chart starts drawing itself here.",
+      building:"building…",levels:"levels",complete:"complete",awaiting:"awaiting structure",reportsTo:"reports to ",
+      halfAbove:"The line above · authority",halfBelow:"The function below · capability",
+      seamTitle:"Exposure Gap · what this structure leaves open",
+      mIndependence:"Independence",mConflict:"Freedom from conflict of interest",mSpeed:"Decision speed",mBoard:"Board access",mAlignment:"Business & IT alignment",
+      mSoc:"Detection & response (SOC)",mGov:"Governance & compliance",mCro:"Cyber risk operations (proactive)",mStrat:"Cyber strategy & architecture",mComp:"Function completeness",
+      footnote:'Scores are a qualitative model, not a benchmark. The line above weighs the five forces every reporting decision trades against: independence, freedom from conflict, decision speed, board access, and alignment. The recommendations are grounded in four authorities: <b>NIST CSF 2.0</b> (the GOVERN function, GV.RR-01 and GV.RR-02), the <b>NIS2 Directive</b> (Article 20, Governance), <b>DORA</b> (Article 5, Governance and organisation), and the <b>NACD-ISA Director\'s Handbook on Cyber-Risk Oversight</b> (5th ed., 2026). Together they place accountability for cyber risk on the board and senior management. The full text of each provision is stored in the verdict above and selected for the structure you mapped.',
+      board:"BOARD OF DIRECTORS",
+      qBoard:'Every structure starts at the same place. The <b>board of directors</b> sits at the top, and under the regulations now in force it is personally accountable for cyber risk. Let\'s place it.',
+      placeBoard:"Place the Board of Directors",boardPlaced:"Board of Directors placed.",
+      qCeo:'Who answers to the board and runs the company day to day? In almost every organization this is the <b>CEO</b>.',
+      placeCeo:"Place the CEO under the Board",
+      qReport:'The decisive question. Does your <b>CISO report to {boss}</b>? If yes, place them. If the CISO sits one level deeper, place the executive they actually report to.',
+      cisoHere:"My CISO reports to {boss}",cisoWhere:"Where does your CISO sit?",
+      deeper:"No — {role} sits here, my CISO is deeper",placed:"{role} placed.",
+      cisoPlaced:"CISO placed under {boss}.",
+      qPeers:'Now the layer beside the CISO. Who are the CISO\'s <b>peers</b>, the executives at the same level under {boss}? Select all that apply. Peers shape how cyber risk gets heard, because each one speaks a different language.',
+      selPeers:"Select the CISO's peers",peerTag:"✓ peer",
+      contPeers:"Continue with {n} peer{s} →",noPeers:"No peers, the CISO stands alone →",
+      peersSet:"{list} set as peers.",noPeersSel:"No peers selected.",
+      qCeoReports:'Before we map the layer around the CISO, look one level up. Your CISO does not report to the CEO, but other executives do. Who are the CEO\'s <b>direct reports</b>, the senior C-suite your CISO sits beneath? Select all that apply. This is the room where cyber risk has to travel to be heard, and your CISO is not in it.',
+      selCeoReports:"Select the CEO's direct reports",ceoRepTag:"✓ reports to CEO",
+      contCeoReports:"Continue with {n} CEO report{s} →",noCeoReports:"Skip, I will not map the CEO's reports →",
+      ceoReportsSet:"{list} set as the CEO's direct reports.",noCeoReportsSel:"CEO's reports not mapped.",
+      ceoReportsBracket:"the CEO's direct reports",
+      qFns:'Now the layer most people skip. What actually <b>reports into the CISO</b>? The reporting line decides authority. This decides whether that authority can do anything. Select every function the CISO owns.',
+      whatReports:"What reports into the CISO",ownedTag:"✓ owned",
+      nextDeps:"Next: where do the other {n} live? →",allOwned:"Every function owned, show me the verdict →",
+      fnsOwned:"{n} functions owned by the CISO.",noFnsOwned:"No functions selected as owned.",
+      qDeps:'The functions the CISO does not own do not disappear. They become <b>dependencies</b>. A dependency is only safe if someone clearly owns it and agrees they do. Let\'s find out where each one actually lives.',
+      qDepOne:"Where does <b>{fn}</b> report?",ownerOf:"Owner of {fn}",
+      nobody:"Nobody owns this",notApplicable:"Not applicable to us",
+      depNobody:"nobody owns it",depNa:"not applicable",
+      reportsInto:"reports into the CISO",depsOwnedElse:"dependencies — owned elsewhere",
+      nobodyOwns:"Nobody owns these",naLabel:"Not applicable",
+      sameLevel:"same level under {boss}",
+      structure:"Your structure",peersLabel:"peers: ",ownsLabel:"owns: ",unownedLabel:"unowned: ",
+      fnsReport:"{n} functions report into the CISO.",noFn:"The CISO owns no defined function.",
+      mapDifferent:"Map a different structure",
+      exportPdf:"Export PDF",
+      stamp:"Generated with The CISO Reporting Structure Builder · framework by Juan Pablo Castro · The Cybersecurity Compass",
+      srclinksH:"Read the thinking behind this tool",
+      whatMeans:"What this placement means",
+      narrow:"NARROW",moderate:"MODERATE",wide:"WIDE",
+      seamTight:"A narrow exposure gap. Risk reaches accountable leaders fast, and the function below can act on it.",
+      seamMod:"A workable exposure gap. Watch the lowest bar in either half. That is where an attacker probes first.",
+      seamWide:"A wide exposure gap. Either risk is filtered before it reaches the board, or the function below cannot act on it, or both.",
+      seamOrphan:"Widened by {n} function{s} nobody owns. An unguarded function is open ground for the attacker.",
+      ugHead:"Unguarded Capacity",
+      ugBody:"These capabilities belong to no one. They are not protected, not monitored, and not anyone\'s responsibility. Each one is missing capacity and open ground for an attacker. Give every item an owner.",
+      qHead:"Sit with these",qSub:"Questions to ask yourself about the structure you just mapped. Not to grade it, but to find where it bends under pressure.",
+      gLine:"On the line above",gGap:"On gaps and conflicts",gBoard:"From the boardroom (NACD-ISA)",gWhat:"What if",whatIf:"What if · ",
+      phasesH:"Attacker vs defender, across the breach",
+      phasesSub:"Your reporting structure does not just sit on a chart. It decides who holds the advantage before, during, and after a breach. Mapped to the three domains of the Cybersecurity Compass and grounded in the accountability that NIST CSF 2.0, NIS2, and DORA now place on the board.",
+      phBeforeDom:"Cyber Risk Management",phBeforeName:"Before the breach",
+      phDuringDom:"Detection and Response",phDuringName:"During the breach",
+      phAfterDom:"Cyber Resilience",phAfterName:"After the breach",
+      whoAtt:"Attacker edge",whoDef:"Defender edge",
+      tiltAtt:"Advantage: attacker",tiltDef:"Advantage: defender",tiltEven:"Contested",
+      fmHead:"How this reporting line tends to fail",
+      repEyebrow:"CISO Reporting Structure Stress Test",
+      repMetaStruct:"Structure assessed",repMetaLine:"CISO reports to",repMetaDate:"Generated",
+      repTreeH:"The structure you mapped",
+      repScoresH:"Headline scores",repLineH:"The line above (authority)",repFnH:"The function below (capability)",
+      repFailH:"How this reporting line tends to fail",
+      repOrphanH:"Unguarded capabilities",
+      repPhaseH:"Attacker vs defender, across the breach",
+      repFindH:"Key findings",
+      repStdH:"Grounded in the standards",
+      repFoot:"This report was generated by The CISO Reporting Structure Stress Test. Scoring is qualitative and structural, intended to surface where a reporting line tends to fail, not to certify compliance. Recommendations draw on NIST CSF 2.0 (the GOVERN function), the NIS2 Directive (Article 20), DORA (Article 5), and the NACD-ISA Director\u2019s Handbook on Cyber-Risk Oversight (5th ed., 2026).",
+      standardsH:"What the standards say about this structure",
+      standardsSub:"Every recommendation below is grounded in a named authority. The provisions are stored in full and selected for the structure you mapped. These instruments place accountability on the board and senior management; they do not prescribe a single reporting line, which is why the structure beneath that accountability matters."
+    },
+    es:{
+      eyebrow:"Cybersecurity Compass · Strategy",
+      h1:'Evaluación de la Estructura de Reporte del <em>CISO</em>',
+      lede1:"Esta herramienta construye tu estructura de reporte contigo, de arriba hacia abajo, haciendo una pregunta a la vez. Comienza con el directorio, ubica al CEO, y luego desciende hasta encontrar a quién reporta realmente el CISO. Después marcas a los pares del CISO, eliges qué reporta al CISO, y finalmente indicas dónde viven realmente las funciones que no controlas. Tu organigrama se dibuja solo a la izquierda mientras respondes.",
+      lede2:"Cuando la estructura está completa, la herramienta la somete a presión. Evalúa la línea por encima del CISO en autoridad y la función por debajo en capacidad, nombra cómo tiende a fallar esa línea de reporte específica, mide la brecha de exposición que tu estructura deja abierta, muestra dónde tiene la ventaja el atacante antes, durante y después de una brecha, y ancla cada recomendación en NIST CSF 2.0, NIS2, DORA y el manual NACD-ISA. Nada se guarda y nada se califica. Construye la estructura que tienes hoy, luego construye la que estás considerando, y compara lo que cuesta cada una bajo presión. Usa los botones a la derecha. Reinicia cuando quieras.",
+      phStructure:"Tu Estructura",phConvo:"La Conversación",phVerdict:"El Veredicto",
+      restart:"Reiniciar",treeEmpty:"Responde la primera pregunta y tu organigrama empieza a dibujarse aquí.",
+      building:"construyendo…",levels:"niveles",complete:"completo",awaiting:"esperando estructura",reportsTo:"reporta a ",
+      halfAbove:"La línea de arriba · autoridad",halfBelow:"La función de abajo · capacidad",
+      seamTitle:"Brecha de Exposición · lo que esta estructura deja abierto",
+      mIndependence:"Independencia",mConflict:"Ausencia de conflicto de interés",mSpeed:"Velocidad de decisión",mBoard:"Acceso al directorio",mAlignment:"Alineación con el negocio y TI",
+      mSoc:"Detección y respuesta (SOC)",mGov:"Gobierno y cumplimiento",mCro:"Operaciones de ciber riesgo (proactivo)",mStrat:"Estrategia y arquitectura de ciberseguridad",mComp:"Completitud de la función",
+      footnote:'Las puntuaciones son un modelo cualitativo, no un benchmark. La línea de arriba pondera las cinco fuerzas que toda decisión de reporte negocia: independencia, ausencia de conflicto, velocidad de decisión, acceso al directorio y alineación. Las recomendaciones se anclan en cuatro autoridades: <b>NIST CSF 2.0</b> (la función GOVERN, GV.RR-01 y GV.RR-02), la <b>Directiva NIS2</b> (Artículo 20, Gobernanza), <b>DORA</b> (Artículo 5, Gobernanza y organización) y el <b>Manual NACD-ISA de Supervisión del Ciber Riesgo para Directores</b> (5.ª ed., 2026). Juntas colocan la responsabilidad del ciber riesgo en el directorio y la alta dirección. El texto completo de cada disposición se almacena en el veredicto de arriba y se selecciona según la estructura que mapeaste.',
+      board:"DIRECTORIO",
+      qBoard:'Toda estructura comienza en el mismo lugar. El <b>directorio</b> está en la cima, y bajo las regulaciones vigentes es personalmente responsable del ciber riesgo. Ubiquémoslo.',
+      placeBoard:"Ubicar el Directorio",boardPlaced:"Directorio ubicado.",
+      qCeo:'¿Quién responde al directorio y dirige la empresa día a día? En casi toda organización es el <b>CEO</b>.',
+      placeCeo:"Ubicar al CEO bajo el Directorio",
+      qReport:'La pregunta decisiva. ¿Tu <b>CISO reporta a {boss}</b>? Si es así, ubícalo. Si el CISO está un nivel más abajo, ubica al ejecutivo a quien realmente reporta.',
+      cisoHere:"Mi CISO reporta a {boss}",cisoWhere:"¿Dónde se ubica tu CISO?",
+      deeper:"No — {role} va aquí, mi CISO está más abajo",placed:"{role} ubicado.",
+      cisoPlaced:"CISO ubicado bajo {boss}.",
+      qPeers:'Ahora la capa junto al CISO. ¿Quiénes son los <b>pares</b> del CISO, los ejecutivos al mismo nivel bajo {boss}? Selecciona todos los que apliquen. Los pares moldean cómo se escucha el ciber riesgo, porque cada uno habla un idioma distinto.',
+      selPeers:"Selecciona los pares del CISO",peerTag:"✓ par",
+      contPeers:"Continuar con {n} par{s} →",noPeers:"Sin pares, el CISO está solo →",
+      peersSet:"{list} marcados como pares.",noPeersSel:"Sin pares seleccionados.",
+      qCeoReports:'Antes de mapear la capa alrededor del CISO, mira un nivel más arriba. Tu CISO no reporta al CEO, pero otros ejecutivos sí. ¿Quiénes son los <b>reportes directos</b> del CEO, la alta dirección bajo la cual se ubica tu CISO? Selecciona todos los que apliquen. Esa es la sala a la que el ciber riesgo debe llegar para ser escuchado, y tu CISO no está en ella.',
+      selCeoReports:"Selecciona los reportes directos del CEO",ceoRepTag:"✓ reporta al CEO",
+      contCeoReports:"Continuar con {n} reporte{s} del CEO →",noCeoReports:"Omitir, no mapearé los reportes del CEO →",
+      ceoReportsSet:"{list} marcados como reportes directos del CEO.",noCeoReportsSel:"Reportes del CEO no mapeados.",
+      ceoReportsBracket:"reportes directos del CEO",
+      qFns:'Ahora la capa que casi todos omiten. ¿Qué <b>reporta al CISO</b>? La línea de reporte define la autoridad. Esto define si esa autoridad puede hacer algo. Selecciona cada función que el CISO controla.',
+      whatReports:"Qué reporta al CISO",ownedTag:"✓ propio",
+      nextDeps:"Siguiente: ¿dónde viven las otras {n}? →",allOwned:"Todo bajo el CISO, muéstrame el veredicto →",
+      fnsOwned:"{n} funciones bajo el CISO.",noFnsOwned:"Ninguna función seleccionada como propia.",
+      qDeps:'Las funciones que el CISO no controla no desaparecen. Se convierten en <b>dependencias</b>. Una dependencia solo es segura si alguien claramente la posee y lo acepta. Veamos dónde vive realmente cada una.',
+      qDepOne:"¿A dónde reporta <b>{fn}</b>?",ownerOf:"Dueño de {fn}",
+      nobody:"Nadie la controla",notApplicable:"No aplica a nosotros",
+      depNobody:"nadie la controla",depNa:"no aplica",
+      reportsInto:"reporta al CISO",depsOwnedElse:"dependencias — controladas en otra parte",
+      nobodyOwns:"Nadie controla estas",naLabel:"No aplica",
+      sameLevel:"mismo nivel bajo {boss}",
+      structure:"Tu estructura",peersLabel:"pares: ",ownsLabel:"controla: ",unownedLabel:"sin dueño: ",
+      fnsReport:"{n} funciones reportan al CISO.",noFn:"El CISO no controla ninguna función definida.",
+      mapDifferent:"Mapear otra estructura",
+      exportPdf:"Exportar PDF",
+      stamp:"Generado con El Constructor de la Estructura de Reporte del CISO · marco de Juan Pablo Castro · La Brújula de la Ciberseguridad",
+      srclinksH:"Lee el pensamiento detrás de esta herramienta",
+      whatMeans:"Qué significa esta ubicación",
+      narrow:"ESTRECHA",moderate:"MODERADA",wide:"AMPLIA",
+      seamTight:"Una brecha de exposición estrecha. El riesgo llega rápido a los líderes responsables, y la función de abajo puede actuar.",
+      seamMod:"Una brecha de exposición manejable. Vigila la barra más baja de cualquier mitad. Ahí es donde sondea primero un atacante.",
+      seamWide:"Una brecha de exposición amplia. O el riesgo se filtra antes de llegar al directorio, o la función de abajo no puede actuar, o ambas.",
+      seamOrphan:"Ampliada por {n} función{s} que nadie controla. Una función sin guardia es terreno abierto para el atacante.",
+      ugHead:"Capacidad sin Guardia",
+      ugBody:"Estas capacidades no pertenecen a nadie. No están protegidas, no se monitorean, y no son responsabilidad de nadie. Cada una es capacidad faltante y terreno abierto para un atacante. Dale un dueño a cada elemento.",
+      qHead:"Para reflexionar",qSub:"Preguntas para hacerte sobre la estructura que acabas de mapear. No para calificarla, sino para hallar dónde se dobla bajo presión.",
+      gLine:"Sobre la línea de arriba",gGap:"Sobre brechas y conflictos",gBoard:"Desde el directorio (NACD-ISA)",gWhat:"Qué pasa si",whatIf:"Qué pasa si · ",
+      phasesH:"Atacante contra defensor, a lo largo de la brecha",
+      phasesSub:"Tu estructura de reporte no solo vive en un organigrama. Decide quién tiene la ventaja antes, durante y después de una brecha. Mapeada a los tres dominios de la Brújula de la Ciberseguridad y anclada en la responsabilidad que NIST CSF 2.0, NIS2 y DORA hoy colocan en el directorio.",
+      phBeforeDom:"Gestión del Ciber Riesgo",phBeforeName:"Antes de la brecha",
+      phDuringDom:"Detección y Respuesta",phDuringName:"Durante la brecha",
+      phAfterDom:"Ciber Resiliencia",phAfterName:"Después de la brecha",
+      whoAtt:"Ventaja del atacante",whoDef:"Ventaja del defensor",
+      tiltAtt:"Ventaja: atacante",tiltDef:"Ventaja: defensor",tiltEven:"En disputa",
+      fmHead:"Cómo tiende a fallar esta línea de reporte",
+      repEyebrow:"Evaluación de la Estructura de Reporte del CISO",
+      repMetaStruct:"Estructura evaluada",repMetaLine:"El CISO reporta a",repMetaDate:"Generado",
+      repTreeH:"La estructura que mapeaste",
+      repScoresH:"Puntajes principales",repLineH:"La línea de arriba (autoridad)",repFnH:"La función de abajo (capacidad)",
+      repFailH:"Cómo tiende a fallar esta línea de reporte",
+      repOrphanH:"Capacidades sin guardia",
+      repPhaseH:"Atacante contra defensor, a lo largo de la brecha",
+      repFindH:"Hallazgos clave",
+      repStdH:"Anclado en los estándares",
+      repFoot:"Este informe fue generado por la Evaluación de la Estructura de Reporte del CISO. La evaluación es cualitativa y estructural, pensada para revelar dónde tiende a fallar una línea de reporte, no para certificar cumplimiento. Las recomendaciones se apoyan en NIST CSF 2.0 (la función GOVERN), la Directiva NIS2 (Artículo 20), DORA (Artículo 5) y el Manual NACD-ISA de Supervisión del Ciber Riesgo para Directores (5.ª ed., 2026).",
+      standardsH:"Qué dicen los estándares sobre esta estructura",
+      standardsSub:"Cada recomendación de abajo se ancla en una autoridad nombrada. Las disposiciones se almacenan completas y se seleccionan según la estructura que mapeaste. Estos instrumentos colocan la responsabilidad en el directorio y la alta dirección; no prescriben una única línea de reporte, y por eso importa la estructura debajo de esa responsabilidad."
+    },
+    pt:{
+      eyebrow:"Cybersecurity Compass · Strategy",
+      h1:'Avaliação da Estrutura de Reporte do <em>CISO</em>',
+      lede1:"Esta ferramenta constrói sua estrutura de reporte com você, de cima para baixo, fazendo uma pergunta de cada vez. Comece com o conselho, posicione o CEO, e desça até encontrar a quem o CISO realmente reporta. Depois você marca os pares do CISO, escolhe o que reporta ao CISO, e por fim indica onde vivem de fato as funções que você não controla. Seu organograma se desenha sozinho à esquerda enquanto você responde.",
+      lede2:"Quando a estrutura está completa, a ferramenta a coloca sob pressão. Ele avalia a linha acima do CISO em autoridade e a função abaixo em capacidade, nomeia como aquela linha de reporte específica tende a falhar, mede a lacuna de exposição que sua estrutura deixa aberta, mostra onde o atacante tem a vantagem antes, durante e depois de uma violação, e ancora cada recomendação no NIST CSF 2.0, NIS2, DORA e no manual NACD-ISA. Nada é salvo e nada é avaliado. Construa a estrutura que você tem hoje, depois construa a que está considerando, e compare quanto custa cada uma sob pressão. Use os botões à direita. Reinicie quando quiser.",
+      phStructure:"Sua Estrutura",phConvo:"A Conversa",phVerdict:"O Veredito",
+      restart:"Recomeçar",treeEmpty:"Responda a primeira pergunta e seu organograma começa a se desenhar aqui.",
+      building:"construindo…",levels:"níveis",complete:"completo",awaiting:"aguardando estrutura",reportsTo:"reporta a ",
+      halfAbove:"A linha acima · autoridade",halfBelow:"A função abaixo · capacidade",
+      seamTitle:"Lacuna de Exposição · o que esta estrutura deixa aberto",
+      mIndependence:"Independência",mConflict:"Ausência de conflito de interesse",mSpeed:"Velocidade de decisão",mBoard:"Acesso ao conselho",mAlignment:"Alinhamento com o negócio e TI",
+      mSoc:"Detecção e resposta (SOC)",mGov:"Governança e conformidade",mCro:"Operações de ciber risco (proativo)",mStrat:"Estratégia e arquitetura de cibersegurança",mComp:"Completude da função",
+      footnote:'As pontuações são um modelo qualitativo, não um benchmark. A linha acima pondera as cinco forças que toda decisão de reporte negocia: independência, ausência de conflito, velocidade de decisão, acesso ao conselho e alinhamento. As recomendações ancoram-se em quatro autoridades: <b>NIST CSF 2.0</b> (a função GOVERN, GV.RR-01 e GV.RR-02), a <b>Diretiva NIS2</b> (Artigo 20, Governança), o <b>DORA</b> (Artigo 5, Governança e organização) e o <b>Manual NACD-ISA de Supervisão do Ciber Risco para Conselheiros</b> (5.ª ed., 2026). Juntas, colocam a responsabilidade do ciber risco no conselho e na alta gestão. O texto completo de cada disposição é armazenado no veredito acima e selecionado para a estrutura que você mapeou.',
+      board:"CONSELHO DE ADMINISTRAÇÃO",
+      qBoard:'Toda estrutura começa no mesmo lugar. O <b>conselho de administração</b> está no topo, e sob as regulações vigentes é pessoalmente responsável pelo ciber risco. Vamos posicioná-lo.',
+      placeBoard:"Posicionar o Conselho",boardPlaced:"Conselho posicionado.",
+      qCeo:'Quem responde ao conselho e dirige a empresa no dia a dia? Em quase toda organização é o <b>CEO</b>.',
+      placeCeo:"Posicionar o CEO sob o Conselho",
+      qReport:'A pergunta decisiva. Seu <b>CISO reporta a {boss}</b>? Se sim, posicione-o. Se o CISO está um nível abaixo, posicione o executivo a quem ele realmente reporta.',
+      cisoHere:"Meu CISO reporta a {boss}",cisoWhere:"Onde fica o seu CISO?",
+      deeper:"Não — {role} fica aqui, meu CISO está mais abaixo",placed:"{role} posicionado.",
+      cisoPlaced:"CISO posicionado sob {boss}.",
+      qPeers:'Agora a camada ao lado do CISO. Quem são os <b>pares</b> do CISO, os executivos no mesmo nível sob {boss}? Selecione todos que se aplicam. Os pares moldam como o ciber risco é ouvido, pois cada um fala uma língua diferente.',
+      selPeers:"Selecione os pares do CISO",peerTag:"✓ par",
+      contPeers:"Continuar com {n} par{s} →",noPeers:"Sem pares, o CISO está sozinho →",
+      peersSet:"{list} marcados como pares.",noPeersSel:"Nenhum par selecionado.",
+      qCeoReports:'Antes de mapear a camada ao redor do CISO, olhe um nível acima. Seu CISO não reporta ao CEO, mas outros executivos reportam. Quem são os <b>reportes diretos</b> do CEO, a alta liderança sob a qual seu CISO se posiciona? Selecione todos que se aplicam. Essa é a sala à qual o ciber risco precisa chegar para ser ouvido, e seu CISO não está nela.',
+      selCeoReports:"Selecione os reportes diretos do CEO",ceoRepTag:"✓ reporta ao CEO",
+      contCeoReports:"Continuar com {n} reporte{s} do CEO →",noCeoReports:"Pular, não vou mapear os reportes do CEO →",
+      ceoReportsSet:"{list} marcados como reportes diretos do CEO.",noCeoReportsSel:"Reportes do CEO não mapeados.",
+      ceoReportsBracket:"reportes diretos do CEO",
+      qFns:'Agora a camada que quase todos pulam. O que de fato <b>reporta ao CISO</b>? A linha de reporte define a autoridade. Isto define se essa autoridade pode fazer algo. Selecione cada função que o CISO controla.',
+      whatReports:"O que reporta ao CISO",ownedTag:"✓ próprio",
+      nextDeps:"Próximo: onde vivem as outras {n}? →",allOwned:"Tudo sob o CISO, mostre o veredito →",
+      fnsOwned:"{n} funções sob o CISO.",noFnsOwned:"Nenhuma função selecionada como própria.",
+      qDeps:'As funções que o CISO não controla não desaparecem. Tornam-se <b>dependências</b>. Uma dependência só é segura se alguém claramente a possui e concorda com isso. Vamos descobrir onde cada uma realmente vive.',
+      qDepOne:"A quem <b>{fn}</b> reporta?",ownerOf:"Responsável por {fn}",
+      nobody:"Ninguém controla",notApplicable:"Não se aplica a nós",
+      depNobody:"ninguém controla",depNa:"não se aplica",
+      reportsInto:"reporta ao CISO",depsOwnedElse:"dependências — controladas em outro lugar",
+      nobodyOwns:"Ninguém controla estas",naLabel:"Não se aplica",
+      sameLevel:"mesmo nível sob {boss}",
+      structure:"Sua estrutura",peersLabel:"pares: ",ownsLabel:"controla: ",unownedLabel:"sem dono: ",
+      fnsReport:"{n} funções reportam ao CISO.",noFn:"O CISO não controla nenhuma função definida.",
+      mapDifferent:"Mapear outra estrutura",
+      exportPdf:"Exportar PDF",
+      stamp:"Gerado com O Construtor da Estrutura de Reporte do CISO · referencial de Juan Pablo Castro · A Bússola da Cibersegurança",
+      srclinksH:"Leia o pensamento por trás desta ferramenta",
+      whatMeans:"O que esta posição significa",
+      narrow:"ESTREITA",moderate:"MODERADA",wide:"AMPLA",
+      seamTight:"Uma lacuna de exposição estreita. O risco chega rápido aos líderes responsáveis, e a função abaixo pode agir.",
+      seamMod:"Uma lacuna de exposição administrável. Observe a barra mais baixa de qualquer metade. É onde um atacante sonda primeiro.",
+      seamWide:"Uma lacuna de exposição ampla. Ou o risco é filtrado antes de chegar ao conselho, ou a função abaixo não consegue agir, ou ambos.",
+      seamOrphan:"Ampliada por {n} função{s} que ninguém controla. Uma função sem guarda é terreno aberto para o atacante.",
+      ugHead:"Capacidade sem Guarda",
+      ugBody:"Estas capacidades não pertencem a ninguém. Não estão protegidas, não são monitoradas, e não são responsabilidade de ninguém. Cada uma é capacidade ausente e terreno aberto para um atacante. Dê um responsável a cada item.",
+      qHead:"Reflita sobre estas",qSub:"Perguntas para fazer a si mesmo sobre a estrutura que acabou de mapear. Não para avaliá-la, mas para achar onde ela dobra sob pressão.",
+      gLine:"Sobre a linha acima",gGap:"Sobre lacunas e conflitos",gBoard:"Da sala do conselho (NACD-ISA)",gWhat:"E se",whatIf:"E se · ",
+      phasesH:"Atacante contra defensor, ao longo da violação",
+      phasesSub:"Sua estrutura de reporte não vive apenas em um organograma. Ela decide quem tem a vantagem antes, durante e depois de uma violação. Mapeada aos três domínios da Bússola da Cibersegurança e ancorada na responsabilidade que NIST CSF 2.0, NIS2 e DORA agora colocam no conselho.",
+      phBeforeDom:"Gestão do Ciber Risco",phBeforeName:"Antes da violação",
+      phDuringDom:"Detecção e Resposta",phDuringName:"Durante a violação",
+      phAfterDom:"Ciber Resiliência",phAfterName:"Depois da violação",
+      whoAtt:"Vantagem do atacante",whoDef:"Vantagem do defensor",
+      tiltAtt:"Vantagem: atacante",tiltDef:"Vantagem: defensor",tiltEven:"Em disputa",
+      fmHead:"Como esta linha de reporte tende a falhar",
+      repEyebrow:"Avaliação da Estrutura de Reporte do CISO",
+      repMetaStruct:"Estrutura avaliada",repMetaLine:"O CISO reporta a",repMetaDate:"Gerado",
+      repTreeH:"A estrutura que você mapeou",
+      repScoresH:"Pontuações principais",repLineH:"A linha acima (autoridade)",repFnH:"A função abaixo (capacidade)",
+      repFailH:"Como esta linha de reporte tende a falhar",
+      repOrphanH:"Capacidades sem guarda",
+      repPhaseH:"Atacante contra defensor, ao longo da violação",
+      repFindH:"Achados principais",
+      repStdH:"Ancorado nos padrões",
+      repFoot:"Este relatório foi gerado pela Avaliação da Estrutura de Reporte do CISO. A avaliação é qualitativa e estrutural, destinada a revelar onde uma linha de reporte tende a falhar, não a certificar conformidade. As recomendações se apoiam no NIST CSF 2.0 (a função GOVERN), na Diretiva NIS2 (Artigo 20), no DORA (Artigo 5) e no Manual NACD-ISA de Supervisão do Ciber Risco para Conselheiros (5.ª ed., 2026).",
+      standardsH:"O que os padrões dizem sobre esta estrutura",
+      standardsSub:"Cada recomendação abaixo se ancora em uma autoridade nomeada. As disposições são armazenadas na íntegra e selecionadas para a estrutura que você mapeou. Esses instrumentos colocam a responsabilidade no conselho e na alta gestão; eles não prescrevem uma única linha de reporte, e é por isso que a estrutura abaixo dessa responsabilidade importa."
+    }
+  };
+
+  /* role labels per language */
+  var ROLE_LABELS={
+    en:{CEO:"CEO",COO:"COO",CRO:"CRO",GC:"General Counsel",CFO:"CFO",CIO:"CIO",CTO:"CTO"},
+    es:{CEO:"CEO",COO:"COO",CRO:"CRO",GC:"Asesor Jurídico",CFO:"CFO",CIO:"CIO",CTO:"CTO"},
+    pt:{CEO:"CEO",COO:"COO",CRO:"CRO",GC:"Diretor Jurídico",CFO:"CFO",CIO:"CIO",CTO:"CTO"}
+  };
+  var DEEPER={CEO:["COO","CRO","GC","CFO","CIO","CTO"],COO:["CIO","CTO"],CRO:[],GC:[],CFO:["CIO"],CIO:["CTO"],CTO:[]};
+
+  /* peers per language */
+  var PEERS_LABEL={
+    en:{CIO:"CIO",CTO:"CTO",CRO:"CRO",CFO:"CFO",COO:"COO",GC:"General Counsel",CDO:"Chief Data Officer",CPO:"Chief Product Officer"},
+    es:{CIO:"CIO",CTO:"CTO",CRO:"CRO",CFO:"CFO",COO:"COO",GC:"Asesor Jurídico",CDO:"Chief Data Officer",CPO:"Chief Product Officer"},
+    pt:{CIO:"CIO",CTO:"CTO",CRO:"CRO",CFO:"CFO",COO:"COO",GC:"Diretor Jurídico",CDO:"Chief Data Officer",CPO:"Chief Product Officer"}
+  };
+  var PEER_IDS=["CIO","CTO","CRO","CFO","COO","GC","CDO","CPO"];
+
+  /* functions per language. d = capability weights; tag label per lang */
+  var FN_DEFS=[
+    {id:"soc",d:{soc:3},dom:"detect",tag:{en:"detect",es:"detecta",pt:"detecta"},label:{en:"Security Operations Center (SOC)",es:"Centro de Operaciones de Seguridad (SOC)",pt:"Centro de Operações de Segurança (SOC)"}},
+    {id:"ir",d:{soc:2},dom:"detect",tag:{en:"respond",es:"responde",pt:"responde"},label:{en:"Incident Response & Forensics",es:"Respuesta a Incidentes y Forense",pt:"Resposta a Incidentes e Forense"}},
+    {id:"gov",d:{gov:3,strat:2},dom:"govern",tag:{en:"govern",es:"gobierna",pt:"governa"},label:{en:"Governance, Risk & Compliance",es:"Gobierno, Riesgo y Cumplimiento",pt:"Governança, Risco e Conformidade"}},
+    {id:"audit",d:{gov:1},dom:"govern",tag:{en:"govern",es:"gobierna",pt:"governa"},label:{en:"Security Audit & Assurance",es:"Auditoría y Aseguramiento de Seguridad",pt:"Auditoria e Garantia de Segurança"}},
+    {id:"croc",d:{cro:3,strat:2},dom:"proactive",tag:{en:"proactive",es:"proactivo",pt:"proativo"},label:{en:"Cyber Risk Operations Center (CROC)",es:"Centro de Operaciones de Ciber Riesgo (CROC)",pt:"Centro de Operações de Ciber Risco (CROC)"}},
+    {id:"vuln",d:{cro:2},dom:"proactive",tag:{en:"proactive",es:"proactivo",pt:"proativo"},label:{en:"Vulnerability & Exposure Management",es:"Gestión de Vulnerabilidades y Exposición",pt:"Gestão de Vulnerabilidades e Exposição"}},
+    {id:"idam",d:{soc:1,cro:1},dom:"identity",tag:{en:"identity",es:"identidad",pt:"identidade"},label:{en:"Identity & Access Management",es:"Gestión de Identidad y Accesos",pt:"Gestão de Identidade e Acessos"}},
+    {id:"arch",d:{cro:1,soc:1,strat:3},dom:"proactive",tag:{en:"build",es:"diseña",pt:"projeta"},label:{en:"Security Architecture & Engineering",es:"Arquitectura e Ingeniería de Seguridad",pt:"Arquitetura e Engenharia de Segurança"}},
+    {id:"awar",d:{gov:1},dom:"govern",tag:{en:"people",es:"personas",pt:"pessoas"},label:{en:"Awareness & Human Risk",es:"Concientización y Riesgo Humano",pt:"Conscientização e Risco Humano"}},
+    {id:"cloud",d:{cro:2},dom:"proactive",tag:{en:"protect",es:"protege",pt:"protege"},label:{en:"Cloud Security",es:"Seguridad en la Nube",pt:"Segurança em Nuvem"}},
+    {id:"appsec",d:{cro:2},dom:"proactive",tag:{en:"protect",es:"protege",pt:"protege"},label:{en:"Application Security",es:"Seguridad de Aplicaciones",pt:"Segurança de Aplicações"}},
+    {id:"container",d:{cro:2},dom:"proactive",tag:{en:"protect",es:"protege",pt:"protege"},label:{en:"Container Security",es:"Seguridad de Contenedores",pt:"Segurança de Contêineres"}},
+    {id:"network",d:{cro:1,soc:1},dom:"proactive",tag:{en:"protect",es:"protege",pt:"protege"},label:{en:"Network Security",es:"Seguridad de Red",pt:"Segurança de Rede"}},
+    {id:"endemail",d:{soc:2},dom:"detect",tag:{en:"protect",es:"protege",pt:"protege"},label:{en:"Endpoint & Email Security",es:"Seguridad de Endpoint y Correo",pt:"Segurança de Endpoint e E-mail"}},
+    {id:"datasec",d:{cro:1,gov:1,strat:1},dom:"proactive",tag:{en:"protect",es:"protege",pt:"protege"},label:{en:"Data Security",es:"Seguridad de Datos",pt:"Segurança de Dados"}},
+    {id:"aisec",d:{cro:1,gov:1,strat:1},dom:"proactive",tag:{en:"emerging",es:"emergente",pt:"emergente"},label:{en:"AI Security",es:"Seguridad de IA",pt:"Segurança de IA"}}
+  ];
+  var DEP_OWNER_IDS=["CIO","CTO","CRO","CFO","COO","GC","CDO","CPO","OUTSOURCED"];
+  var DEP_OWNER_LABEL={
+    en:{CIO:"The CIO",CTO:"The CTO",CRO:"The CRO",CFO:"The CFO",COO:"The COO",GC:"General Counsel",CDO:"Chief Data Officer",CPO:"Chief Product Officer",OUTSOURCED:"Outsourced / MSSP"},
+    es:{CIO:"El CIO",CTO:"El CTO",CRO:"El CRO",CFO:"El CFO",COO:"El COO",GC:"Asesor Jurídico",CDO:"Chief Data Officer",CPO:"Chief Product Officer",OUTSOURCED:"Tercerizado / MSSP"},
+    pt:{CIO:"O CIO",CTO:"O CTO",CRO:"O CRO",CFO:"O CFO",COO:"O COO",GC:"Diretor Jurídico",CDO:"Chief Data Officer",CPO:"Chief Product Officer",OUTSOURCED:"Terceirizado / MSSP"}
+  };
+
+  /* model: numeric scores language-independent; text (name/sub/flags) per language */
+  var MSCORE={
+    CEO:{s:{independence:5,conflict:5,speed:5,board:5,alignment:3},seam:18},
+    COO:{s:{independence:4,conflict:4,speed:4,board:4,alignment:4},seam:24},
+    CRO:{s:{independence:4,conflict:4,speed:3,board:4,alignment:3},seam:30},
+    GC:{s:{independence:5,conflict:5,speed:3,board:4,alignment:2},seam:34},
+    CFO:{s:{independence:3,conflict:3,speed:3,board:4,alignment:3},seam:38},
+    CIO:{s:{independence:2,conflict:1,speed:3,board:2,alignment:5},seam:62},
+    CTO:{s:{independence:2,conflict:2,speed:3,board:2,alignment:5},seam:58}
+  };
+  var MTEXT={
+    en:{
+      CEO:{name:"CISO → CEO",sub:"Direct line to the chief executive. Maximum independence and board access.",flags:[["pos","Independence and access peak here.","Cyber risk reaches the top unfiltered, with visible authority."],["neg","The seat assumes a board-ready CISO.","Without business fluency, the access goes unused."]]},
+      COO:{name:"CISO → COO",sub:"Under operations. One of the most balanced and underused structures.",flags:[["pos","Resolves the IT conflict at its root.","Peer to the CIO and CTO, not beneath them."],["neu","Depends on a strong COO mandate.","Weakens when the role is narrowly operational."]]},
+      CRO:{name:"CISO → CRO",sub:"Under enterprise risk. Cyber risk becomes comparable to every other risk.",flags:[["pos","Cyber risk becomes one risk among many.","Measured like financial exposure."],["neg","Cyber risk does not behave like credit risk.","A static cadence leaves you a step behind."]]},
+      GC:{name:"CISO → General Counsel",sub:"Under legal. Total independence from IT, strong for disclosure.",flags:[["pos","Built for accountability and disclosure.","Responsible for enterprise risk and privilege."],["neg","Alignment with IT becomes deliberate work.","The structural closeness to technology is gone."]]},
+      CFO:{name:"CISO → CFO",sub:"Under finance. Strong financial framing and budget proximity.",flags:[["pos","Cyber risk speaks in financial terms by default.","Exposure lands in the board's language."],["neg","A cost lens can distort the risk.","Security spending with no feature is easy to under-fund."]]},
+      CIO:{name:"CISO → CIO",sub:"Under IT. Operational proximity, and the deepest documented conflict of interest.",flags:[["pos","Tightest alignment with the systems it protects.","Next to infrastructure decisions and budget."],["neg","The fire marshal reports to the sprinkler-cutter.","The CIO is rewarded for uptime. The CISO has to take systems down."],["neg","Risk reaches the board pre-filtered.","Cyber risk passes through an IT lens and loses business meaning."]]},
+      CTO:{name:"CISO → CTO",sub:"Under engineering. Aligns security with build velocity, same conflict as the CIO line.",flags:[["pos","Security embedded in how products are built.","Strong where the product is the business."],["neg","Velocity is the boss's reward, not safety.","Security that slows a release competes with the metric it reports into."]]}
+    },
+    es:{
+      CEO:{name:"CISO → CEO",sub:"Línea directa al director ejecutivo. Máxima independencia y acceso al directorio.",flags:[["pos","La independencia y el acceso alcanzan su punto máximo.","El ciber riesgo llega a la cima sin filtros, con autoridad visible."],["neg","El puesto asume un CISO listo para el directorio.","Sin fluidez de negocio, el acceso se desaprovecha."]]},
+      COO:{name:"CISO → COO",sub:"Bajo operaciones. Una de las estructuras más equilibradas y menos usadas.",flags:[["pos","Resuelve el conflicto con TI de raíz.","Par del CIO y el CTO, no bajo ellos."],["neu","Depende de un mandato fuerte del COO.","Se debilita cuando el rol es puramente operativo."]]},
+      CRO:{name:"CISO → CRO",sub:"Bajo riesgo empresarial. El ciber riesgo se vuelve comparable a todo otro riesgo.",flags:[["pos","El ciber riesgo se vuelve uno entre muchos.","Medido como la exposición financiera."],["neg","El ciber riesgo no se comporta como el riesgo crediticio.","Una cadencia estática te deja un paso atrás."]]},
+      GC:{name:"CISO → Asesor Jurídico",sub:"Bajo legal. Independencia total de TI, fuerte para divulgación.",flags:[["pos","Construido para la rendición de cuentas y la divulgación.","Responsable del riesgo empresarial y el privilegio."],["neg","La alineación con TI se vuelve trabajo deliberado.","La cercanía estructural con la tecnología desaparece."]]},
+      CFO:{name:"CISO → CFO",sub:"Bajo finanzas. Fuerte encuadre financiero y cercanía al presupuesto.",flags:[["pos","El ciber riesgo habla en términos financieros por defecto.","La exposición llega en el lenguaje del directorio."],["neg","Una óptica de costo puede distorsionar el riesgo.","El gasto sin nueva funcionalidad es fácil de subfinanciar."]]},
+      CIO:{name:"CISO → CIO",sub:"Bajo TI. Cercanía operativa, y el conflicto de interés más documentado.",flags:[["pos","La mayor alineación con los sistemas que protege.","Junto a las decisiones de infraestructura y presupuesto."],["neg","El jefe de bomberos reporta a quien recorta los aspersores.","El CIO es premiado por la disponibilidad. El CISO debe bajar sistemas."],["neg","El riesgo llega prefiltrado al directorio.","El ciber riesgo pasa por una óptica de TI y pierde su sentido de negocio."]]},
+      CTO:{name:"CISO → CTO",sub:"Bajo ingeniería. Alinea seguridad con velocidad de desarrollo, mismo conflicto que la línea del CIO.",flags:[["pos","Seguridad integrada en cómo se construyen los productos.","Fuerte donde el producto es el negocio."],["neg","La velocidad es el premio del jefe, no la seguridad.","La seguridad que frena un lanzamiento compite con la métrica a la que reporta."]]}
+    },
+    pt:{
+      CEO:{name:"CISO → CEO",sub:"Linha direta ao diretor executivo. Máxima independência e acesso ao conselho.",flags:[["pos","A independência e o acesso atingem o pico.","O ciber risco chega ao topo sem filtros, com autoridade visível."],["neg","O cargo pressupõe um CISO pronto para o conselho.","Sem fluência de negócio, o acesso é desperdiçado."]]},
+      COO:{name:"CISO → COO",sub:"Sob operações. Uma das estruturas mais equilibradas e subutilizadas.",flags:[["pos","Resolve o conflito com TI na raiz.","Par do CIO e do CTO, não abaixo deles."],["neu","Depende de um mandato forte do COO.","Enfraquece quando o papel é puramente operacional."]]},
+      CRO:{name:"CISO → CRO",sub:"Sob risco corporativo. O ciber risco torna-se comparável a todo outro risco.",flags:[["pos","O ciber risco torna-se um entre muitos.","Medido como a exposição financeira."],["neg","O ciber risco não se comporta como risco de crédito.","Uma cadência estática deixa você um passo atrás."]]},
+      GC:{name:"CISO → Diretor Jurídico",sub:"Sob o jurídico. Independência total de TI, forte para divulgação.",flags:[["pos","Construído para prestação de contas e divulgação.","Responsável pelo risco corporativo e pelo sigilo."],["neg","O alinhamento com TI vira trabalho deliberado.","A proximidade estrutural com a tecnologia desaparece."]]},
+      CFO:{name:"CISO → CFO",sub:"Sob finanças. Forte enquadramento financeiro e proximidade do orçamento.",flags:[["pos","O ciber risco fala em termos financeiros por padrão.","A exposição chega na linguagem do conselho."],["neg","Uma lente de custo pode distorcer o risco.","Gasto sem nova funcionalidade é fácil de subfinanciar."]]},
+      CIO:{name:"CISO → CIO",sub:"Sob TI. Proximidade operacional, e o conflito de interesse mais documentado.",flags:[["pos","O maior alinhamento com os sistemas que protege.","Ao lado das decisões de infraestrutura e orçamento."],["neg","O chefe dos bombeiros reporta a quem corta os aspersores.","O CIO é premiado pela disponibilidade. O CISO precisa derrubar sistemas."],["neg","O risco chega pré-filtrado ao conselho.","O ciber risco passa por uma lente de TI e perde o sentido de negócio."]]},
+      CTO:{name:"CISO → CTO",sub:"Sob engenharia. Alinha segurança com velocidade de desenvolvimento, mesmo conflito da linha do CIO.",flags:[["pos","Segurança integrada em como os produtos são construídos.","Forte onde o produto é o negócio."],["neg","A velocidade é o prêmio do chefe, não a segurança.","Segurança que atrasa um lançamento compete com a métrica a que reporta."]]}
+    }
+  };
+
+  /* ============ runtime state ============ */
+  var L='en';
+  var chain=[],cisoBoss=null,peers=[],fns=[],deps={},ceoReports=[],phase='line';
+  var depQueue=[],depIdx=0;
+
+  var $=function(id){return document.getElementById(id);};
+  var chat=$('chat'),options=$('options'),tree=$('tree'),treeEmpty=$('tree-empty'),analysis=$('analysis');
+
+  function t(k){return T[L][k];}
+  function fmt(s,o){o=o||{};return s.replace(/\{(\w+)\}/g,function(_,k){return o[k]!==undefined?o[k]:'';});}
+  function roleLabel(r){return ROLE_LABELS[L][r]||r;}
+  function peerLabel(id){return PEERS_LABEL[L][id]||id;}
+  function fnDef(id){return FN_DEFS.find(function(x){return x.id===id;});}
+  function fnLabel(id){var f=fnDef(id);return f?f.label[L]:id;}
+  function fnTag(id){var f=fnDef(id);return f?f.tag[L]:'';}
+  function labelShort(role){return role==='CEO'?roleLabel('CEO'):roleLabel(role);}
+
+  function addMsg(kind,html){var d=document.createElement('div');d.className='msg';var b=document.createElement('div');b.className='bubble '+kind;b.innerHTML=html;d.appendChild(b);chat.appendChild(d);chat.scrollTop=chat.scrollHeight;return d;}
+  function clearOptions(){options.innerHTML='';}
+  function setPhase(p){phase=p;var order=['line','ceorep','peers','fn','deps','done'];document.querySelectorAll('.pstep').forEach(function(el){var s=el.getAttribute('data-s');var ai=order.indexOf(p),ei=order.indexOf(s);el.classList.toggle('done',ei<ai);el.classList.toggle('active',ei===ai);});}
+  function setDepth(){$('depth-tag').textContent=cisoBoss?(phase==='done'?t('complete'):phase):(chain.length?chain.length+' '+t('levels'):t('building'));}
+
+  /* ============ static UI text ============ */
+  function paintStatic(){
+    document.documentElement.lang=L;
+    $('eyebrow').textContent=t('eyebrow');
+    $('h1').innerHTML=t('h1');
+    $('lede1').textContent=t('lede1');
+    $('lede2').textContent=t('lede2');
+    $('ph-structure').textContent=t('phStructure');
+    $('ph-convo').textContent=t('phConvo');
+    $('ph-verdict').textContent=t('phVerdict');
+    $('restart').textContent=t('restart');
+    $('tree-empty-p').textContent=t('treeEmpty');
+    $('half-above').textContent=t('halfAbove');
+    $('half-below').textContent=t('halfBelow');
+    $('seam-title').textContent=t('seamTitle');
+    $('mn-independence').textContent=t('mIndependence');
+    $('mn-conflict').textContent=t('mConflict');
+    $('mn-speed').textContent=t('mSpeed');
+    $('mn-board').textContent=t('mBoard');
+    $('mn-alignment').textContent=t('mAlignment');
+    $('mn-soc').textContent=t('mSoc');
+    $('mn-gov').textContent=t('mGov');
+    $('mn-cro').textContent=t('mCro');
+    $('mn-strat').textContent=t('mStrat');
+    $('mn-comp').textContent=t('mComp');
+    $('footnote').innerHTML=t('footnote');
+    var ex=$('export');if(ex)ex.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>'+t('exportPdf');
+  }
+
+  /* ============ tree ============ */
+  function nodeEl(label,cls,extraTag){var n=document.createElement('div');n.className='node '+(cls||'');n.innerHTML='<span>'+label+'</span>'+(extraTag?'<span class="tag">'+extraTag+'</span>':'');return n;}
+  function renderTree(){
+    if(chain.length===0){treeEmpty.style.display='flex';Array.prototype.slice.call(tree.querySelectorAll('.dyn')).forEach(function(e){e.remove();});return;}
+    treeEmpty.style.display='none';
+    Array.prototype.slice.call(tree.querySelectorAll('.dyn')).forEach(function(e){e.remove();});
+    var holder=document.createElement('div');holder.className='dyn node-wrap';
+    var deeper=cisoBoss&&cisoBoss!=='CEO'&&ceoReports.length;
+    var ceoIdx=chain.indexOf('CEO');
+    var pathLevelIdx=deeper?ceoIdx+1:-1;
+
+    // builds the CISO block (peers row + CISO + functions + dependencies) into a given container
+    function appendCisoBlock(container){
+      if(peers.length){var br=document.createElement('div');br.className='peer-bracket';br.textContent=fmt(t('sameLevel'),{boss:roleLabel(cisoBoss)});container.appendChild(br);}
+      var row=document.createElement('div');row.className='peer-row';
+      peers.forEach(function(p){row.appendChild(nodeEl(peerLabel(p),'peer'));});
+      row.appendChild(nodeEl('CISO','ciso'));container.appendChild(row);
+      if(fns.length){var rail=document.createElement('div');rail.className='fn-rail';container.appendChild(rail);var fw=document.createElement('div');fw.className='fn-wrap';var cap=document.createElement('div');cap.className='fn-cap';cap.textContent=t('reportsInto');fw.appendChild(cap);var grid=document.createElement('div');grid.className='fn-grid';fns.forEach(function(f){grid.appendChild(nodeEl(fnLabel(f),'fn',fnTag(f)));});fw.appendChild(grid);container.appendChild(fw);}
+      var depKeys=Object.keys(deps);
+      if(depKeys.length){
+        var assigned={},nobody=[],na=[];
+        depKeys.forEach(function(fid){var d=deps[fid];if(d.owner==='NOBODY')nobody.push(fid);else if(d.owner==='NA')na.push(fid);else{(assigned[d.owner]=assigned[d.owner]||{label:depOwnerLabel(d.owner),items:[]}).items.push(fid);}});
+        var dw=document.createElement('div');dw.className='dep-wrap';
+        var dcap=document.createElement('div');dcap.className='dep-caphdr';dcap.textContent=t('depsOwnedElse');dw.appendChild(dcap);
+        var dgrid=document.createElement('div');dgrid.className='dep-grid';
+        Object.keys(assigned).forEach(function(own){var grp=document.createElement('div');grp.className='dep-group';var oh=document.createElement('div');oh.className='dep-owner';oh.textContent=assigned[own].label;grp.appendChild(oh);assigned[own].items.forEach(function(fid){grp.appendChild(nodeEl(fnLabel(fid),'fn dep'));});dgrid.appendChild(grp);});
+        if(nobody.length){var g=document.createElement('div');g.className='dep-group';var oh=document.createElement('div');oh.className='dep-owner danger';oh.textContent=t('nobodyOwns');g.appendChild(oh);nobody.forEach(function(fid){g.appendChild(nodeEl(fnLabel(fid),'fn dep orphan'));});dgrid.appendChild(g);}
+        if(na.length){var g2=document.createElement('div');g2.className='dep-group';var oh2=document.createElement('div');oh2.className='dep-owner';oh2.style.color='var(--ink-faint)';oh2.textContent=t('naLabel');g2.appendChild(oh2);na.forEach(function(fid){g2.appendChild(nodeEl(fnLabel(fid),'fn dep na'));});dgrid.appendChild(g2);}
+        dw.appendChild(dgrid);container.appendChild(dw);
+      }
+    }
+    // builds remaining chain nodes below a given start index into a container (vertical)
+    function appendChainBelow(container,startIdx){
+      for(var j=startIdx;j<chain.length;j++){var s=document.createElement('div');s.className='stem';container.appendChild(s);container.appendChild(nodeEl(roleLabel(chain[j]),''));}
+    }
+
+    if(deeper){
+      // draw chain down to the CEO
+      chain.slice(0,ceoIdx+1).forEach(function(role,i){
+        if(i>0){var s=document.createElement('div');s.className='stem';holder.appendChild(s);}
+        holder.appendChild(nodeEl(role==='BOARD'?t('board'):roleLabel(role),role==='BOARD'?'board':role==='CEO'?'ceo':''));
+      });
+      // C-suite level: CEO reports + the path node, where the path node carries the whole CISO sub-tree beneath it
+      var rs=document.createElement('div');rs.className='stem';holder.appendChild(rs);
+      var rb=document.createElement('div');rb.className='peer-bracket';rb.textContent=t('ceoReportsBracket');holder.appendChild(rb);
+      var crow=document.createElement('div');crow.className='peer-row csuite-row';
+      ceoReports.forEach(function(p){crow.appendChild(nodeEl(peerLabel(p),'peer csuite'));});
+      // the path node becomes a vertical column: node, then the rest of the chain, then the CISO block
+      var col=document.createElement('div');col.className='node-wrap pathcol';
+      col.appendChild(nodeEl(roleLabel(chain[pathLevelIdx]),'pathnode'));
+      appendChainBelow(col,pathLevelIdx+1); // any chain nodes between this and the CISO boss
+      var bs=document.createElement('div');bs.className='stem';col.appendChild(bs);
+      appendCisoBlock(col);
+      crow.appendChild(col);
+      holder.appendChild(crow);
+    }else{
+      // normal linear chain
+      chain.forEach(function(role,i){
+        if(i>0){var s=document.createElement('div');s.className='stem';holder.appendChild(s);}
+        holder.appendChild(nodeEl(role==='BOARD'?t('board'):roleLabel(role),role==='BOARD'?'board':role==='CEO'?'ceo':''));
+      });
+      if(cisoBoss){var s=document.createElement('div');s.className='stem';holder.appendChild(s);appendCisoBlock(holder);}
+    }
+    tree.appendChild(holder);
+  }
+  function depOwnerLabel(id){return DEP_OWNER_LABEL[L][id]||id;}
+
+  /* ============ flow ============ */
+  function start(){chat.innerHTML='';clearOptions();chain=[];cisoBoss=null;peers=[];fns=[];deps={};ceoReports=[];analysis.classList.remove('show');setPhase('line');renderTree();setDepth();addMsg('q',t('qBoard'));showOptions([{k:'01',label:t('placeBoard'),act:placeBoard}]);}
+  function placeBoard(){chain=['BOARD'];renderTree();setDepth();addMsg('a',t('boardPlaced'));askWhoReportsTo('BOARD');}
+  function askWhoReportsTo(parentRole){clearOptions();if(parentRole==='BOARD'){addMsg('q',t('qCeo'));showOptions([{k:'02',label:t('placeCeo'),act:function(){placeNode('CEO');}}]);return;}addMsg('q',fmt(t('qReport'),{boss:labelShort(parentRole)}));showOptions(whoReportsToOptions(parentRole));}
+  function whoReportsToOptions(parentRole){var opts=[{ciso:true,k:'◆',label:fmt(t('cisoHere'),{boss:labelShort(parentRole)}),act:function(){placeCISO(parentRole);}}];(DEEPER[parentRole]||[]).forEach(function(role,i){if(chain.indexOf(role)===-1)opts.push({k:('0'+(i+1)).slice(-2),label:fmt(t('deeper'),{role:roleLabel(role)}),act:(function(r){return function(){placeNode(r);};})(role)});});return opts;}
+  function placeNode(role){chain.push(role);renderTree();setDepth();addMsg('a',fmt(t('placed'),{role:roleLabel(role)}));askWhoReportsTo(role);}
+  function placeCISO(boss){cisoBoss=boss;renderTree();setDepth();clearOptions();addMsg('a',fmt(t('cisoPlaced'),{boss:labelShort(boss)}));if(boss!=='CEO'&&chain.indexOf('CEO')!==-1)startCeoReports();else startPeers();}
+
+  function startCeoReports(){setPhase('ceorep');setDepth();addMsg('q',t('qCeoReports'));renderCeoReportOptions();}
+  function renderCeoReportOptions(){clearOptions();var lab=document.createElement('div');lab.className='opt-label';lab.textContent=t('selCeoReports');options.appendChild(lab);PEER_IDS.forEach(function(id){if(chain.indexOf(id)!==-1)return;var btn=document.createElement('button');btn.className='opt'+(ceoReports.indexOf(id)!==-1?' sel':'');btn.innerHTML='<span class="k">+</span><span>'+peerLabel(id)+'</span><span class="chk">'+t('ceoRepTag')+'</span>';btn.addEventListener('click',function(){toggleCeoReport(id);});options.appendChild(btn);});var done=document.createElement('div');done.className='opt-done';done.textContent=ceoReports.length?fmt(t('contCeoReports'),{n:ceoReports.length,s:ceoReports.length>1?'s':''}):t('noCeoReports');done.addEventListener('click',function(){if(ceoReports.length)addMsg('a',fmt(t('ceoReportsSet'),{list:ceoReports.map(peerLabel).join(', ')}));else addMsg('a',t('noCeoReportsSel'));startPeers();});options.appendChild(done);}
+  function toggleCeoReport(id){var i=ceoReports.indexOf(id);if(i===-1)ceoReports.push(id);else ceoReports.splice(i,1);renderTree();renderCeoReportOptions();}
+
+  function startPeers(){peers=peers.filter(function(id){return ceoReports.indexOf(id)===-1;});setPhase('peers');setDepth();addMsg('q',fmt(t('qPeers'),{boss:labelShort(cisoBoss)}));renderPeerOptions();}
+  function renderPeerOptions(){clearOptions();var lab=document.createElement('div');lab.className='opt-label';lab.textContent=t('selPeers');options.appendChild(lab);PEER_IDS.forEach(function(id){if(chain.indexOf(id)!==-1)return;if(ceoReports.indexOf(id)!==-1)return;var btn=document.createElement('button');btn.className='opt'+(peers.indexOf(id)!==-1?' sel':'');btn.innerHTML='<span class="k">+</span><span>'+peerLabel(id)+'</span><span class="chk">'+t('peerTag')+'</span>';btn.addEventListener('click',function(){togglePeer(id);});options.appendChild(btn);});var done=document.createElement('div');done.className='opt-done';done.textContent=peers.length?fmt(t('contPeers'),{n:peers.length,s:peers.length>1?'s':''}):t('noPeers');done.addEventListener('click',startFunctions);options.appendChild(done);}
+  function togglePeer(id){var i=peers.indexOf(id);if(i===-1)peers.push(id);else peers.splice(i,1);renderTree();renderPeerOptions();}
+
+  function startFunctions(){if(peers.length)addMsg('a',fmt(t('peersSet'),{list:peers.map(peerLabel).join(', ')}));else addMsg('a',t('noPeersSel'));setPhase('fn');setDepth();addMsg('q',t('qFns'));renderFnOptions();}
+  function renderFnOptions(){clearOptions();var lab=document.createElement('div');lab.className='opt-label';lab.textContent=t('whatReports');options.appendChild(lab);FN_DEFS.forEach(function(f){var btn=document.createElement('button');btn.className='opt'+(fns.indexOf(f.id)!==-1?' sel':'');btn.innerHTML='<span class="k">+</span><span>'+fnLabel(f.id)+'</span><span class="chk">'+t('ownedTag')+'</span>';btn.addEventListener('click',function(){toggleFn(f.id);});options.appendChild(btn);});var done=document.createElement('div');done.className='opt-done';var missing=FN_DEFS.length-fns.length;done.textContent=missing>0?fmt(t('nextDeps'),{n:missing}):t('allOwned');done.addEventListener('click',function(){missing>0?startDeps():finish();});options.appendChild(done);}
+  function toggleFn(id){var i=fns.indexOf(id);if(i===-1)fns.push(id);else fns.splice(i,1);renderTree();renderFnOptions();}
+
+  function startDeps(){addMsg('a',fns.length?fmt(t('fnsOwned'),{n:fns.length}):t('noFnsOwned'));setPhase('deps');setDepth();depQueue=FN_DEFS.filter(function(f){return fns.indexOf(f.id)===-1;}).map(function(f){return f.id;});depIdx=0;addMsg('q',t('qDeps'));askDep();}
+  function askDep(){if(depIdx>=depQueue.length){finish();return;}var id=depQueue[depIdx];clearOptions();addMsg('q',fmt(t('qDepOne'),{fn:fnLabel(id)}));var lab=document.createElement('div');lab.className='opt-label';lab.textContent=fmt(t('ownerOf'),{fn:fnLabel(id)});options.appendChild(lab);DEP_OWNER_IDS.forEach(function(oid){var btn=document.createElement('button');btn.className='opt';btn.innerHTML='<span class="k">+</span><span>'+depOwnerLabel(oid)+'</span>';btn.addEventListener('click',function(){setDep(id,oid);});options.appendChild(btn);});var none=document.createElement('button');none.className='opt';none.style.borderColor='var(--bad)';none.innerHTML='<span class="k">!</span><span>'+t('nobody')+'</span>';none.addEventListener('click',function(){setDep(id,'NOBODY');});options.appendChild(none);var na=document.createElement('button');na.className='opt';na.innerHTML='<span class="k">–</span><span>'+t('notApplicable')+'</span>';na.addEventListener('click',function(){setDep(id,'NA');});options.appendChild(na);}
+  function setDep(fnId,ownerId){deps[fnId]={owner:ownerId};var lbl=ownerId==='NOBODY'?t('depNobody'):ownerId==='NA'?t('depNa'):depOwnerLabel(ownerId);addMsg('a',fnLabel(fnId)+' → '+lbl);renderTree();depIdx++;askDep();}
+
+  function finish(){setPhase('done');setDepth();clearOptions();addMsg('a',fns.length?fmt(t('fnsReport'),{n:fns.length}):t('noFn'));var orphanList=Object.keys(deps).filter(function(k){return deps[k].owner==='NOBODY';}).map(fnLabel);addMsg('note','<span class="lbl">'+t('structure')+'</span>'+chain.map(function(r){return r==='BOARD'?(L==='en'?'Board':L==='es'?'Directorio':'Conselho'):roleLabel(r);}).concat(['CISO']).join('  →  ')+(peers.length?('<br><span style="color:var(--ink-faint)">'+t('peersLabel')+peers.map(peerLabel).join(', ')+'</span>'):'')+(fns.length?('<br><span style="color:var(--ink-faint)">'+t('ownsLabel')+fns.map(fnLabel).join(', ')+'</span>'):'')+(orphanList.length?('<br><span style="color:var(--bad)">'+t('unownedLabel')+orphanList.join(', ')+'</span>'):''));showAnalysis();var st=$('print-stamp');if(st){var d=new Date();st.textContent=t('stamp')+' · '+d.toISOString().slice(0,10);}showOptions([{k:'↺',label:t('mapDifferent'),act:start}]);}
+
+  function showOptions(list){clearOptions();var hasCiso=list.some(function(o){return o.ciso;});if(hasCiso){var lab=document.createElement('div');lab.className='opt-label';lab.textContent=t('cisoWhere');options.appendChild(lab);}list.forEach(function(o){var btn=document.createElement('button');btn.className='opt'+(o.ciso?' ciso-opt':'');btn.innerHTML='<span class="k">'+o.k+'</span><span>'+o.label+'</span>';btn.addEventListener('click',o.act);options.appendChild(btn);});}
+
+  /* ============ scoring ============ */
+  function barColor(v){return v>=4?'var(--good)':v>=3?'var(--warn)':'var(--bad)';}
+  function functionScores(){
+    var raw={soc:0,gov:0,cro:0,strat:0};
+    fns.forEach(function(id){var f=fnDef(id);for(var k in f.d)raw[k]+=f.d[k];});
+    function norm(v,cap){return Math.max(0,Math.min(5,v/cap*5));}
+    var soc=norm(raw.soc,7),gov=norm(raw.gov,4),cro=norm(raw.cro,11),strat=norm(raw.strat,7);
+    var domains={detect:false,govern:false,proactive:false,identity:false};
+    fns.forEach(function(id){var dm=fnDef(id).dom;domains[dm]=true;});
+    var covered=Object.keys(domains).filter(function(k){return domains[k];}).length;
+    var orphanN=Object.keys(deps).filter(function(k){return deps[k].owner==='NOBODY';}).length;
+    // unowned capabilities are missing capacity: each one lowers completeness only
+    var comp=Math.max(0,norm(covered,4)-orphanN*0.7);
+    return {soc:soc,gov:gov,cro:cro,strat:strat,comp:comp,domains:domains,covered:covered,orphanN:orphanN};
+  }
+
+  function showAnalysis(){
+    var ms=MSCORE[cisoBoss],mt=MTEXT[L][cisoBoss];if(!ms)return;
+    $('v-name').textContent=mt.name;
+    $('v-sub').textContent=mt.sub;
+    var fs=functionScores();
+    ['independence','conflict','speed','board','alignment'].forEach(function(k){var v=ms.s[k];var bar=$('b-'+k);setTimeout(function(){bar.style.width=(v/5*100)+'%';bar.style.background=barColor(v);},60);$('n-'+k).textContent=v.toFixed(1)+' / 5';});
+    [['soc',fs.soc],['gov',fs.gov],['cro',fs.cro],['strat',fs.strat],['comp',fs.comp]].forEach(function(p){var bar=$('b-'+p[0]);setTimeout(function(){bar.style.width=(p[1]/5*100)+'%';bar.style.background=barColor(p[1]);},60);$('n-'+p[0]).textContent=p[1].toFixed(1)+' / 5';});
+    var capGap=(5-fs.soc)+(5-fs.gov)+(5-fs.cro)+(5-fs.comp);
+    var orphanN=Object.keys(deps).filter(function(k){return deps[k].owner==='NOBODY';}).length;
+    var seam=Math.round(Math.min(92,ms.seam+capGap*1.6+orphanN*4));
+    setTimeout(function(){$('seam-fill').style.width=seam+'%';},60);
+    var sv=$('seam-val');var label=seam<=28?t('narrow'):seam<=48?t('moderate'):t('wide');var col=seam<=28?'var(--good)':seam<=48?'var(--warn)':'var(--bad)';sv.textContent=label+' · '+seam;sv.style.color=col;
+    $('seam-cap').textContent=orphanN>0?fmt(t('seamOrphan'),{n:orphanN,s:orphanN>1?'s':''}):(seam<=28?t('seamTight'):seam<=48?t('seamMod'):t('seamWide'));
+    renderFailMode();
+    var ug=$('unguarded'),ugList=$('ug-list');
+    var orphanIds=Object.keys(deps).filter(function(k){return deps[k].owner==='NOBODY';});
+    if(orphanIds.length){$('ug-head').textContent=t('ugHead');$('ug-body').textContent=t('ugBody');ugList.innerHTML='';orphanIds.forEach(function(id){var c=document.createElement('span');c.className='ug-chip';c.textContent=fnLabel(id);ugList.appendChild(c);});ug.classList.add('show');}else{ug.classList.remove('show');}
+    var fl=$('flags');fl.innerHTML='<div class="flags-h">'+t('whatMeans')+'</div>';
+    $('verdict-tag').textContent=t('reportsTo')+roleLabel(cisoBoss);
+    function flag(tp,b,x){var d=document.createElement('div');d.className='flag '+tp;var mk=tp==='pos'?'+':tp==='neg'?'!':'~';d.innerHTML='<span class="mark">'+mk+'</span><span><b>'+b+'</b> '+x+'</span>';fl.appendChild(d);}
+    mt.flags.forEach(function(f){flag(f[0],f[1],f[2]);});
+    FLAGS_EXTRA[L](flag,fs,deps);
+    var lineStrong=(ms.s.independence+ms.s.board)/2>=4;
+    var fnStrong=fs.covered>=3&&fs.cro>=2;
+    if(lineStrong&&!fnStrong)FIGUREHEAD[L](flag,'fig');
+    if(!lineStrong&&fnStrong)FIGUREHEAD[L](flag,'marshal');
+    renderQuestions(ms,mt,fs,lineStrong,fnStrong);
+    renderPhases(ms,fs);
+    renderStandards(ms,fs);
+    analysis.classList.add('show');
+  }
+
+  // attacker/defender advantage across the three Cybersecurity Compass domains
+  function renderPhases(ms,fs){
+    $('phases-h').textContent=t('phasesH');
+    $('phases-sub').textContent=t('phasesSub');
+    var grid=$('phase-grid');grid.innerHTML='';
+    var boardAccess=ms.s.board, speed=ms.s.speed, independence=ms.s.independence;
+    var orphanN=fs.orphanN||0;
+    // BEFORE: proactive cyber risk + board access decide whether exposure is seen and acted on early
+    var beforeDef=fs.domains.proactive && fs.cro>=2.5 && boardAccess>=4;
+    var beforeAtt=!fs.domains.proactive || orphanN>0;
+    // DURING: detection/SOC + decision speed decide whether you can act inside the attacker's window
+    var duringDef=fs.domains.detect && fs.soc>=2.5 && speed>=4;
+    var duringAtt=!fs.domains.detect || speed<=2;
+    // AFTER: governance + board accountability decide whether you learn, disclose, and recover
+    var afterDef=fs.domains.govern && independence>=4;
+    var afterAtt=!fs.domains.govern;
+    var P=PHASE_TEXT[L](fs,ms,{orphanN:orphanN});
+    [['before',beforeAtt,beforeDef,P.before],['during',duringAtt,duringDef,P.during],['after',afterAtt,afterDef,P.after]].forEach(function(ph){
+      var key=ph[0],att=ph[1],def=ph[2],txt=ph[3];
+      var card=document.createElement('div');card.className='phase-card';
+      card.innerHTML=
+        '<div class="phase-top"><div class="phase-domain">'+t('ph'+cap(key)+'Dom')+'</div><div class="phase-name">'+t('ph'+cap(key)+'Name')+'</div></div>'+
+        '<div class="phase-edge phase-att"><div class="who"><span class="dot"></span>'+t('whoAtt')+'</div><p>'+txt.att+'</p></div>'+
+        '<div class="phase-edge phase-def"><div class="who"><span class="dot"></span>'+t('whoDef')+'</div><p>'+txt.def+'</p></div>';
+      // tilt: who holds the advantage in this phase for this structure
+      var tilt,tcls;
+      if(att&&!def){tilt=t('tiltAtt');tcls='att';}
+      else if(def&&!att){tilt=t('tiltDef');tcls='def';}
+      else{tilt=t('tiltEven');tcls='even';}
+      var tl=document.createElement('div');tl.className='phase-tilt '+tcls;tl.textContent=tilt;
+      card.appendChild(tl);
+      grid.appendChild(card);
+    });
+  }
+  function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+  /* capability + dependency flags per language */
+  var FLAGS_EXTRA={
+    en:function(flag,fs,deps){
+      if(!fs.domains.proactive)flag('neg','No proactive cyber risk layer.','Without a CROC or exposure management, the function only reacts. The attack happens before the alert.');else flag('pos','A proactive layer exists.','Cyber risk is framed before the incident, not just chased after it.');
+      if(!fs.domains.govern)flag('neg','Governance and compliance is missing.','Under NIS2, DORA, and SEC scrutiny, the board cannot prove oversight without it.');
+      if(!fs.domains.detect)flag('neg','No detection and response under the CISO.','Authority with no SOC is a title, not a defense.');
+      if(fs.covered>=4)flag('pos','The function spans all four domains.','Detect and respond, govern, proactive risk, and identity are all owned. A complete capability.');
+      depFlags(flag,deps,'en');
+    },
+    es:function(flag,fs,deps){
+      if(!fs.domains.proactive)flag('neg','No hay capa proactiva de ciber riesgo.','Sin un CROC o gestión de exposición, la función solo reacciona. El ataque ocurre antes de la alerta.');else flag('pos','Existe una capa proactiva.','El ciber riesgo se encuadra antes del incidente, no solo se persigue después.');
+      if(!fs.domains.govern)flag('neg','Falta gobierno y cumplimiento.','Bajo el escrutinio de NIS2, DORA y la SEC, el directorio no puede demostrar supervisión sin esto.');
+      if(!fs.domains.detect)flag('neg','Sin detección y respuesta bajo el CISO.','Autoridad sin SOC es un título, no una defensa.');
+      if(fs.covered>=4)flag('pos','La función abarca los cuatro dominios.','Detección y respuesta, gobierno, riesgo proactivo e identidad, todos bajo control. Una capacidad completa.');
+      depFlags(flag,deps,'es');
+    },
+    pt:function(flag,fs,deps){
+      if(!fs.domains.proactive)flag('neg','Sem camada proativa de ciber risco.','Sem um CROC ou gestão de exposição, a função só reage. O ataque acontece antes do alerta.');else flag('pos','Existe uma camada proativa.','O ciber risco é enquadrado antes do incidente, não apenas perseguido depois.');
+      if(!fs.domains.govern)flag('neg','Falta governança e conformidade.','Sob o escrutínio de NIS2, DORA e SEC, o conselho não consegue comprovar supervisão sem isso.');
+      if(!fs.domains.detect)flag('neg','Sem detecção e resposta sob o CISO.','Autoridade sem SOC é um título, não uma defesa.');
+      if(fs.covered>=4)flag('pos','A função abrange os quatro domínios.','Detecção e resposta, governança, risco proativo e identidade, todos sob controle. Uma capacidade completa.');
+      depFlags(flag,deps,'pt');
+    }
+  };
+  function depFlags(flag,deps,lang){
+    var orphans=Object.keys(deps).filter(function(k){return deps[k].owner==='NOBODY';});
+    var managed=Object.keys(deps).filter(function(k){return ['NOBODY','NA'].indexOf(deps[k].owner)===-1;});
+    var names=orphans.map(fnLabel).join(', ');
+    var mnames=managed.map(fnLabel).join(', ');
+    if(lang==='en'){
+      if(orphans.length)flag('neg','No one owns '+names+'.','An unowned capability is not a gap you manage. It is a hole nobody is watching. Assign it before an attacker finds it.');
+      if(managed.length)flag('neu',managed.length+' capabilit'+(managed.length>1?'ies':'y')+' owned outside the CISO: '+mnames+'.','You can still be held responsible for risk you do not control. Each split widens the gap between what you answer for and what you command. Confirm every boundary in writing before you rely on it.');
+    }else if(lang==='es'){
+      if(orphans.length)flag('neg','Nadie controla '+names+'.','Una capacidad sin dueño no es una brecha que gestionas. Es un hueco que nadie vigila. Asígnala antes de que un atacante la encuentre.');
+      if(managed.length)flag('neu',managed.length+' capacidad'+(managed.length>1?'es':'')+' controlada fuera del CISO: '+mnames+'.','Aún puedes ser responsable de un riesgo que no controlas. Cada separación amplía la brecha entre aquello de lo que respondes y aquello que mandas. Confirma cada límite por escrito antes de depender de él.');
+    }else{
+      if(orphans.length)flag('neg','Ninguém controla '+names+'.','Uma capacidade sem dono não é uma lacuna que você gerencia. É um buraco que ninguém observa. Atribua-a antes que um atacante a encontre.');
+      if(managed.length)flag('neu',managed.length+' capacidade'+(managed.length>1?'s':'')+' controlada fora do CISO: '+mnames+'.','Você ainda pode ser responsabilizado por um risco que não controla. Cada separação amplia a lacuna entre aquilo por que você responde e aquilo que comanda. Confirme cada limite por escrito antes de depender dele.');
+    }
+  }
+  var FIGUREHEAD={
+    en:function(flag,which){if(which==='fig')flag('neu','A strong line above a thin function.','The authority is real, but a hollow function makes the CISO a figurehead. Build the layer below.');else flag('neu','A strong function under a constrained line.','The capability is real, but the reporting line caps how far its decisions travel. A fire marshal with no authority to clear the building.');},
+    es:function(flag,which){if(which==='fig')flag('neu','Una línea fuerte sobre una función delgada.','La autoridad es real, pero una función hueca hace del CISO una figura decorativa. Construye la capa de abajo.');else flag('neu','Una función fuerte bajo una línea limitada.','La capacidad es real, pero la línea de reporte limita cuán lejos llegan sus decisiones. Un jefe de bomberos sin autoridad para evacuar el edificio.');},
+    pt:function(flag,which){if(which==='fig')flag('neu','Uma linha forte sobre uma função fraca.','A autoridade é real, mas uma função vazia torna o CISO uma figura decorativa. Construa a camada de baixo.');else flag('neu','Uma função forte sob uma linha limitada.','A capacidade é real, mas a linha de reporte limita até onde suas decisões chegam. Um chefe dos bombeiros sem autoridade para evacuar o prédio.');}
+  };
+
+  /* ============ questions (per language) ============ */
+  function renderQuestions(ms,mt,fs,lineStrong,fnStrong){
+    var box=$('questions');box.innerHTML='';
+    var head=document.createElement('div');head.className='q-head';head.textContent=t('qHead');box.appendChild(head);
+    var sub=document.createElement('p');sub.className='q-sub';sub.textContent=t('qSub');box.appendChild(sub);
+    function group(title,items){if(!items.length)return;var g=document.createElement('div');g.className='q-group';var h=document.createElement('div');h.className='q-group-h';h.textContent=title;g.appendChild(h);var n=1;items.forEach(function(it){var d=document.createElement('div');d.className='q-item';d.innerHTML='<span class="qn">'+('0'+(n++)).slice(-2)+'</span><span class="qt">'+it.q+(it.why?'<em>'+it.why+'</em>':'')+'</span>';g.appendChild(d);});box.appendChild(g);}
+    function whatif(title,body){var w=document.createElement('div');w.className='whatif';w.innerHTML='<b>'+t('whatIf')+title+'</b>'+body;box.appendChild(w);}
+    var boss=cisoBoss,bn=roleLabel(boss);
+    var Q=QUESTIONS[L];
+    group(t('gLine'),Q.line(boss,bn));
+    group(t('gGap'),Q.gap(boss,bn,fs,deps,peers,fns));
+    if(Q.nacd)group(t('gBoard'),Q.nacd(boss,fs));
+    Q.whatif(boss,fs,deps,whatif);
+  }
+
+  /* helper shared by all langs for gap dependency questions */
+  function ownerOfFn(id){return deps[id]||null;}
+
+  var QUESTIONS={
+    en:{
+      line:function(boss,bn){var a=[];
+        a.push({q:'When you need to say no to a decision the business has already committed to, does your line to '+bn+' give you the standing to make it stick?',why:'Authority you cannot exercise under pressure is not authority.'});
+        if(boss==='CIO'||boss==='CTO'){a.push({q:'Your boss is rewarded for uptime and delivery. When patching means downtime, or securing means slowing a release, whose incentive wins?',why:'The conflict is structural, not personal. Name it before an incident does.'});a.push({q:'When cyber risk reaches the board, how much of it has been reframed in IT terms before it gets there, and what meaning is lost on the way?'});}
+        if(boss==='CRO'){a.push({q:'Does your risk reporting cadence move at the speed of the threat, or at the speed of the risk committee?',why:'Cyber risk does not wait for the quarterly cycle.'});}
+        if(boss==='CFO'){a.push({q:'When security spending produces no new feature and no new revenue, how do you keep it from being optimized away inside a budget function?'});}
+        if(boss==='GC'){a.push({q:'Independence from IT is total here. What deliberate work are you doing to rebuild the alignment with the technology teams you depend on?'});}
+        if(boss==='CEO'){a.push({q:'You have the access. Can you turn exposure into a decision the board can act on, or does the conversation stay technical once you are in the room?',why:'The seat assumes a board-ready CISO. Be honest about whether that is you yet.'});}
+        if(boss==='COO'){a.push({q:'Your placement resolves the IT conflict on paper. Does the COO actually carry the enterprise authority to escalate cyber risk to the board?'});}
+        a.push({q:'If your reporting line changed tomorrow, would your real influence change with it, or have you built standing that does not depend on the box?'});return a;},
+      gap:function(boss,bn,fs,deps,peers,fns){var a=[];
+        function gapFor(id,ownedQ,orphanQ){if(fns.indexOf(id)!==-1)return;var o=deps[id];if(!o||o.owner==='NA')return;if(o.owner==='NOBODY')a.push({q:orphanQ,why:'Nobody owns this. It is not a managed boundary, it is an open hole.'});else a.push({q:ownedQ.replace('{owner}',depOwnerLabel(o.owner))});}
+        if(!fs.domains.detect)a.push({q:'You own no detection and response. When an alert fires at 3am, whose phone rings, and do they answer to you?',why:'Authority with no SOC is a title, not a defense.'});
+        if(!fs.domains.proactive)a.push({q:'You have no proactive cyber risk layer. How will you see exposure forming before it becomes an incident, instead of chasing it after?',why:'The attack happens before the alert.'});
+        if(!fs.domains.govern)a.push({q:'You own no governance or compliance function. When a regulator asks you to prove oversight, where is the evidence?',why:'NIS2, DORA, and the SEC want demonstrable governance, not assurances.'});
+        gapFor('cloud','Cloud security reports to {owner}, not you. When a misconfiguration becomes a breach, do they carry that risk or does it land back on you?','Nobody owns cloud security, and most of your exposure now lives there. Who is watching the environment you depend on most?');
+        gapFor('appsec','Application security sits with {owner}. When a release ships with a known flaw, who decides, and who answers for it?','Nobody owns application security. Every release is a bet that the flaw you did not catch was not the one that mattered.');
+        gapFor('container','Container security reports to {owner}. As workloads move to containers, is that owner accountable to security, or building at their own pace?','Nobody owns container security. The layer your modern workloads run on is unguarded.');
+        gapFor('network','Network security sits with {owner}. When detection depends on network signal, do you get that telemetry, or does it stay inside their domain?','Nobody owns network security. The traffic that carries both the attack and its evidence has no guardian.');
+        gapFor('endemail','Endpoint and email security report to {owner}, yet email is a top initial-access vector. Does that owner feed your detection, or operate in isolation?','Nobody owns endpoint and email security. The most common front door for an attack is unwatched.');
+        gapFor('datasec','Data security reports to {owner}. Is the boundary between their custody of the data and your protection of it actually written down?','Nobody owns data security. The asset every regulation is built to protect has no guardian.');
+        gapFor('aisec','AI security sits with {owner}. As the business deploys agents and models, are they governing that attack surface, or just building on it?','Nobody owns AI security. The newest attack surface in the enterprise is unguarded by design.');
+        gapFor('idam','Identity reports to {owner}, yet identity is the first point of entry. Is that control accountable to security, or only to operations?','Nobody owns identity, the first point of entry in nearly every breach. This is where attackers start.');
+        if(fns.indexOf('croc')!==-1&&fns.indexOf('soc')!==-1)a.push({q:'You own both the SOC and the CROC. Is the loop between them closed, so decisions framed before the incident are the ones the SOC executes during it?',why:'The future is SOC and CROC connected, not SOC alone.'});
+        if(peers.indexOf('CIO')!==-1||peers.indexOf('CTO')!==-1)a.push({q:'The CIO or CTO is your peer, not your boss. Good. But when your priorities collide, who arbitrates, and have they ever had to?'});
+        if(peers.length===0)a.push({q:'You named no peers. Is cybersecurity genuinely standing alone at this level, or isolated from the executives whose decisions shape your exposure?'});
+        if(a.length===0)a.push({q:'Your function looks complete and every dependency has an owner. Where is the seam you are not seeing, the assumption never tested under pressure?'});
+        a.push({q:'A dependency is only safe if the named owner agrees they own it. Have you confirmed each handoff in writing, or are you assuming a boundary the other side has not accepted?'});return a;},
+      nacd:function(boss,fs){var a=[];
+        var filtered=(boss==='CIO'||boss==='CTO');
+        a.push({q:'Does the CISO have a direct reporting line to the board, or is cyber-risk reporting filtered through the CIO or another senior leader?',why:'NACD-ISA Tool J frames this as the test of a fit-for-purpose line.'});
+        a.push({q:'What thresholds trigger direct communication between the CISO and the board, without waiting for the next scheduled briefing?',why:'NACD-ISA Tool J, Escalation.'});
+        a.push({q:'How is cyber-risk accountability distributed across executive leadership, and does the board understand where responsibilities begin and end?',why:'NACD-ISA Principle Three.'});
+        if(filtered)a.push({q:'Is the current positioning of the security team and the CISO reporting line still fit for purpose, or has the business outgrown it?',why:'NACD-ISA Tool J, Collaboration.'});
+        if(!fs.domains.detect||fs.soc<2.5)a.push({q:'Who owns the incident response program, and does that owner hold cross-functional authority and a board-level escalation path?',why:'NACD-ISA Tool B.'});
+        a.push({q:'Does the board have enough cyber knowledge to interpret what the CISO reports and ask the right questions, or should it add expertise?',why:'NACD-ISA Tool J, Board Expertise.'});
+        return a;},
+      whatif:function(boss,fs,deps,whatif){
+        if(boss==='CIO'||boss==='CTO')whatif('the CIO overrules you',"A critical patch requires downtime during launch week. Your boss says wait. The vulnerability is on the KEV list. Walk the decision. Who do you escalate to, and how fast can you reach them?");
+        else whatif('a hard call has to travel',"A containment action will disrupt a revenue-critical system. You are right. How many approvals stand between your decision and the action, and how much attacker freedom of movement does each one buy?");
+        if(!fs.domains.proactive)whatif('the breach started weeks ago',"Forensics shows the intrusion began long before any alert. With no proactive layer, what would have surfaced the exposure earlier, and who would have owned acting on it?");
+        else whatif('the proactive layer warned you and nothing happened',"The CROC flagged the exposure. The signal reached the right people. No decision followed. Where did the loop break, in the framing, the authority, or the will to act?");
+        whatif('the board is now personally liable',"A regulator asks your board to prove it understood and directed cyber risk, not just received a slide. Given where you report, does that proof exist, and did it reach the board unfiltered?");
+        whatif('your best structure stops fitting',"The business acquires a company, adopts agentic AI, or enters a regulated market. The structure you mapped was right for last year. What would tell you it is time to move the box again, and who is watching for that signal?");
+      }
+    },
+    es:{
+      line:function(boss,bn){var a=[];
+        a.push({q:'Cuando necesitas decir no a una decisión que el negocio ya tomó, ¿tu línea hacia '+bn+' te da el peso para sostenerla?',why:'La autoridad que no puedes ejercer bajo presión no es autoridad.'});
+        if(boss==='CIO'||boss==='CTO'){a.push({q:'A tu jefe lo premian por disponibilidad y entrega. Cuando parchar implica caídas, o asegurar implica frenar un lanzamiento, ¿qué incentivo gana?',why:'El conflicto es estructural, no personal. Nómbralo antes de que lo haga un incidente.'});a.push({q:'Cuando el ciber riesgo llega al directorio, ¿cuánto se ha reformulado en términos de TI antes de llegar, y qué sentido se pierde en el camino?'});}
+        if(boss==='CRO'){a.push({q:'¿Tu cadencia de reporte de riesgo se mueve a la velocidad de la amenaza, o a la del comité de riesgo?',why:'El ciber riesgo no espera al ciclo trimestral.'});}
+        if(boss==='CFO'){a.push({q:'Cuando el gasto en seguridad no produce nueva funcionalidad ni nuevos ingresos, ¿cómo evitas que sea optimizado fuera dentro de una función de presupuesto?'});}
+        if(boss==='GC'){a.push({q:'La independencia de TI es total aquí. ¿Qué trabajo deliberado haces para reconstruir la alineación con los equipos de tecnología de los que dependes?'});}
+        if(boss==='CEO'){a.push({q:'Tienes el acceso. ¿Puedes convertir la exposición en una decisión sobre la que el directorio pueda actuar, o la conversación se queda en lo técnico una vez en la sala?',why:'El puesto asume un CISO listo para el directorio. Sé honesto sobre si ya lo eres.'});}
+        if(boss==='COO'){a.push({q:'Tu ubicación resuelve el conflicto con TI en el papel. ¿El COO realmente lleva la autoridad empresarial para escalar el ciber riesgo al directorio?'});}
+        a.push({q:'Si tu línea de reporte cambiara mañana, ¿cambiaría tu influencia real con ella, o has construido un peso que no depende de la casilla?'});return a;},
+      gap:function(boss,bn,fs,deps,peers,fns){var a=[];
+        function gapFor(id,ownedQ,orphanQ){if(fns.indexOf(id)!==-1)return;var o=deps[id];if(!o||o.owner==='NA')return;if(o.owner==='NOBODY')a.push({q:orphanQ,why:'Nadie la controla. No es un límite gestionado, es un hueco abierto.'});else a.push({q:ownedQ.replace('{owner}',depOwnerLabel(o.owner))});}
+        if(!fs.domains.detect)a.push({q:'No controlas detección y respuesta. Cuando una alerta suena a las 3am, ¿a quién le suena el teléfono, y te responde a ti?',why:'Autoridad sin SOC es un título, no una defensa.'});
+        if(!fs.domains.proactive)a.push({q:'No tienes capa proactiva de ciber riesgo. ¿Cómo verás la exposición formándose antes de que sea incidente, en vez de perseguirla después?',why:'El ataque ocurre antes de la alerta.'});
+        if(!fs.domains.govern)a.push({q:'No controlas gobierno ni cumplimiento. Cuando un regulador te pide demostrar supervisión, ¿dónde está la evidencia?',why:'NIS2, DORA y la SEC quieren gobierno demostrable, no garantías.'});
+        gapFor('cloud','La seguridad en la nube reporta a {owner}, no a ti. Cuando una mala configuración se vuelve brecha, ¿cargan ellos ese riesgo o vuelve a ti?','Nadie controla la seguridad en la nube, y la mayor parte de tu exposición ahora vive allí. ¿Quién vigila el entorno del que más dependes?');
+        gapFor('appsec','La seguridad de aplicaciones está con {owner}. Cuando un lanzamiento sale con una falla conocida, ¿quién decide, y quién responde por ello?','Nadie controla la seguridad de aplicaciones. Cada lanzamiento es una apuesta a que la falla que no detectaste no era la que importaba.');
+        gapFor('container','La seguridad de contenedores reporta a {owner}. A medida que las cargas migran a contenedores, ¿ese dueño rinde cuentas a seguridad, o construye a su propio ritmo?','Nadie controla la seguridad de contenedores. La capa sobre la que corren tus cargas modernas está sin guardia.');
+        gapFor('network','La seguridad de red está con {owner}. Cuando la detección depende de la señal de red, ¿recibes esa telemetría, o se queda en su dominio?','Nadie controla la seguridad de red. El tráfico que lleva el ataque y su evidencia no tiene guardián.');
+        gapFor('endemail','La seguridad de endpoint y correo reporta a {owner}, y el correo es un vector principal de acceso inicial. ¿Ese dueño alimenta tu detección, o opera aislado?','Nadie controla la seguridad de endpoint y correo. La puerta de entrada más común de un ataque está sin vigilancia.');
+        gapFor('datasec','La seguridad de datos reporta a {owner}. ¿El límite entre su custodia de los datos y tu protección de ellos está realmente por escrito?','Nadie controla la seguridad de datos. El activo que toda regulación busca proteger no tiene guardián.');
+        gapFor('aisec','La seguridad de IA está con {owner}. A medida que el negocio despliega agentes y modelos, ¿gobiernan esa superficie de ataque, o solo construyen sobre ella?','Nadie controla la seguridad de IA. La superficie de ataque más nueva de la empresa está sin guardia por diseño.');
+        gapFor('idam','La identidad reporta a {owner}, y la identidad es el primer punto de entrada. ¿Ese control rinde cuentas a seguridad, o solo a operaciones?','Nadie controla la identidad, el primer punto de entrada en casi toda brecha. Ahí es donde empiezan los atacantes.');
+        if(fns.indexOf('croc')!==-1&&fns.indexOf('soc')!==-1)a.push({q:'Controlas tanto el SOC como el CROC. ¿El bucle entre ellos está cerrado, de modo que las decisiones encuadradas antes del incidente son las que el SOC ejecuta durante él?',why:'El futuro es SOC y CROC conectados, no el SOC solo.'});
+        if(peers.indexOf('CIO')!==-1||peers.indexOf('CTO')!==-1)a.push({q:'El CIO o el CTO es tu par, no tu jefe. Bien. Pero cuando sus prioridades chocan, ¿quién arbitra, y ha tenido que hacerlo alguna vez?'});
+        if(peers.length===0)a.push({q:'No nombraste pares. ¿La ciberseguridad realmente está sola en este nivel, o aislada de los ejecutivos cuyas decisiones moldean tu exposición?'});
+        if(a.length===0)a.push({q:'Tu función parece completa y cada dependencia tiene dueño. ¿Dónde está la brecha que no ves, el supuesto que nunca se probó bajo presión?'});
+        a.push({q:'Una dependencia solo es segura si el dueño nombrado acepta que la posee. ¿Has confirmado cada traspaso por escrito, o asumes un límite que la otra parte no ha aceptado?'});return a;},
+      nacd:function(boss,fs){var a=[];
+        var filtered=(boss==='CIO'||boss==='CTO');
+        a.push({q:'¿Tiene el CISO una línea de reporte directa al directorio, o el reporte de ciber riesgo se filtra por el CIO u otro líder?',why:'La Herramienta J de NACD-ISA lo plantea como la prueba de una línea adecuada.'});
+        a.push({q:'¿Qué umbrales disparan la comunicación directa entre el CISO y el directorio, sin esperar la próxima reunión programada?',why:'NACD-ISA Herramienta J, Escalamiento.'});
+        a.push({q:'¿Cómo se distribuye la rendición de cuentas del ciber riesgo en el liderazgo, y entiende el directorio dónde empiezan y terminan las responsabilidades?',why:'NACD-ISA Principio Tres.'});
+        if(filtered)a.push({q:'¿La posición actual del equipo de seguridad y la línea de reporte del CISO siguen siendo adecuadas, o el negocio las superó?',why:'NACD-ISA Herramienta J, Colaboración.'});
+        if(!fs.domains.detect||fs.soc<2.5)a.push({q:'¿Quién es dueño del programa de respuesta a incidentes, y tiene autoridad transversal y una ruta de escalamiento al directorio?',why:'NACD-ISA Herramienta B.'});
+        a.push({q:'¿Tiene el directorio suficiente conocimiento de ciber para interpretar lo que reporta el CISO y hacer las preguntas correctas, o debe sumar experiencia?',why:'NACD-ISA Herramienta J, Experiencia del Directorio.'});
+        return a;},
+      whatif:function(boss,fs,deps,whatif){
+        if(boss==='CIO'||boss==='CTO')whatif('el CIO te revoca',"Un parche crítico requiere una caída durante la semana de lanzamiento. Tu jefe dice esperar. La vulnerabilidad está en la lista KEV. Recorre la decisión. ¿A quién escalas, y qué tan rápido lo alcanzas?");
+        else whatif('una decisión difícil debe viajar',"Una acción de contención interrumpirá un sistema crítico para los ingresos. Tienes razón. ¿Cuántas aprobaciones hay entre tu decisión y la acción, y cuánta libertad de movimiento le da cada una al atacante?");
+        if(!fs.domains.proactive)whatif('la brecha empezó hace semanas',"El forense muestra que la intrusión comenzó mucho antes de cualquier alerta. Sin capa proactiva, ¿qué habría revelado la exposición antes, y quién habría sido dueño de actuar?");
+        else whatif('la capa proactiva avisó y no pasó nada',"El CROC marcó la exposición. La señal llegó a las personas correctas. No siguió ninguna decisión. ¿Dónde se rompió el bucle: en el encuadre, la autoridad, o la voluntad de actuar?");
+        whatif('el directorio ahora es personalmente responsable',"Un regulador pide a tu directorio demostrar que entendió y dirigió el ciber riesgo, no que solo recibió una lámina. Dado dónde reportas, ¿existe esa prueba, y llegó al directorio sin filtros?");
+        whatif('tu mejor estructura deja de calzar',"El negocio adquiere una empresa, adopta IA agéntica, o entra a un mercado regulado. La estructura que mapeaste era la correcta para el año pasado. ¿Qué te diría que es hora de mover la casilla de nuevo, y quién vigila esa señal?");
+      }
+    },
+    pt:{
+      line:function(boss,bn){var a=[];
+        a.push({q:'Quando você precisa dizer não a uma decisão que o negócio já assumiu, sua linha até '+bn+' lhe dá o peso para sustentá-la?',why:'Autoridade que você não consegue exercer sob pressão não é autoridade.'});
+        if(boss==='CIO'||boss==='CTO'){a.push({q:'Seu chefe é premiado por disponibilidade e entrega. Quando aplicar patch significa indisponibilidade, ou proteger significa atrasar um lançamento, qual incentivo vence?',why:'O conflito é estrutural, não pessoal. Nomeie-o antes que um incidente o faça.'});a.push({q:'Quando o ciber risco chega ao conselho, quanto dele foi reformulado em termos de TI antes de chegar, e que sentido se perde no caminho?'});}
+        if(boss==='CRO'){a.push({q:'Sua cadência de reporte de risco se move na velocidade da ameaça, ou na do comitê de risco?',why:'O ciber risco não espera o ciclo trimestral.'});}
+        if(boss==='CFO'){a.push({q:'Quando o gasto em segurança não gera nova funcionalidade nem nova receita, como você evita que seja otimizado para fora dentro de uma função orçamentária?'});}
+        if(boss==='GC'){a.push({q:'A independência de TI é total aqui. Que trabalho deliberado você faz para reconstruir o alinhamento com as equipes de tecnologia das quais depende?'});}
+        if(boss==='CEO'){a.push({q:'Você tem o acesso. Consegue transformar exposição em uma decisão sobre a qual o conselho pode agir, ou a conversa fica técnica quando você está na sala?',why:'O cargo pressupõe um CISO pronto para o conselho. Seja honesto sobre se já é você.'});}
+        if(boss==='COO'){a.push({q:'Sua posição resolve o conflito com TI no papel. O COO realmente carrega a autoridade corporativa para escalar o ciber risco ao conselho?'});}
+        a.push({q:'Se sua linha de reporte mudasse amanhã, sua influência real mudaria com ela, ou você construiu um peso que não depende da caixa?'});return a;},
+      gap:function(boss,bn,fs,deps,peers,fns){var a=[];
+        function gapFor(id,ownedQ,orphanQ){if(fns.indexOf(id)!==-1)return;var o=deps[id];if(!o||o.owner==='NA')return;if(o.owner==='NOBODY')a.push({q:orphanQ,why:'Ninguém controla. Não é um limite gerenciado, é um buraco aberto.'});else a.push({q:ownedQ.replace('{owner}',depOwnerLabel(o.owner))});}
+        if(!fs.domains.detect)a.push({q:'Você não controla detecção e resposta. Quando um alerta dispara às 3h, de quem é o telefone que toca, e ele responde a você?',why:'Autoridade sem SOC é um título, não uma defesa.'});
+        if(!fs.domains.proactive)a.push({q:'Você não tem camada proativa de ciber risco. Como verá a exposição se formando antes de virar incidente, em vez de persegui-la depois?',why:'O ataque acontece antes do alerta.'});
+        if(!fs.domains.govern)a.push({q:'Você não controla governança nem conformidade. Quando um regulador pede para comprovar supervisão, onde está a evidência?',why:'NIS2, DORA e a SEC querem governança demonstrável, não garantias.'});
+        gapFor('cloud','A segurança em nuvem reporta a {owner}, não a você. Quando uma má configuração vira uma violação, eles carregam esse risco ou ele volta para você?','Ninguém controla a segurança em nuvem, e a maior parte da sua exposição agora vive lá. Quem observa o ambiente do qual você mais depende?');
+        gapFor('appsec','A segurança de aplicações está com {owner}. Quando um lançamento sai com uma falha conhecida, quem decide, e quem responde por isso?','Ninguém controla a segurança de aplicações. Cada lançamento é uma aposta de que a falha que você não pegou não era a que importava.');
+        gapFor('container','A segurança de contêineres reporta a {owner}. À medida que as cargas migram para contêineres, esse responsável presta contas à segurança, ou constrói no próprio ritmo?','Ninguém controla a segurança de contêineres. A camada sobre a qual suas cargas modernas rodam está sem guarda.');
+        gapFor('network','A segurança de rede está com {owner}. Quando a detecção depende do sinal de rede, você recebe essa telemetria, ou ela fica no domínio deles?','Ninguém controla a segurança de rede. O tráfego que carrega o ataque e a sua evidência não tem guardião.');
+        gapFor('endemail','A segurança de endpoint e e-mail reporta a {owner}, e o e-mail é um dos principais vetores de acesso inicial. Esse responsável alimenta sua detecção, ou opera isolado?','Ninguém controla a segurança de endpoint e e-mail. A porta de entrada mais comum de um ataque está sem vigilância.');
+        gapFor('datasec','A segurança de dados reporta a {owner}. O limite entre a custódia deles dos dados e a sua proteção deles está realmente por escrito?','Ninguém controla a segurança de dados. O ativo que toda regulação busca proteger não tem guardião.');
+        gapFor('aisec','A segurança de IA está com {owner}. À medida que o negócio implanta agentes e modelos, eles governam essa superfície de ataque, ou apenas constroem sobre ela?','Ninguém controla a segurança de IA. A superfície de ataque mais nova da empresa está sem guarda por design.');
+        gapFor('idam','A identidade reporta a {owner}, e a identidade é o primeiro ponto de entrada. Esse controle presta contas à segurança, ou só às operações?','Ninguém controla a identidade, o primeiro ponto de entrada em quase toda violação. É onde os atacantes começam.');
+        if(fns.indexOf('croc')!==-1&&fns.indexOf('soc')!==-1)a.push({q:'Você controla tanto o SOC quanto o CROC. O ciclo entre eles está fechado, de modo que as decisões enquadradas antes do incidente são as que o SOC executa durante ele?',why:'O futuro é SOC e CROC conectados, não o SOC sozinho.'});
+        if(peers.indexOf('CIO')!==-1||peers.indexOf('CTO')!==-1)a.push({q:'O CIO ou o CTO é seu par, não seu chefe. Bom. Mas quando as prioridades colidem, quem arbitra, e já precisou arbitrar?'});
+        if(peers.length===0)a.push({q:'Você não nomeou pares. A cibersegurança está realmente sozinha neste nível, ou isolada dos executivos cujas decisões moldam sua exposição?'});
+        if(a.length===0)a.push({q:'Sua função parece completa e cada dependência tem dono. Onde está a lacuna que você não vê, a suposição nunca testada sob pressão?'});
+        a.push({q:'Uma dependência só é segura se o responsável nomeado concordar que a possui. Você confirmou cada repasse por escrito, ou está assumindo um limite que o outro lado não aceitou?'});return a;},
+      nacd:function(boss,fs){var a=[];
+        var filtered=(boss==='CIO'||boss==='CTO');
+        a.push({q:'O CISO tem uma linha de reporte direta ao conselho, ou o reporte de ciber risco é filtrado pelo CIO ou outro líder?',why:'A Ferramenta J da NACD-ISA coloca isso como o teste de uma linha adequada.'});
+        a.push({q:'Quais limiares disparam a comunicação direta entre o CISO e o conselho, sem esperar a próxima reunião agendada?',why:'NACD-ISA Ferramenta J, Escalonamento.'});
+        a.push({q:'Como a responsabilidade pelo ciber risco é distribuída na liderança, e o conselho entende onde as responsabilidades começam e terminam?',why:'NACD-ISA Princípio Três.'});
+        if(filtered)a.push({q:'A posição atual da equipe de segurança e a linha de reporte do CISO ainda são adequadas, ou o negócio as superou?',why:'NACD-ISA Ferramenta J, Colaboração.'});
+        if(!fs.domains.detect||fs.soc<2.5)a.push({q:'Quem é dono do programa de resposta a incidentes, e tem autoridade transversal e uma rota de escalonamento ao conselho?',why:'NACD-ISA Ferramenta B.'});
+        a.push({q:'O conselho tem conhecimento de ciber suficiente para interpretar o que o CISO reporta e fazer as perguntas certas, ou deve somar expertise?',why:'NACD-ISA Ferramenta J, Expertise do Conselho.'});
+        return a;},
+      whatif:function(boss,fs,deps,whatif){
+        if(boss==='CIO'||boss==='CTO')whatif('o CIO te sobrepõe',"Um patch crítico exige indisponibilidade na semana de lançamento. Seu chefe manda esperar. A vulnerabilidade está na lista KEV. Percorra a decisão. A quem você escala, e com que rapidez o alcança?");
+        else whatif('uma decisão difícil precisa viajar',"Uma ação de contenção vai interromper um sistema crítico para a receita. Você está certo. Quantas aprovações há entre sua decisão e a ação, e quanta liberdade de movimento cada uma dá ao atacante?");
+        if(!fs.domains.proactive)whatif('a violação começou semanas atrás',"A perícia mostra que a intrusão começou muito antes de qualquer alerta. Sem camada proativa, o que teria revelado a exposição mais cedo, e quem seria dono de agir?");
+        else whatif('a camada proativa avisou e nada aconteceu',"O CROC sinalizou a exposição. O sinal chegou às pessoas certas. Nenhuma decisão se seguiu. Onde o ciclo se rompeu: no enquadramento, na autoridade, ou na vontade de agir?");
+        whatif('o conselho agora é pessoalmente responsável',"Um regulador pede ao seu conselho para comprovar que entendeu e dirigiu o ciber risco, não que apenas recebeu um slide. Dado onde você reporta, essa prova existe, e chegou ao conselho sem filtros?");
+        whatif('sua melhor estrutura deixa de servir',"O negócio adquire uma empresa, adota IA agêntica, ou entra em um mercado regulado. A estrutura que você mapeou era a certa para o ano passado. O que lhe diria que é hora de mover a caixa de novo, e quem observa esse sinal?");
+      }
+    }
+  };
+
+  /* attacker/defender edge narratives per language, tailored by score */
+  var PHASE_TEXT={
+    en:function(fs,ms,o){
+      return {
+        before:{
+          att: !fs.domains.proactive ? "With little or no proactive cyber risk layer, exposure builds unseen. The attacker studies your gaps while you wait for an alert that has not fired yet." : (o.orphanN>0 ? "Unowned capabilities give the attacker quiet ground to operate on before anyone is watching." : "The attacker still moves first, but a proactive layer narrows how long they go unnoticed."),
+          def: (fs.domains.proactive && fs.cro>=2.5 && ms.s.board>=4) ? "Strong proactive cyber risk operations plus real board access let you frame and fund exposure reduction before it becomes an incident. This is where the reporting line pays off most." : "To win here you need both a proactive layer and a board that hears you early. Strengthen whichever is weaker."
+        },
+        during:{
+          att: (!fs.domains.detect || ms.s.speed<=2) ? "Detection is thin or your decision has to travel through too many approvals. The attacker operates inside the gap between alert and action." : "The attacker counts on delay. Every approval between detection and response is time they keep moving.",
+          def: (fs.domains.detect && fs.soc>=2.5 && ms.s.speed>=4) ? "A real SOC under the CISO plus a short decision path means you can act inside the attacker's window, not after it closes." : "Speed is the whole game during a breach. A strong SOC under a slow reporting line still loses time it cannot recover."
+        },
+        after:{
+          att: !fs.domains.govern ? "Without governance and compliance, you cannot prove what happened or what you controlled. The damage extends from the breach into the disclosure and the regulator's response." : "The attacker's leverage fades after containment, but a weak governance function lets the aftermath, disclosure, and liability do further harm.",
+          def: (fs.domains.govern && ms.s.independence>=4) ? "Strong governance and an independent line let you disclose accurately, learn, and recover with the board able to prove it directed cyber risk. This is the accountability NIS2 and DORA now demand." : "Recovery and disclosure are board-accountable under NIS2 and DORA. Governance and independence are what let the board prove it met that duty."
+        }
+      };
+    },
+    es:function(fs,ms,o){
+      return {
+        before:{
+          att: !fs.domains.proactive ? "Con poca o ninguna capa proactiva de ciber riesgo, la exposición crece sin ser vista. El atacante estudia tus brechas mientras esperas una alerta que aún no suena." : (o.orphanN>0 ? "Las capacidades sin dueño le dan al atacante terreno silencioso para operar antes de que alguien vigile." : "El atacante igual se mueve primero, pero una capa proactiva acorta cuánto tiempo pasa sin ser notado."),
+          def: (fs.domains.proactive && fs.cro>=2.5 && ms.s.board>=4) ? "Operaciones proactivas de ciber riesgo fuertes más acceso real al directorio te permiten encuadrar y financiar la reducción de exposición antes de que sea incidente. Aquí es donde más rinde la línea de reporte." : "Para ganar aquí necesitas tanto una capa proactiva como un directorio que te escuche temprano. Refuerza la más débil."
+        },
+        during:{
+          att: (!fs.domains.detect || ms.s.speed<=2) ? "La detección es delgada o tu decisión debe pasar por demasiadas aprobaciones. El atacante opera en el espacio entre la alerta y la acción." : "El atacante cuenta con la demora. Cada aprobación entre detección y respuesta es tiempo que sigue moviéndose.",
+          def: (fs.domains.detect && fs.soc>=2.5 && ms.s.speed>=4) ? "Un SOC real bajo el CISO más una ruta de decisión corta significan que puedes actuar dentro de la ventana del atacante, no después de que se cierre." : "La velocidad lo es todo durante una brecha. Un SOC fuerte bajo una línea de reporte lenta igual pierde tiempo que no recupera."
+        },
+        after:{
+          att: !fs.domains.govern ? "Sin gobierno ni cumplimiento, no puedes probar qué pasó ni qué controlabas. El daño se extiende de la brecha a la divulgación y a la respuesta del regulador." : "La ventaja del atacante se desvanece tras la contención, pero una función de gobierno débil deja que las secuelas, la divulgación y la responsabilidad hagan más daño.",
+          def: (fs.domains.govern && ms.s.independence>=4) ? "Un gobierno fuerte y una línea independiente te permiten divulgar con precisión, aprender y recuperarte, con el directorio capaz de probar que dirigió el ciber riesgo. Esta es la responsabilidad que NIS2 y DORA hoy exigen." : "La recuperación y la divulgación son responsabilidad del directorio bajo NIS2 y DORA. El gobierno y la independencia son lo que le permite al directorio probar que cumplió ese deber."
+        }
+      };
+    },
+    pt:function(fs,ms,o){
+      return {
+        before:{
+          att: !fs.domains.proactive ? "Com pouca ou nenhuma camada proativa de ciber risco, a exposição cresce sem ser vista. O atacante estuda suas lacunas enquanto você espera um alerta que ainda não disparou." : (o.orphanN>0 ? "Capacidades sem dono dão ao atacante um terreno silencioso para operar antes que alguém esteja observando." : "O atacante ainda se move primeiro, mas uma camada proativa encurta quanto tempo ele passa despercebido."),
+          def: (fs.domains.proactive && fs.cro>=2.5 && ms.s.board>=4) ? "Operações proativas de ciber risco fortes mais acesso real ao conselho permitem enquadrar e financiar a redução de exposição antes que vire incidente. É aqui que a linha de reporte mais compensa." : "Para vencer aqui você precisa de uma camada proativa e de um conselho que ouça você cedo. Reforce a mais fraca."
+        },
+        during:{
+          att: (!fs.domains.detect || ms.s.speed<=2) ? "A detecção é fraca ou sua decisão precisa passar por aprovações demais. O atacante opera no intervalo entre o alerta e a ação." : "O atacante conta com o atraso. Cada aprovação entre detecção e resposta é tempo em que ele continua se movendo.",
+          def: (fs.domains.detect && fs.soc>=2.5 && ms.s.speed>=4) ? "Um SOC real sob o CISO mais um caminho de decisão curto significam que você pode agir dentro da janela do atacante, não depois que ela fecha." : "Velocidade é tudo durante uma violação. Um SOC forte sob uma linha de reporte lenta ainda perde tempo que não recupera."
+        },
+        after:{
+          att: !fs.domains.govern ? "Sem governança e conformidade, você não consegue provar o que aconteceu nem o que controlava. O dano se estende da violação para a divulgação e a resposta do regulador." : "A vantagem do atacante se dissipa após a contenção, mas uma função de governança fraca deixa que as consequências, a divulgação e a responsabilidade causem mais dano.",
+          def: (fs.domains.govern && ms.s.independence>=4) ? "Governança forte e uma linha independente permitem divulgar com precisão, aprender e recuperar, com o conselho capaz de provar que dirigiu o ciber risco. Esta é a responsabilidade que NIS2 e DORA agora exigem." : "Recuperação e divulgação são responsabilidade do conselho sob NIS2 e DORA. Governança e independência são o que permite ao conselho provar que cumpriu esse dever."
+        }
+      };
+    }
+  };
+
+  /* ===== stored governance text from each authority, with structure-aware recommendations ===== */
+  /* NACD-ISA Director's Handbook on Cyber-Risk Oversight (5th ed., 2026) is all-rights-reserved; */
+  /* quotes are kept brief and attributed. NIST CSF 2.0 is US Government work. NIS2 / DORA are EU law. */
+  var STANDARDS={
+    en:function(fs,ms){
+      var filtered=cisoBoss==='CIO'||cisoBoss==='CTO';
+      var lowBoard=ms.s.board<4, lowIndep=ms.s.independence<4, slow=ms.s.speed<=3;
+      var orphanN=fs.orphanN||0, weakDetect=!fs.domains.detect||fs.soc<2.5, weakGov=!fs.domains.govern||fs.gov<2.5, weakProactive=!fs.domains.proactive||fs.cro<2.5;
+      var out=[];
+      // Universal accountability provisions (always shown)
+      out.push({org:"NIST CSF 2.0",prov:"GOVERN function, GV.RR-01 (NIST CSWP 29, 2024)",
+        quote:"Organizational leadership is responsible and accountable for cybersecurity risk.",
+        rec:(lowBoard||filtered)?"The CISO reports to "+roleLabel(cisoBoss)+", so the line that carries accountability up to leadership runs through an intermediary. <b>Confirm the board can still see and direct cyber risk without that view being filtered.</b>":"With the CISO close to the top, leadership can meet this accountability directly. <b>Keep the reporting line short enough that the board owns the risk, not just hears about it.</b>"});
+      out.push({org:"NIST CSF 2.0",prov:"GOVERN function, GV.RR-02 (NIST CSWP 29, 2024)",
+        quote:"Roles, responsibilities, and authorities are established, communicated, understood, and enforced.",
+        rec:orphanN>0?"You left "+orphanN+" capabilit"+(orphanN>1?"ies":"y")+" with no owner. <b>That is an unmet GV.RR-02 obligation: every cyber risk function needs an established, enforced owner.</b>":"Each function in your map has a named owner. <b>Document those authorities so the assignment is enforced, not assumed.</b>"});
+      out.push({org:"NIS2 Directive (EU)",prov:"Article 20, Governance (Directive (EU) 2022/2555)",
+        quote:"Management bodies approve the cybersecurity risk-management measures, oversee implementation, and can be held liable for infringements.",
+        rec:(lowBoard||lowIndep)?"The board carries personal, non-delegable liability under NIS2, yet this structure distances it from the CISO. <b>The board can delegate execution, but not the accountability it is being distanced from.</b>":"This structure keeps the board close enough to approve and oversee measures directly, which is what NIS2 makes non-delegable. <b>Hold that line.</b>"});
+      out.push({org:"DORA (EU)",prov:"Article 5, Governance and organisation (Regulation (EU) 2022/2554)",
+        quote:"The management body shall set clear roles and responsibilities for all ICT-related functions.",
+        rec:orphanN>0?"DORA requires clear roles for all functions. <b>An unowned capability is a direct gap against Article 5 if you are a financial entity.</b>":"Your function map assigns every role, which is what DORA Article 5 requires of financial entities. <b>Keep the ownership map current as functions change.</b>"});
+      // NACD provisions selected by structure
+      if(filtered||lowBoard){
+        out.push({org:"NACD-ISA",prov:"Tool J, Building a Relationship Between the Board and the CISO (5th ed., 2026)",
+          quote:"Is the CISO line direct to the board, or filtered through a CIO?",
+          rec:"The handbook poses this as the test for a fit-for-purpose line. <b>Your CISO reports to "+roleLabel(cisoBoss)+", so answer it directly: is the board's view of cyber risk filtered before it arrives?</b>"});
+      }
+      out.push({org:"NACD-ISA",prov:"Principle Three, Establish Board Oversight Structures and Access to Expertise (5th ed., 2026)",
+        quote:"A reporting line between the board and CISO is established and maintained.",
+        rec:filtered?"NACD lists a formalized board-to-CISO reporting line as a success indicator. <b>Under an IT executive, build a direct channel to the board so reporting is not solely filtered through technology leadership.</b>":"You are close to this success indicator. <b>Formalize the board-to-CISO channel as a standing line, not an ad-hoc one.</b>"});
+      if(weakProactive||orphanN>0){
+        out.push({org:"NACD-ISA",prov:"Principle Four, Adopt an Enterprise Framework for Managing Cyber Risk (5th ed., 2026)",
+          quote:"A formal policy delineates the respective roles of the board, management, and the CISO.",
+          rec:"Your proactive cyber risk layer is thin or has gaps. <b>NACD frames this as a governance-charter question: write down who owns each function before the framework can hold.</b>"});
+      }
+      if(weakDetect||slow){
+        out.push({org:"NACD-ISA",prov:"Tool B, The Board's Role in Cyber Incident Response (5th ed., 2026)",
+          quote:"Incident response needs a senior owner with cross-functional authority.",
+          rec:"Detection or decision speed is weak in this structure. <b>NACD ties incident response to a senior owner with cross-functional authority and a board-level escalation path; a slow or buried line undercuts both.</b>"});
+      }
+      if(weakGov||lowIndep){
+        out.push({org:"NACD-ISA",prov:"Principle Two, Monitor Legal and Disclosure Implications (5th ed., 2026)",
+          quote:"The board needs direct, unfiltered CISO reporting on top risks.",
+          rec:"Governance or independence is weak here. <b>NACD calls for direct, unfiltered CISO reporting on disclosure-triggering risk; this structure makes that harder and raises the board's personal exposure.</b>"});
+      }
+      return out;
+    },
+    es:function(fs,ms){
+      var filtered=cisoBoss==='CIO'||cisoBoss==='CTO';
+      var lowBoard=ms.s.board<4, lowIndep=ms.s.independence<4, slow=ms.s.speed<=3;
+      var orphanN=fs.orphanN||0, weakDetect=!fs.domains.detect||fs.soc<2.5, weakGov=!fs.domains.govern||fs.gov<2.5, weakProactive=!fs.domains.proactive||fs.cro<2.5;
+      var out=[];
+      out.push({org:"NIST CSF 2.0",prov:"Función GOVERN, GV.RR-01 (NIST CSWP 29, 2024)",
+        quote:"El liderazgo de la organización es responsable y rinde cuentas por el ciber riesgo.",
+        rec:(lowBoard||filtered)?"El CISO reporta a "+roleLabel(cisoBoss)+", así que la línea que lleva la rendición de cuentas hacia el liderazgo pasa por un intermediario. <b>Confirma que el directorio aún pueda ver y dirigir el ciber riesgo sin que esa vista se filtre.</b>":"Con el CISO cerca de la cima, el liderazgo puede asumir esta rendición de cuentas de forma directa. <b>Mantén la línea de reporte corta para que el directorio sea dueño del riesgo, no solo lo escuche.</b>"});
+      out.push({org:"NIST CSF 2.0",prov:"Función GOVERN, GV.RR-02 (NIST CSWP 29, 2024)",
+        quote:"Los roles, responsabilidades y autoridades se establecen, comunican, comprenden y hacen cumplir.",
+        rec:orphanN>0?"Dejaste "+orphanN+" capacidad"+(orphanN>1?"es":"")+" sin dueño. <b>Eso es una obligación incumplida de GV.RR-02: cada función de ciber riesgo necesita un dueño establecido y exigible.</b>":"Cada función de tu mapa tiene un dueño nombrado. <b>Documenta esas autoridades para que la asignación se haga cumplir, no se asuma.</b>"});
+      out.push({org:"Directiva NIS2 (UE)",prov:"Artículo 20, Gobernanza (Directiva (UE) 2022/2555)",
+        quote:"Los órganos de dirección aprueban las medidas de gestión de riesgos, supervisan su implementación y pueden ser responsabilizados por las infracciones.",
+        rec:(lowBoard||lowIndep)?"El directorio carga una responsabilidad personal e indelegable bajo NIS2, pero esta estructura lo aleja del CISO. <b>El directorio puede delegar la ejecución, no la rendición de cuentas de la que se le aleja.</b>":"Esta estructura mantiene al directorio lo bastante cerca para aprobar y supervisar las medidas de forma directa, que es lo que NIS2 hace indelegable. <b>Sostén esa línea.</b>"});
+      out.push({org:"DORA (UE)",prov:"Artículo 5, Gobernanza y organización (Reglamento (UE) 2022/2554)",
+        quote:"El órgano de dirección establecerá roles y responsabilidades claros para todas las funciones de TIC.",
+        rec:orphanN>0?"DORA exige roles claros para todas las funciones. <b>Una capacidad sin dueño es una brecha directa contra el Artículo 5 si eres una entidad financiera.</b>":"Tu mapa de funciones asigna cada rol, que es lo que DORA Artículo 5 exige a las entidades financieras. <b>Mantén el mapa de propiedad actualizado a medida que cambian las funciones.</b>"});
+      if(filtered||lowBoard){
+        out.push({org:"NACD-ISA",prov:"Herramienta J, Construir la Relación entre el Directorio y el CISO (5.ª ed., 2026)",
+          quote:"¿Es la línea del CISO directa al directorio, o filtrada por un CIO?",
+          rec:"El manual plantea esto como la prueba de una línea adecuada. <b>Tu CISO reporta a "+roleLabel(cisoBoss)+", así que respóndela directo: ¿se filtra la vista de ciber riesgo del directorio antes de llegar?</b>"});
+      }
+      out.push({org:"NACD-ISA",prov:"Principio Tres, Establecer Estructuras de Supervisión y Acceso a la Experiencia (5.ª ed., 2026)",
+        quote:"Se establece y mantiene una línea de reporte entre el directorio y el CISO.",
+        rec:filtered?"NACD lista una línea formal directorio-CISO como indicador de éxito. <b>Bajo un ejecutivo de TI, construye un canal directo al directorio para que el reporte no se filtre solo por el liderazgo tecnológico.</b>":"Estás cerca de este indicador de éxito. <b>Formaliza el canal directorio-CISO como una línea permanente, no improvisada.</b>"});
+      if(weakProactive||orphanN>0){
+        out.push({org:"NACD-ISA",prov:"Principio Cuatro, Adoptar un Marco Empresarial para Gestionar el Ciber Riesgo (5.ª ed., 2026)",
+          quote:"Una política formal delinea los roles respectivos del directorio, la gerencia y el CISO.",
+          rec:"Tu capa proactiva de ciber riesgo es delgada o tiene brechas. <b>NACD lo plantea como una cuestión de carta de gobierno: escribe quién es dueño de cada función antes de que el marco pueda sostenerse.</b>"});
+      }
+      if(weakDetect||slow){
+        out.push({org:"NACD-ISA",prov:"Herramienta B, El Rol del Directorio en la Respuesta a Incidentes (5.ª ed., 2026)",
+          quote:"La respuesta a incidentes necesita un dueño senior con autoridad transversal.",
+          rec:"La detección o la velocidad de decisión es débil en esta estructura. <b>NACD ata la respuesta a incidentes a un dueño senior con autoridad transversal y una ruta de escalamiento al directorio; una línea lenta o sepultada socava ambas.</b>"});
+      }
+      if(weakGov||lowIndep){
+        out.push({org:"NACD-ISA",prov:"Principio Dos, Monitorear Implicaciones Legales y de Divulgación (5.ª ed., 2026)",
+          quote:"El directorio necesita reportes directos y sin filtrar del CISO.",
+          rec:"La gobernanza o la independencia es débil aquí. <b>NACD pide reportes directos y sin filtrar del CISO sobre el riesgo que dispara divulgación; esta estructura lo dificulta y eleva la exposición personal del directorio.</b>"});
+      }
+      return out;
+    },
+    pt:function(fs,ms){
+      var filtered=cisoBoss==='CIO'||cisoBoss==='CTO';
+      var lowBoard=ms.s.board<4, lowIndep=ms.s.independence<4, slow=ms.s.speed<=3;
+      var orphanN=fs.orphanN||0, weakDetect=!fs.domains.detect||fs.soc<2.5, weakGov=!fs.domains.govern||fs.gov<2.5, weakProactive=!fs.domains.proactive||fs.cro<2.5;
+      var out=[];
+      out.push({org:"NIST CSF 2.0",prov:"Função GOVERN, GV.RR-01 (NIST CSWP 29, 2024)",
+        quote:"A liderança da organização é responsável e presta contas pelo ciber risco.",
+        rec:(lowBoard||filtered)?"O CISO reporta a "+roleLabel(cisoBoss)+", então a linha que leva a prestação de contas até a liderança passa por um intermediário. <b>Confirme que o conselho ainda consegue ver e dirigir o ciber risco sem que essa visão seja filtrada.</b>":"Com o CISO perto do topo, a liderança pode assumir essa prestação de contas de forma direta. <b>Mantenha a linha de reporte curta para que o conselho seja dono do risco, não apenas o ouça.</b>"});
+      out.push({org:"NIST CSF 2.0",prov:"Função GOVERN, GV.RR-02 (NIST CSWP 29, 2024)",
+        quote:"Os papéis, responsabilidades e autoridades são estabelecidos, comunicados, compreendidos e aplicados.",
+        rec:orphanN>0?"Você deixou "+orphanN+" capacidade"+(orphanN>1?"s":"")+" sem dono. <b>Isso é uma obrigação não cumprida do GV.RR-02: cada função de ciber risco precisa de um dono estabelecido e aplicável.</b>":"Cada função do seu mapa tem um dono nomeado. <b>Documente essas autoridades para que a atribuição seja aplicada, não presumida.</b>"});
+      out.push({org:"Diretiva NIS2 (UE)",prov:"Artigo 20, Governança (Diretiva (UE) 2022/2555)",
+        quote:"Os órgãos de administração aprovam as medidas de gestão de risco, supervisionam a implementação e podem ser responsabilizados por infrações.",
+        rec:(lowBoard||lowIndep)?"O conselho carrega responsabilidade pessoal e indelegável sob a NIS2, mas esta estrutura o afasta do CISO. <b>O conselho pode delegar a execução, não a prestação de contas da qual está sendo afastado.</b>":"Esta estrutura mantém o conselho perto o bastante para aprovar e supervisionar as medidas de forma direta, que é o que a NIS2 torna indelegável. <b>Sustente essa linha.</b>"});
+      out.push({org:"DORA (UE)",prov:"Artigo 5, Governança e organização (Regulamento (UE) 2022/2554)",
+        quote:"O órgão de administração deve definir papéis e responsabilidades claros para todas as funções de TIC.",
+        rec:orphanN>0?"A DORA exige papéis claros para todas as funções. <b>Uma capacidade sem dono é uma lacuna direta contra o Artigo 5 se você for uma entidade financeira.</b>":"Seu mapa de funções atribui cada papel, que é o que o DORA Artigo 5 exige das entidades financeiras. <b>Mantenha o mapa de propriedade atualizado conforme as funções mudam.</b>"});
+      if(filtered||lowBoard){
+        out.push({org:"NACD-ISA",prov:"Ferramenta J, Construir a Relação entre o Conselho e o CISO (5.ª ed., 2026)",
+          quote:"A linha do CISO é direta ao conselho, ou filtrada por um CIO?",
+          rec:"O manual coloca isso como o teste de uma linha adequada. <b>Seu CISO reporta a "+roleLabel(cisoBoss)+", então responda direto: a visão de ciber risco do conselho é filtrada antes de chegar?</b>"});
+      }
+      out.push({org:"NACD-ISA",prov:"Princípio Três, Estabelecer Estruturas de Supervisão e Acesso à Expertise (5.ª ed., 2026)",
+        quote:"Uma linha de reporte entre o conselho e o CISO é estabelecida e mantida.",
+        rec:filtered?"A NACD lista uma linha formal conselho-CISO como indicador de sucesso. <b>Sob um executivo de TI, construa um canal direto ao conselho para que o reporte não seja filtrado apenas pela liderança de tecnologia.</b>":"Você está perto desse indicador de sucesso. <b>Formalize o canal conselho-CISO como uma linha permanente, não improvisada.</b>"});
+      if(weakProactive||orphanN>0){
+        out.push({org:"NACD-ISA",prov:"Princípio Quatro, Adotar um Quadro Empresarial para Gerir o Ciber Risco (5.ª ed., 2026)",
+          quote:"Uma política formal delineia os respectivos papéis do conselho, da gestão e do CISO.",
+          rec:"Sua camada proativa de ciber risco é fina ou tem lacunas. <b>A NACD coloca isso como uma questão de carta de governança: escreva quem é dono de cada função antes que o quadro possa se sustentar.</b>"});
+      }
+      if(weakDetect||slow){
+        out.push({org:"NACD-ISA",prov:"Ferramenta B, O Papel do Conselho na Resposta a Incidentes (5.ª ed., 2026)",
+          quote:"A resposta a incidentes precisa de um dono sênior com autoridade transversal.",
+          rec:"A detecção ou a velocidade de decisão é fraca nesta estrutura. <b>A NACD liga a resposta a incidentes a um dono sênior com autoridade transversal e uma rota de escalonamento ao conselho; uma linha lenta ou soterrada enfraquece ambas.</b>"});
+      }
+      if(weakGov||lowIndep){
+        out.push({org:"NACD-ISA",prov:"Princípio Dois, Monitorar Implicações Legais e de Divulgação (5.ª ed., 2026)",
+          quote:"O conselho precisa de reportes diretos e sem filtro do CISO.",
+          rec:"A governança ou a independência é fraca aqui. <b>A NACD pede reportes diretos e sem filtro do CISO sobre o risco que dispara divulgação; esta estrutura dificulta isso e eleva a exposição pessoal do conselho.</b>"});
+      }
+      return out;
+    }
+  };
+  function renderStandards(ms,fs){
+    $('standards-h').textContent=t('standardsH');
+    $('standards-sub').textContent=t('standardsSub');
+    var list=$('standards-list');list.innerHTML='';
+    var items=STANDARDS[L](fs,ms);
+    items.forEach(function(it){
+      var card=document.createElement('div');card.className='std-card';
+      card.innerHTML='<div class="std-org">'+it.org+'</div><div class="std-prov">'+it.prov+'</div>'+
+        '<p class="std-quote">\u201C'+it.quote+'\u201D</p><p class="std-rec">'+it.rec+'</p>';
+      list.appendChild(card);
+    });
+  }
+
+  /* per-line rationale and failure mode (drawn from established reporting-structure analysis, in our own words) */
+  var FAILMODE={
+    en:{
+      CEO:{why:"The CISO reports to the CEO because leadership treats cyber risk as core to the business and wants security at the executive table.",
+        fail:"This line fails when the CISO loses an internal champion and ends up competing with the CIO for the same budget. <b>Authority is high, but the CISO can be left exposed with no one above to absorb the friction.</b>"},
+      COO:{why:"The CISO reports to the COO when cyber risk is framed as operational continuity and resilience of the running business.",
+        fail:"This line fails when security is judged only by whether operations keep moving. <b>Risk that does not yet disrupt operations gets deprioritized until it does.</b>"},
+      CRO:{why:"The CISO reports to the CRO to move cyber out of technology and treat it as part of the broader risk agenda, with a funding channel separate from IT.",
+        fail:"This line fails when cyber risk is handled as just another entry on the risk register and loses its technical edge. <b>If the CISO lacks the soft skills to operate in a risk function, the role stalls.</b>"},
+      GC:{why:"The CISO reports to the General Counsel because security and legal share an incentive to keep the company within its obligations.",
+        fail:"This line fails when legal instincts dominate technical ones. <b>The structure can drift toward compliance and disclosure defense, leaving operational detection and response underweighted.</b>"},
+      CFO:{why:"The CISO reports to the CFO because breaches hit the bottom line, and the line gives security a funding channel and a voice at the table.",
+        fail:"This line fails when security investment is judged on numbers it cannot yet express in numbers. <b>A finance-first lens can constrain the budget for risk that is still mostly qualitative.</b>"},
+      CIO:{why:"The CISO reports to the CIO on the logic that the CIO owns the information and the CISO secures it. This is the most common line in mature programs.",
+        fail:"This line fails when a security plan threatens to stall an IT project and the CIO overrules it. <b>The same executive owns delivery and the brake on delivery, so the brake loses.</b>"},
+      CTO:{why:"The CISO reports to the CTO when security is treated as a technical caretaker function inside the technology organization.",
+        fail:"This line fails when security is measured as a drain on velocity. <b>Buried under the builder of the systems, the CISO has the least independence and the longest path to the board.</b>"}
+    },
+    es:{
+      CEO:{why:"El CISO reporta al CEO porque el liderazgo trata el ciber riesgo como central al negocio y quiere la seguridad en la mesa ejecutiva.",
+        fail:"Esta línea falla cuando el CISO pierde un padrino interno y termina compitiendo con el CIO por el mismo presupuesto. <b>La autoridad es alta, pero el CISO puede quedar expuesto sin nadie arriba que absorba la fricción.</b>"},
+      COO:{why:"El CISO reporta al COO cuando el ciber riesgo se enmarca como continuidad operativa y resiliencia del negocio en marcha.",
+        fail:"Esta línea falla cuando la seguridad se juzga solo por si las operaciones siguen avanzando. <b>El riesgo que aún no interrumpe las operaciones se posterga hasta que lo hace.</b>"},
+      CRO:{why:"El CISO reporta al CRO para sacar el ciber de tecnología y tratarlo como parte de la agenda de riesgo más amplia, con financiamiento separado de TI.",
+        fail:"Esta línea falla cuando el ciber riesgo se maneja como una entrada más del registro de riesgos y pierde su filo técnico. <b>Si al CISO le faltan habilidades blandas para operar en una función de riesgo, el rol se estanca.</b>"},
+      GC:{why:"El CISO reporta al Asesor Jurídico porque seguridad y legal comparten el incentivo de mantener a la empresa dentro de sus obligaciones.",
+        fail:"Esta línea falla cuando los instintos legales dominan a los técnicos. <b>La estructura puede derivar hacia la defensa de cumplimiento y divulgación, dejando subponderadas la detección y respuesta operativas.</b>"},
+      CFO:{why:"El CISO reporta al CFO porque las brechas golpean el resultado financiero, y la línea le da a la seguridad un canal de fondos y una voz en la mesa.",
+        fail:"Esta línea falla cuando la inversión en seguridad se juzga con números que aún no puede expresar en números. <b>Una mirada de finanzas primero puede restringir el presupuesto para un riesgo que todavía es mayormente cualitativo.</b>"},
+      CIO:{why:"El CISO reporta al CIO bajo la lógica de que el CIO es dueño de la información y el CISO la asegura. Es la línea más común en programas maduros.",
+        fail:"Esta línea falla cuando un plan de seguridad amenaza con frenar un proyecto de TI y el CIO lo anula. <b>El mismo ejecutivo es dueño de la entrega y del freno a la entrega, así que el freno pierde.</b>"},
+      CTO:{why:"El CISO reporta al CTO cuando la seguridad se trata como una función técnica de cuidado dentro de la organización de tecnología.",
+        fail:"Esta línea falla cuando la seguridad se mide como un lastre a la velocidad. <b>Sepultado bajo el constructor de los sistemas, el CISO tiene la menor independencia y el camino más largo al directorio.</b>"}
+    },
+    pt:{
+      CEO:{why:"O CISO reporta ao CEO porque a liderança trata o ciber risco como central ao negócio e quer a segurança na mesa executiva.",
+        fail:"Esta linha falha quando o CISO perde um padrinho interno e acaba competindo com o CIO pelo mesmo orçamento. <b>A autoridade é alta, mas o CISO pode ficar exposto sem ninguém acima para absorver o atrito.</b>"},
+      COO:{why:"O CISO reporta ao COO quando o ciber risco é enquadrado como continuidade operacional e resiliência do negócio em andamento.",
+        fail:"Esta linha falha quando a segurança é julgada apenas por se as operações continuam andando. <b>O risco que ainda não interrompe as operações é despriorizado até que o faça.</b>"},
+      CRO:{why:"O CISO reporta ao CRO para tirar o ciber da tecnologia e tratá-lo como parte da agenda de risco mais ampla, com financiamento separado da TI.",
+        fail:"Esta linha falha quando o ciber risco é tratado como mais uma entrada no registro de riscos e perde seu fio técnico. <b>Se ao CISO faltam habilidades interpessoais para operar numa função de risco, o papel estagna.</b>"},
+      GC:{why:"O CISO reporta ao Diretor Jurídico porque segurança e jurídico compartilham o incentivo de manter a empresa dentro de suas obrigações.",
+        fail:"Esta linha falha quando os instintos jurídicos dominam os técnicos. <b>A estrutura pode derivar para a defesa de conformidade e divulgação, deixando subponderadas a detecção e a resposta operacionais.</b>"},
+      CFO:{why:"O CISO reporta ao CFO porque violações atingem o resultado financeiro, e a linha dá à segurança um canal de recursos e uma voz na mesa.",
+        fail:"Esta linha falha quando o investimento em segurança é julgado por números que ainda não consegue expressar em números. <b>Uma lente de finanças em primeiro lugar pode restringir o orçamento para um risco que ainda é majoritariamente qualitativo.</b>"},
+      CIO:{why:"O CISO reporta ao CIO sob a lógica de que o CIO é dono da informação e o CISO a protege. É a linha mais comum em programas maduros.",
+        fail:"Esta linha falha quando um plano de segurança ameaça travar um projeto de TI e o CIO o anula. <b>O mesmo executivo é dono da entrega e do freio à entrega, então o freio perde.</b>"},
+      CTO:{why:"O CISO reporta ao CTO quando a segurança é tratada como uma função técnica de zeladoria dentro da organização de tecnologia.",
+        fail:"Esta linha falha quando a segurança é medida como um peso à velocidade. <b>Soterrado sob o construtor dos sistemas, o CISO tem a menor independência e o caminho mais longo até o conselho.</b>"}
+    }
+  };
+  function renderFailMode(){
+    var fm=$('failmode');
+    var data=(FAILMODE[L]||FAILMODE.en)[cisoBoss];
+    if(!data){fm.style.display='none';return;}
+    fm.style.display='block';
+    $('fm-head').textContent=fmt(t('fmHead'),{})+' \u00b7 '+roleLabel(cisoBoss);
+    $('fm-why').textContent=data.why;
+    $('fm-fail').innerHTML=data.fail;
+  }
+
+  function setLang(l){
+    L=l;
+    document.querySelectorAll('.lang button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-l')===l);});
+    paintStatic();
+    start(); // restart the conversation in the new language for a clean state
+  }
+  document.querySelectorAll('.lang button').forEach(function(b){b.addEventListener('click',function(){setLang(b.getAttribute('data-l'));});});
+  $('restart').addEventListener('click',start);
+  /* assemble the executive report from current state, then print */
+  function repText(L,key){return (T[L]&&T[L][key])||T.en[key];}
+  function buildReport(){
+    if(!cisoBoss||!MSCORE[cisoBoss])return false;
+    var ms=MSCORE[cisoBoss],mt=MTEXT[L][cisoBoss],fs=functionScores();
+    var bn=roleLabel(cisoBoss);
+    var orphanIds=Object.keys(deps).filter(function(k){return deps[k].owner==='NOBODY';});
+    var orphanN=orphanIds.length;
+    var capGap=(5-fs.soc)+(5-fs.gov)+(5-fs.cro)+(5-fs.comp);
+    var gap=Math.round(Math.min(92,ms.seam+capGap*1.6+orphanN*4));
+    var lineStrong=(ms.s.independence+ms.s.board)/2>=4, fnStrong=fs.covered>=3&&fs.cro>=2;
+    // cover
+    $('rep-eyebrow').textContent=t('repEyebrow');
+    $('rep-title').textContent=mt.name;
+    var now=new Date();var ds=now.toLocaleDateString(L==='es'?'es-MX':L==='pt'?'pt-BR':'en-US',{year:'numeric',month:'long',day:'numeric'});
+    $('rep-meta').innerHTML='<b>'+t('repMetaLine')+':</b> '+bn+' &nbsp;·&nbsp; <b>'+t('repMetaDate')+':</b> '+ds;
+    // verdict + summary
+    var gapWord=gap<=28?t('narrow'):gap<=48?t('moderate'):t('wide');
+    $('rep-verdict').textContent=mt.sub;
+    // plain-English summary assembled from structure
+    var summary=buildSummary(L,bn,lineStrong,fnStrong,gap,gapWord,orphanN);
+    $('rep-summary').textContent=summary;
+    // structure tree: clone the live mapped structure into the report
+    $('rep-tree-h').textContent=t('repTreeH');
+    var rt=$('rep-tree');rt.innerHTML='';
+    var liveHolder=tree.querySelector('.dyn');
+    if(liveHolder){rt.appendChild(liveHolder.cloneNode(true));$('rep-tree-wrap').style.display='block';}
+    else{$('rep-tree-wrap').style.display='none';}
+    // scores
+    $('rep-scores-h').textContent=t('repScoresH');
+    var sg=$('rep-scoregrid');sg.innerHTML='';
+    function scoreCol(title,rows){
+      var col=document.createElement('div');var h=document.createElement('div');h.className='rep-scorecol-h';h.textContent=title;col.appendChild(h);
+      rows.forEach(function(r){var d=document.createElement('div');d.className='rep-score';
+        var col2=r.v>=4?'#138a5e':r.v>=2.5?'#9a6a00':'#b00';
+        d.innerHTML='<span class="rep-score-label">'+r.label+'</span><span class="rep-score-track"><span class="rep-score-fill" style="width:'+(r.v/5*100)+'%;background:'+col2+'"></span></span><span class="rep-score-num">'+r.v.toFixed(1)+' / 5</span>';
+        col.appendChild(d);});
+      return col;
+    }
+    var lineRows=[['independence',t('mIndependence')],['conflict',t('mConflict')],['speed',t('mSpeed')],['board',t('mBoard')],['alignment',t('mAlignment')]].map(function(p){return {label:p[1],v:ms.s[p[0]]};});
+    var fnRows=[{label:t('mSoc'),v:fs.soc},{label:t('mGov'),v:fs.gov},{label:t('mCro'),v:fs.cro},{label:t('mStrat'),v:fs.strat},{label:t('mComp'),v:fs.comp}];
+    sg.appendChild(scoreCol(t('repLineH'),lineRows));
+    sg.appendChild(scoreCol(t('repFnH'),fnRows));
+    var gcol=gap<=28?'#138a5e':gap<=48?'#9a6a00':'#b00';
+    $('rep-gap').innerHTML='<b>'+t('seamTitle').split('·')[0].trim()+':</b> <span class="g-val" style="color:'+gcol+'">'+gapWord+' · '+gap+'</span>. '+(orphanN>0?fmt(t('seamOrphan'),{n:orphanN,s:orphanN>1?'s':''}):(gap<=28?t('seamTight'):gap<=48?t('seamMod'):t('seamWide')));
+    // failure mode
+    var fmd=(FAILMODE[L]||FAILMODE.en)[cisoBoss];
+    $('rep-fail-h').textContent=t('repFailH')+' · '+bn;
+    $('rep-fail-why').textContent=fmd?fmd.why:'';
+    $('rep-fail-fail').innerHTML=fmd?fmd.fail:'';
+    // orphans
+    var ow=$('rep-orphan-wrap');
+    if(orphanN>0){ow.style.display='block';$('rep-orphan-h').textContent=t('repOrphanH');$('rep-orphan-body').textContent=t('ugBody');var ol=$('rep-orphan-list');ol.innerHTML='';orphanIds.forEach(function(id){var c=document.createElement('span');c.className='rep-orphan-chip';c.textContent=fnLabel(id);ol.appendChild(c);});}
+    else ow.style.display='none';
+    // phases
+    $('rep-phase-h').textContent=t('repPhaseH');
+    var pg=$('rep-phasegrid');pg.innerHTML='';
+    var boardAccess=ms.s.board,speed=ms.s.speed,independence=ms.s.independence;
+    var beforeDef=fs.domains.proactive&&fs.cro>=2.5&&boardAccess>=4,beforeAtt=!fs.domains.proactive||orphanN>0;
+    var duringDef=fs.domains.detect&&fs.soc>=2.5&&speed>=4,duringAtt=!fs.domains.detect||speed<=2;
+    var afterDef=fs.domains.govern&&independence>=4,afterAtt=!fs.domains.govern;
+    var P=PHASE_TEXT[L](fs,ms,{orphanN:orphanN});
+    [['before',beforeAtt,beforeDef,P.before],['during',duringAtt,duringDef,P.during],['after',afterAtt,afterDef,P.after]].forEach(function(ph){
+      var key=ph[0],att=ph[1],def=ph[2],txt=ph[3];
+      var card=document.createElement('div');card.className='rep-phase';
+      var tilt,tcls;if(att&&!def){tilt=t('tiltAtt');tcls='att';}else if(def&&!att){tilt=t('tiltDef');tcls='def';}else{tilt=t('tiltEven');tcls='even';}
+      card.innerHTML='<div class="rep-phase-dom">'+t('ph'+cap(key)+'Dom')+'</div><div class="rep-phase-name">'+t('ph'+cap(key)+'Name')+'</div>'+
+        '<div class="rep-phase-edge rep-phase-att"><span class="who">'+t('whoAtt')+'</span>'+txt.att+'</div>'+
+        '<div class="rep-phase-edge rep-phase-def"><span class="who">'+t('whoDef')+'</span>'+txt.def+'</div>'+
+        '<div class="rep-phase-tilt '+tcls+'">'+tilt+'</div>';
+      pg.appendChild(card);
+    });
+    // findings: pull the flag set (line flags + capability flags + figurehead/marshal)
+    $('rep-find-h').textContent=t('repFindH');
+    var fnd=$('rep-findings');fnd.innerHTML='';
+    var collected=[];
+    function collect(tp,b,x){collected.push('<b>'+b+'</b> '+x);}
+    mt.flags.forEach(function(fl){collect(fl[0],fl[1],fl[2]);});
+    FLAGS_EXTRA[L](collect,fs,deps);
+    if(lineStrong&&!fnStrong)FIGUREHEAD[L](collect,'fig');
+    if(!lineStrong&&fnStrong)FIGUREHEAD[L](collect,'marshal');
+    collected.forEach(function(h){var d=document.createElement('div');d.className='rep-finding';d.innerHTML=h;fnd.appendChild(d);});
+    // standards (full grounding, every citation)
+    $('rep-std-h').textContent=t('repStdH');
+    $('rep-std-sub').textContent=t('standardsSub');
+    var sl=$('rep-std-list');sl.innerHTML='';
+    STANDARDS[L](fs,ms).forEach(function(it){
+      var d=document.createElement('div');d.className='rep-std-item';
+      d.innerHTML='<div class="rep-std-org">'+it.org+'</div><div class="rep-std-prov">'+it.prov+'</div>'+
+        '<p class="rep-std-quote">\u201C'+it.quote+'\u201D</p><p class="rep-std-rec">'+it.rec+'</p>';
+      sl.appendChild(d);
+    });
+    $('rep-foot').textContent=t('repFoot');
+    return true;
+  }
+  function buildSummary(L,bn,lineStrong,fnStrong,gap,gapWord,orphanN){
+    var EN=function(){
+      var a="In this structure the CISO reports to "+bn+". ";
+      a+= lineStrong? "The line carries real authority: cyber risk reaches accountable leadership with limited filtering. " : "The line is distanced from accountable leadership, so cyber risk is filtered before it is seen at the top. ";
+      a+= fnStrong? "The function beneath the CISO is broad enough to detect and act on that risk. " : "The function beneath the CISO is thin, which limits its ability to detect and act. ";
+      a+= orphanN>0? ("There "+(orphanN>1?"are ":"is ")+orphanN+" capabilit"+(orphanN>1?"ies":"y")+" no one owns, widening the exposure. ") : "";
+      a+= "The exposure gap is "+gapWord.toLowerCase()+" at "+gap+" of 100. The findings and standards below set out where this structure starts to fail and what the board is accountable for.";
+      return a;
+    };
+    var ES=function(){
+      var a="En esta estructura el CISO reporta a "+bn+". ";
+      a+= lineStrong? "La línea tiene autoridad real: el ciber riesgo llega al liderazgo responsable con poco filtrado. " : "La línea está alejada del liderazgo responsable, así que el ciber riesgo se filtra antes de verse arriba. ";
+      a+= fnStrong? "La función bajo el CISO es lo bastante amplia para detectar y actuar sobre ese riesgo. " : "La función bajo el CISO es delgada, lo que limita su capacidad de detectar y actuar. ";
+      a+= orphanN>0? ("Hay "+orphanN+" capacidad"+(orphanN>1?"es":"")+" que nadie controla, lo que amplía la exposición. ") : "";
+      a+= "La brecha de exposición es "+gapWord.toLowerCase()+" en "+gap+" de 100. Los hallazgos y estándares siguientes muestran dónde empieza a fallar esta estructura y de qué responde el directorio.";
+      return a;
+    };
+    var PT=function(){
+      var a="Nesta estrutura o CISO reporta a "+bn+". ";
+      a+= lineStrong? "A linha tem autoridade real: o ciber risco chega à liderança responsável com pouca filtragem. " : "A linha está distante da liderança responsável, então o ciber risco é filtrado antes de ser visto no topo. ";
+      a+= fnStrong? "A função abaixo do CISO é ampla o bastante para detectar e agir sobre esse risco. " : "A função abaixo do CISO é fina, o que limita sua capacidade de detectar e agir. ";
+      a+= orphanN>0? ("Há "+orphanN+" capacidade"+(orphanN>1?"s":"")+" que ninguém controla, ampliando a exposição. ") : "";
+      a+= "A lacuna de exposição é "+gapWord.toLowerCase()+" em "+gap+" de 100. Os achados e padrões a seguir mostram onde esta estrutura começa a falhar e pelo que o conselho responde.";
+      return a;
+    };
+    return L==='es'?ES():L==='pt'?PT():EN();
+  }
+
+  $('export').addEventListener('click',function(){if(buildReport())window.print();});
+
+  // detect browser language: es or pt if matched, else en
+  var nav=(navigator.language||navigator.userLanguage||'en').toLowerCase();
+  var initial=nav.indexOf('es')===0?'es':nav.indexOf('pt')===0?'pt':'en';
+  setLang(initial);
+})();
+</script>
+</body>
+</html>

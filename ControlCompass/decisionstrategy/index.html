@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Proactive vs Reactive: Three Decision Strategies in Cybersecurity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --paper: #f6f1e7;
+    --ink: #1f2a44;
+    --ink-soft: #3b4660;
+    --muted: #6b7280;
+    --rule: #cfc6b4;
+    --blue: #2f5d9e;
+    --orange: #c4622d;
+    --green: #3f7d5a;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 19px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 56px 40px 64px;
+  }
+
+  /* Journal header */
+  header {
+    border-top: 3px solid var(--ink);
+    padding-top: 22px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 22px;
+  }
+  header h1 {
+    font-weight: 600;
+    font-size: clamp(28px, 3.6vw, 42px);
+    line-height: 1.12;
+    margin: 0;
+    letter-spacing: -0.005em;
+  }
+  header p {
+    margin: 12px 0 0;
+    font-style: italic;
+    font-size: 21px;
+    color: var(--ink-soft);
+  }
+
+  /* Figure */
+  figure {
+    margin: 40px 0 0;
+  }
+  svg { width: 100%; height: auto; display: block; overflow: visible; }
+  figcaption { display: none;
+    margin-top: 16px;
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 78ch;
+  }
+  figcaption strong { color: var(--ink); font-weight: 600; }
+
+  /* Reveal mechanics */
+  .fx { opacity: 0; transition: opacity 0.8s ease; }
+  .fx.on { opacity: 1; }
+  /* Arrowheads, ticks and labels appear once the axis lines have finished drawing */
+  #arrow-y.on, #arrow-x.on, #ticks.on, #axis-labels.on { transition-delay: 1.4s; }
+  .draw {
+    fill: none;
+    transition: stroke-dashoffset 1.6s cubic-bezier(0.55, 0.1, 0.3, 1);
+  }
+
+  .axis { stroke: var(--ink); stroke-width: 2.5; stroke-linecap: butt; }
+  .tick { stroke: var(--ink); stroke-width: 1.5; }
+  .curve { stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .c-rp { stroke: var(--blue); }
+  .c-rr { stroke: var(--orange); }
+  .c-pd { stroke: var(--green); }
+  .thr { stroke: var(--muted); stroke-width: 1.8; stroke-dasharray: 9 7; }
+  #thrRect { transition: width 1.4s ease; }
+
+  .lbl { fill: var(--ink-soft); font-size: 17px; font-style: italic; }
+  .legend-text { fill: var(--ink); font-size: 20px; }
+  .stage { fill: #9b1c1c; font-size: 17px; font-weight: 600; text-anchor: middle; }
+  .title { fill: var(--ink); font-size: 22px; font-weight: 600; }
+  .mk-label { font-size: 18px; font-weight: 600; }
+
+  /* Story */
+  .story {
+    max-width: none;
+    margin-top: 44px;
+    border-top: 1px solid var(--rule);
+    padding-top: 26px;
+  }
+  .count {
+    font-style: italic;
+    font-size: 16px;
+    color: var(--muted);
+  }
+  .story h2 {
+    font-weight: 600;
+    font-size: 22px;
+    line-height: 1.2;
+    margin: 6px 0 14px;
+    color: var(--ink);
+    transition: color 0.6s ease;
+  }
+  .story-body { transition: opacity 0.35s ease; min-height: 6.5em; }
+  .story-body p {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 22px;
+    flex-wrap: wrap;
+  }
+  button {
+    font: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 0;
+    padding: 8px 18px;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  button:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
+  button:disabled { opacity: 0.35; cursor: default; }
+  /* Back / Next: same look as the language and theme selectors */
+  .controls button { height: 30px; min-width: 72px; box-sizing: border-box; padding: 0 14px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; border: 1px solid var(--rule); border-radius: 999px; background: var(--paper); color: var(--ink); }
+  .controls button:hover:not(:disabled) { background: var(--rule); color: var(--ink); }
+  button:focus-visible, .dot:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  .dots {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    align-items: center;
+  }
+  .dot {
+    width: 11px;
+    height: 11px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--ink);
+    background: transparent;
+  }
+  .dot[aria-current="step"] { background: var(--ink); }
+
+.appendix { max-width: 760px; margin: 0; }
+  .appendix h2 { font-weight: 600; font-size: 28px; line-height: 1.2; margin: 0 0 14px; }
+  .appendix > p { font-size: 19px; line-height: 1.65; color: var(--ink-soft); margin: 0; }
+  .formula-card { margin-top: 26px; border: 2px solid var(--ink); padding: 22px 26px; background: #fbf8f1; }
+  .fc-title { font-weight: 600; font-size: 30px; line-height: 1.1; }
+  .fc-sub { font-style: italic; color: var(--muted); margin-bottom: 16px; }
+  .fc-eq { font-size: 40px; text-align: center; padding: 18px; border: 1px solid var(--rule); margin-bottom: 18px; }
+  .formula-card dl { display: grid; grid-template-columns: 60px 1fr; gap: 6px 14px; margin: 0; font-size: 18px; }
+  .formula-card dt { font-style: italic; }
+  .formula-card dd { margin: 0; }
+  .fc-note { margin: 18px 0 0; font-style: italic; color: var(--ink-soft); text-align: center; }
+  .pulse-line { animation: line-pulse 1.6s ease-in-out infinite; }
+  @keyframes line-pulse {
+    0%, 100% { stroke-width: 3; }
+    50% { stroke-width: 8; }
+  }
+.topbar { display: flex; justify-content: flex-end; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+  #theme-toggle { font: inherit; font-size: 12px; line-height: 1; height: 30px; min-width: 56px; box-sizing: border-box; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; border-radius: 999px; }
+  #theme-toggle:hover { background: var(--rule); }
+  #present-toggle { font: inherit; font-size: 14px; line-height: 1; height: 30px; min-width: 36px; box-sizing: border-box; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--rule); border-radius: 999px; background: transparent; color: var(--ink); cursor: pointer; }
+  #present-toggle:hover { background: var(--rule); }
+
+  /* Presentation mode: only the chart is visible, filling the screen */
+  body.present .topbar > *:not(#present-toggle):not(#cmd-bar) { display: none; }
+  body.present header, body.present .story, body.present footer, body.present #appendix { display: none; }
+  body.present .wrap { max-width: none; padding: 16px 24px; }
+  body.present figure { margin: 0 auto; max-width: 1500px; }
+  body.present .topbar { margin-bottom: 4px; }
+  /* Dark theme: swap the page colors, and flip the chart so its dark text and lines stay readable */
+  :root[data-theme="dark"] { --paper: #14181f; --ink: #e8ecf4; --ink-soft: #c3cbdb; --muted: #8b95a9; --rule: #3a465e; }
+  /* Chart on a dark background: light labels and lines; the formula cards keep their light panels and dark text */
+  :root[data-theme="dark"] svg text:not(#formula-card text):not(#rp-card text):not(#rr-card text):not(#pd-card text) { fill: #e8ecf4; }
+  :root[data-theme="dark"] svg [stroke="#1f2a44"] { stroke: #c3cbdb; }
+  :root[data-theme="dark"] svg polygon[fill="#1f2a44"] { fill: #c3cbdb; }
+  :root[data-theme="dark"] svg [stroke="#3b4660"] { stroke: #8b95a9; }
+  :root[data-theme="dark"] svg [stroke="#2f5d9e"], :root[data-theme="dark"] svg [stroke="#2f7d4f"] { stroke: #6aa0ff; }
+  :root[data-theme="dark"] svg [stroke="#c4622d"] { stroke: #ff9a5c; }
+  :root[data-theme="dark"] svg [stroke="#3f7d5a"] { stroke: #5cd39a; }
+  :root[data-theme="dark"] svg [fill="#2f5d9e"] { fill: #6aa0ff; }
+  :root[data-theme="dark"] svg [fill="#c4622d"] { fill: #ff9a5c; }
+  :root[data-theme="dark"] svg [fill="#3f7d5a"], :root[data-theme="dark"] svg [fill="#2f7d4f"] { fill: #5cd39a; }
+  :root[data-theme="dark"] .c-rp { stroke: #6aa0ff; }
+  :root[data-theme="dark"] .c-rr { stroke: #ff9a5c; }
+  :root[data-theme="dark"] .c-pd { stroke: #5cd39a; }
+  
+  .topbar select { font: inherit; font-size: 15px; padding: 6px 10px; border: 1px solid var(--rule); background: transparent; color: var(--ink); border-radius: 0; cursor: pointer; }
+  .topbar select option { color: #111827; }
+#lang-bar { position: relative; }
+  #lang-toggle { display: flex; align-items: center; gap: 5px; height: 30px; min-width: 56px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); font: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; border-radius: 999px; }
+  #lang-toggle:hover { background: var(--rule); }
+  .lang-caret { font-size: 10px; opacity: 0.7; transition: transform 0.18s; }
+  #lang-toggle[aria-expanded="true"] .lang-caret { transform: rotate(180deg); }
+  #lang-menu { position: absolute; top: calc(100% + 6px); right: 0; display: none; flex-direction: column; gap: 2px; background: var(--paper); border: 1px solid var(--rule); padding: 4px; min-width: 56px; z-index: 100; border-radius: 10px; }
+  #lang-menu.open { display: flex; }
+  #lang-menu button { padding: 5px 10px; border: none; background: transparent; color: var(--ink-soft); cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-align: left; border-radius: 999px; padding: 4px 10px; }
+  #lang-menu button:hover { background: var(--rule); color: var(--ink); }
+  .credit { display: none; margin: 8px 0 0; font-size: 14px; line-height: 1.6; color: var(--muted); max-width: 78ch; }
+  .credit a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+/* Command center: icon-only playback controls, grouped in one dark capsule */
+  #cmd-bar { display: inline-flex; align-items: center; gap: 8px; margin-right: 12px; }
+  .cmd-btn { width: 30px; height: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--rule); border-radius: 50%; background: var(--paper); color: var(--ink); cursor: pointer; transition: background 0.15s, color 0.15s, box-shadow 0.15s; }
+  .cmd-btn:hover { background: var(--rule); box-shadow: 0 0 0 1px var(--muted); }
+  .cmd-btn svg { width: 12px; height: 12px; display: block; }
+  .cmd-btn.cmd-main { background: var(--ink); color: var(--paper); }
+  .cmd-btn.cmd-main:hover { background: var(--ink-soft); }
+  .cmd-btn:focus-visible { outline: 2px solid var(--muted); outline-offset: 2px; }
+  /* Battlefield areas: after their steps they dim and their labels disappear */
+  #def-battle rect, #att-battle rect { transition: fill-opacity 0.6s ease; }
+  #def-battle text, #att-battle text { transition: opacity 0.6s ease; }
+  #def-battle.dim rect, #att-battle.dim rect { fill-opacity: 0.4; }
+  #def-battle.dim text, #att-battle.dim text { opacity: 0; }
+  /* Loop circle: dashed, with the dashes flowing around it */
+  .ring-dash { stroke-dasharray: 8 8; animation: ring-flow 1.4s linear infinite; }
+  @keyframes ring-flow { to { stroke-dashoffset: 16; } }
+  .res-purple { fill: rgba(91, 45, 138, 0.22); }
+  /* Defender advantage areas pulse by strength of fill only, so the fade-in still works */
+  .area-pulse { animation: area-pulse 2.2s ease-in-out infinite; }
+  @keyframes area-pulse {
+    0%, 100% { fill-opacity: 0.55; }
+    50% { fill-opacity: 1; }
+  }
+  /* Pulsing label: scales only, so the fade-in from .fx still works */
+  /* Subtle pulse on the label text only: a small size change, no shapes behind it */
+  /* Two faint copies of the same text grow from the center and fade, behind the main text */
+  .label-halo-text { transform-box: view-box; transform-origin: 780px 269px; animation: label-halo-text 2.4s ease-out infinite; }
+  .label-halo-text.delay { animation-delay: 1.2s; }
+  @keyframes label-halo-text {
+    0% { transform: scale(1); opacity: 0.35; }
+    100% { transform: scale(1.4, 2.2); opacity: 0; }
+  }
+  @keyframes label-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
+  @keyframes pulse-text {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  /* Pulsing borders around the three loop boxes */
+  .pulse-border { fill: none; stroke-width: 2; animation: border-pulse 1.4s ease-in-out infinite; }
+  /* Box halos use the same expanding-fade style as the dots */
+  .pulse-box { transform-box: fill-box; transform-origin: center; animation: pulse-box 2s ease-out infinite; }
+  .pulse-box.delay { animation-delay: 1s; }
+  @keyframes pulse-box {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.3); opacity: 0; }
+  }
+  @keyframes border-pulse {
+    0%, 100% { stroke-width: 1.5; stroke-opacity: 0.35; }
+    50% { stroke-width: 4; stroke-opacity: 1; }
+  }
+  .hint {
+    margin: 14px 0 0;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--muted);
+  }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 78ch;
+  }
+
+  .pulse {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: pulse 2s ease-out infinite;
+  }
+  .pulse.delay { animation-delay: 1s; }
+  
+
+
+  .flow { stroke-dasharray: 10 6; animation: flow 1.2s linear infinite; }
+  @keyframes flow { to { stroke-dashoffset: -16; } }
+  .march { animation: march 1s linear infinite; }
+  @keyframes march { to { stroke-dashoffset: -8; } }
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 0.55; }
+    100% { transform: scale(3); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pulse { animation: none; opacity: 0; }
+    .march { animation: none; }
+    .flow { animation: none; }
+    .pulse-line { animation: none; }
+    
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topbar">
+    <div id="cmd-bar" role="group" aria-label="Playback">
+        <button id="cmd-prev" class="cmd-btn" type="button" aria-label="Back to start"><svg viewBox="0 0 24 24"><path d="M6 5v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M19 5.5v13L9 12z" fill="currentColor"/></svg></button>
+        <button id="cmd-play" class="cmd-btn cmd-main" type="button" aria-label="Play or pause"></button>
+        <button id="cmd-next" class="cmd-btn" type="button" aria-label="Next step"><svg viewBox="0 0 24 24"><path d="M18 5v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M5 5.5v13L15 12z" fill="currentColor"/></svg></button>
+      </div>
+      <button id="theme-toggle" type="button" aria-label="Switch to dark theme">◐</button>
+      <button id="present-toggle" type="button" aria-label="Presentation mode" aria-pressed="false" title="Presentation mode">⛶</button>
+    <div id="lang-bar">
+      <button id="lang-toggle" aria-haspopup="listbox" aria-expanded="false">
+        <span id="lang-toggle-label">EN</span><span class="lang-caret">▾</span>
+      </button>
+      <div id="lang-menu" role="listbox">
+        <button data-lang="en">EN</button>
+        <button data-lang="es">ES</button>
+        <button data-lang="pt">PT</button>
+        <button data-lang="ja">JA</button>
+      </div>
+    </div>
+  </div>
+  <header>
+    <h1>Proactive vs Reactive: Three Decision Strategies in Cybersecurity</h1>
+    <p>How to beat the attacker's advantage</p>
+  </header>
+
+  <figure>
+    <svg id="chart-svg" viewBox="0 0 1500 880" role="img" aria-labelledby="chart-title chart-desc">
+      <title id="chart-title">Decision effectiveness over time for three strategies</title>
+      <desc id="chart-desc">Three decay curves compared against a dashed minimum decision effectiveness line. Reactive Precision drops fastest and crosses the minimum first. Reactive Response drops more slowly and crosses it second. Proactive Defense starts highest and levels off above the minimum line without crossing it.</desc>
+
+      <defs>
+        <marker id="arrowInk" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="18" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0.5 L10 5 L0 9.5 L3 5 Z" fill="#1f2a44"></path></marker>
+        <marker id="arrowBlue" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="18" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0.5 L10 5 L0 9.5 L3 5 Z" fill="#2f5d9e"></path></marker>
+        <marker id="arrowOrange" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="18" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0.5 L10 5 L0 9.5 L3 5 Z" fill="#c4622d"></path></marker>
+        <marker id="arrowGreen" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="18" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0.5 L10 5 L0 9.5 L3 5 Z" fill="#2f7d4f"></path></marker>
+        <marker id="arrowPurple" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="18" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0.5 L10 5 L0 9.5 L3 5 Z" fill="#6d3f9e"></path></marker>
+        <marker id="arrowGray" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="18" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0.5 L10 5 L0 9.5 L3 5 Z" fill="#6b7280"></path></marker>
+        <clipPath id="thrClip">
+          <rect id="thrRect" x="195" y="0" width="0" height="880"></rect>
+        </clipPath>
+      </defs>
+
+      <!-- Step 1: axes and labels -->
+      <path id="axis-y" class="draw axis" d="M200 760 L200 80"></path>
+      <path id="axis-x" class="draw axis" d="M200 760 L1450 760"></path>
+      <polygon id="arrow-y" class="fx" points="200,62 192,84 208,84" fill="#1f2a44"></polygon>
+      <polygon id="arrow-x" class="fx" points="1472,760 1450,752 1450,768" fill="#1f2a44"></polygon>
+
+      <g id="ticks" class="fx">
+        <line class="tick" x1="427.5" x2="427.5" y1="760" y2="780"></line>
+        <line class="tick" x1="655" x2="655" y1="760" y2="780"></line>
+        <line class="tick" x1="882.5" x2="882.5" y1="760" y2="780"></line>
+        <line class="tick" x1="1110" x2="1110" y1="760" y2="780"></line>
+        <line class="tick" x1="1337.5" x2="1337.5" y1="760" y2="780"></line>
+        
+        
+        
+      </g>
+
+      <g id="axis-labels">
+        <text class="lbl" x="186" y="112" text-anchor="end">Higher</text><text class="lbl" x="186" y="134" text-anchor="end">effectiveness</text>
+        <text class="lbl" x="186" y="700" text-anchor="end">Lower</text><text class="lbl" x="186" y="722" text-anchor="end">effectiveness</text>
+        <text id="ylab1" class="title" x="186" y="400" text-anchor="end">Decision</text><text id="ylab2" class="title" x="186" y="422" text-anchor="end">effectiveness</text>
+        <text class="lbl" x="200" y="806" text-anchor="start">Fast decisions</text><text class="lbl" x="200" y="828" text-anchor="start">(short time)</text>
+        <text class="lbl" x="1450" y="806" text-anchor="end">Slow decisions</text><text class="lbl" x="1450" y="828" text-anchor="end">(long time)</text>
+        <text class="title" x="825" y="812" text-anchor="middle">Time to decide</text>
+      </g>
+
+      <!-- Step 2: minimum decision effectiveness -->
+      <g clip-path="url(#thrClip)">
+        <line id="thr-line" class="thr" x1="200" x2="1450" y1="545" y2="545"></line>
+      </g>
+      <text id="thr-label" class="fx lbl" x="1444" y="589" text-anchor="end">Minimum decision</text><text id="thr-label-2" class="fx lbl" x="1444" y="611" text-anchor="end">effectiveness</text>
+
+      <!-- Steps 9 to 12: attack stages, labelled under the time axis -->
+      <g id="stage-1" class="fx"><text class="stage" x="313" y="670">Recon and</text><text class="stage" x="313" y="690">Preparation</text></g>
+      <g id="boundary-1" class="fx"><line x1="427.5" y1="565" x2="427.5" y2="760" stroke="#3b4660" stroke-width="1.8" stroke-dasharray="2 6" stroke-linecap="round"></line><circle class="pulse" cx="427.5" cy="565" r="8" fill="#d1342f"></circle><circle class="pulse delay" cx="427.5" cy="565" r="8" fill="#d1342f"></circle><circle cx="427.5" cy="565" r="8" fill="#d1342f" stroke="#f6f1e7" stroke-width="2"></circle></g>
+      <g id="stage-2" class="fx"><text class="stage" x="532" y="670">Initial</text><text class="stage" x="532" y="690">Compromise</text></g>
+      <g id="boundary-2" class="fx"><line x1="655" y1="565" x2="655" y2="760" stroke="#3b4660" stroke-width="1.8" stroke-dasharray="2 6" stroke-linecap="round"></line><circle class="pulse" cx="655" cy="565" r="8" fill="#d1342f"></circle><circle class="pulse delay" cx="655" cy="565" r="8" fill="#d1342f"></circle><circle cx="655" cy="565" r="8" fill="#d1342f" stroke="#f6f1e7" stroke-width="2"></circle></g>
+      <g id="stage-3" class="fx"><text class="stage" x="769" y="670">Lateral Movement</text></g>
+      <g id="boundary-3" class="fx"><line x1="882.5" y1="565" x2="882.5" y2="760" stroke="#3b4660" stroke-width="1.8" stroke-dasharray="2 6" stroke-linecap="round"></line><circle class="pulse" cx="882.5" cy="565" r="8" fill="#d1342f"></circle><circle class="pulse delay" cx="882.5" cy="565" r="8" fill="#d1342f"></circle><circle cx="882.5" cy="565" r="8" fill="#d1342f" stroke="#f6f1e7" stroke-width="2"></circle></g>
+      <g id="stage-4" class="fx"><text class="stage" x="1166" y="670">Objectives</text></g>
+
+      <!-- Step 8: attacker's advantage zone (drawn under the curves) -->
+      <g id="attacker-zone" class="fx">
+        <rect x="200" y="565" width="1250" height="195" fill="rgba(220, 53, 69, 0.10)"></rect>
+        <path d="M620.0 600.0 Q620.0 593.0 627.0 593.0 L933.0 593.0 Q940.0 593.0 940.0 586.0 L940.0 586.0 Q940.0 579.0 946.2 582.3 L992.1 606.4 Q1001.0 611.0 992.1 615.6 L946.2 639.7 Q940.0 643.0 940.0 636.0 L940.0 636.0 Q940.0 629.0 933.0 629.0 L627.0 629.0 Q620.0 629.0 620.0 622.0 Z" fill="rgba(220, 53, 69, 0.18)"></path>
+        <text x="780" y="618" fill="#9b1c1c" font-size="22" text-anchor="middle">Attacker's advantage</text>
+      </g>
+
+      <!-- Steps 13 to 15: defender advantage areas (drawn under the curves) -->
+      <path id="def-blue" class="fx area-pulse" fill="rgba(47, 93, 158, 0.18)"></path>
+      <path id="def-orange" class="fx area-pulse" fill="rgba(196, 98, 45, 0.18)"></path>
+      <path id="res-area" class="fx area-pulse res-purple"></path>
+      <text id="res-label" class="fx" x="780" y="642" text-anchor="middle" fill="#5b2d8a" font-size="30" font-weight="600">Proactive Defense</text>
+      <path id="def-green" class="fx area-pulse" fill="rgba(63, 125, 90, 0.18)"></path>
+
+      <!-- Battlefields: green above the minimum line (step 3), red below it (step 4) -->
+      <g id="def-battle" class="fx">
+        <rect x="200" y="60" width="1250" height="505" fill="rgba(63, 125, 90, 0.14)"></rect>
+        <text x="825" y="322" text-anchor="middle" fill="#1e6b43" font-size="30" font-weight="600">Defender's battlefield</text>
+      </g>
+      <g id="att-battle" class="fx">
+        <rect x="200" y="565" width="1250" height="195" fill="rgba(220, 53, 69, 0.10)"></rect>
+        <text x="825" y="672" text-anchor="middle" fill="#9b1c1c" font-size="30" font-weight="600">Attacker's battlefield</text>
+      </g>
+
+      <!-- Step 3: Reactive Precision -->
+      <path id="curve-rp" class="draw curve c-rp"></path>
+      <g id="mk-rp" class="fx">
+        <circle class="pulse" cx="326" cy="565" r="9" fill="#2f5d9e"></circle>
+        <circle class="pulse delay" cx="326" cy="565" r="9" fill="#2f5d9e"></circle>
+        <circle cx="326" cy="565" r="9" fill="#2f5d9e" stroke="#f6f1e7" stroke-width="2.5"></circle>
+        <rect x="200" y="565" width="126" height="195" fill="rgba(47,93,158,0.12)"></rect>
+        <line x1="326" y1="565" x2="326" y2="760" stroke="#1f2a44" stroke-width="1.5" stroke-dasharray="5 5"></line>
+        <line x1="200" y1="592" x2="326" y2="592" stroke="#1f2a44" stroke-width="1.8"></line>
+        <polygon points="200,592 210,587 210,597" fill="#1f2a44"></polygon>
+        <polygon points="326,592 316,587 316,597" fill="#1f2a44"></polygon>
+        <line x1="478" y1="430" x2="334.2" y2="557.7" stroke="#1f2a44" stroke-width="2" marker-end="url(#arrowInk)"></line>
+        
+        <text x="480" y="402" fill="#1f2a44" class="lbl">Reactive Precision</text>
+        <text x="480" y="424" fill="#1f2a44" class="lbl">reaches the threshold</text>
+        <text id="dt1" x="263" y="622" fill="#1f2a44" font-size="18" text-anchor="middle">Death by</text>
+        <text id="dt2" x="263" y="644" fill="#1f2a44" font-size="18" text-anchor="middle">Friction</text>
+        <text id="dsub1" x="263" y="672" fill="#3b4660" font-size="14" text-anchor="middle">Time to Decide</text><text id="dsub2" x="263" y="690" fill="#3b4660" font-size="14" text-anchor="middle">Exceeds</text><text id="dsub3" x="263" y="708" fill="#3b4660" font-size="14" text-anchor="middle">Time to Act</text><text id="dsub4" x="263" y="726" fill="#3b4660" font-size="14" text-anchor="middle"></text>
+        
+        
+      </g>
+
+      <!-- Step 4: Reactive Response -->
+      <path id="curve-rr" class="draw curve c-rr"></path>
+      <g id="mk-rr" class="fx">
+        <rect x="200" y="565" width="227.5" height="195" fill="rgba(196,98,45,0.12)"></rect>
+        <line x1="427.5" y1="565" x2="427.5" y2="760" stroke="#1f2a44" stroke-width="1.5" stroke-dasharray="5 5"></line>
+        <line x1="200" y1="620" x2="427.5" y2="620" stroke="#1f2a44" stroke-width="1.8"></line>
+        <polygon points="200,620 210,615 210,625" fill="#1f2a44"></polygon>
+        <polygon points="427.5,620 417.5,615 417.5,625" fill="#1f2a44"></polygon>
+        <circle class="pulse" cx="427.5" cy="565" r="9" fill="#c4622d"></circle>
+        <circle class="pulse delay" cx="427.5" cy="565" r="9" fill="#c4622d"></circle>
+        <circle cx="427.5" cy="565" r="9" fill="#c4622d" stroke="#f6f1e7" stroke-width="2.5"></circle>
+        <line x1="515" y1="425" x2="433.3" y2="555.7" stroke="#1f2a44" stroke-width="2" marker-end="url(#arrowInk)"></line>
+        <text x="520" y="396" fill="#1f2a44" class="lbl" style="font-style:normal">Reactive Response (SOC)</text>
+        <text x="520" y="418" fill="#1f2a44" class="lbl" style="font-style:normal">reaches the threshold</text>
+        <text x="520" y="440" fill="#1f2a44" class="lbl" style="font-style:normal">Control passes to the attacker</text>
+        <text id="soc-t1" x="314" y="668" fill="#1f2a44" font-size="18" text-anchor="middle">SOC Decision Window</text><text id="soc-t2" x="314" y="674" fill="#1f2a44" font-size="18" text-anchor="middle"></text>
+        <text id="soc-d1" x="314" y="690" fill="#3b4660" font-size="14" text-anchor="middle">Defender can still influence</text>
+        <text id="soc-d2" x="314" y="708" fill="#3b4660" font-size="14" text-anchor="middle">the outcome</text><text id="soc-d3" x="314" y="726" fill="#3b4660" font-size="14" text-anchor="middle"></text>
+      </g>
+
+      <!-- Step 5: Proactive Defense -->
+      <path id="curve-pd" class="draw curve c-pd"></path>
+
+      <!-- Legend: each entry appears with its curve -->
+      <g id="lg-rp" class="fx">
+        <line x1="1120" y1="100" x2="1170" y2="100" stroke="#2f5d9e" stroke-width="7" stroke-linecap="round"></line>
+        <text class="legend-text" x="1190" y="107">Reactive Precision</text>
+      </g>
+      <g id="lg-rr" class="fx">
+        <line x1="1120" y1="130" x2="1170" y2="130" stroke="#c4622d" stroke-width="7" stroke-linecap="round"></line>
+        <text class="legend-text" x="1190" y="137">Reactive Response (SOC)</text>
+      </g>
+      <g id="lg-pd" class="fx">
+        <line x1="1120" y1="160" x2="1170" y2="160" stroke="#3f7d5a" stroke-width="7" stroke-linecap="round"></line>
+        <text class="legend-text" x="1190" y="167">Proactive Defense (CROC)</text>
+      </g>
+    <!-- Defender advantage banner and arrows -->
+      <g id="def-banner" class="fx">
+        <path d="M620.0 302.0 Q620.0 295.0 627.0 295.0 L933.0 295.0 Q940.0 295.0 940.0 288.0 L940.0 284.0 Q940.0 277.0 945.8 280.9 L992.7 312.4 Q1001.0 318.0 992.7 323.6 L945.8 355.1 Q940.0 359.0 940.0 352.0 L940.0 348.0 Q940.0 341.0 933.0 341.0 L627.0 341.0 Q620.0 341.0 620.0 334.0 Z" fill="rgba(63, 125, 90, 0.18)"></path>
+        <text x="780" y="325" fill="#1e6b43" font-size="22" text-anchor="middle">Defender advantage</text>
+      </g>
+      <g id="def-arrow-blue" class="fx"><circle cx="780" cy="290" r="5.5" fill="#2f5d9e"></circle>
+        <path d="M780 290 Q525 80 204 160" fill="none" stroke="#2f5d9e" stroke-width="2.2" class="march" stroke-dasharray="2 6" stroke-linecap="round" marker-end="url(#arrowBlue)"></path>
+      </g>
+      <g id="def-arrow-orange" class="fx"><circle cx="620" cy="318" r="5.5" fill="#c4622d"></circle>
+        <path d="M620 318 Q500 330 360 538" fill="none" stroke="#c4622d" stroke-width="2.2" class="march" stroke-dasharray="2 6" stroke-linecap="round" marker-end="url(#arrowOrange)"></path>
+      </g>
+      <g id="def-arrow-green" class="fx"><circle cx="780" cy="346" r="5.5" fill="#2f7d4f"></circle>
+        <path d="M780 346 Q700 430 500 516" fill="none" stroke="#2f7d4f" stroke-width="2.2" class="march" stroke-dasharray="2 6" stroke-linecap="round" marker-end="url(#arrowGreen)"></path>
+      </g>
+    <!-- Steps 16 to 18: handoffs and the continuous defense loop -->
+      <circle id="ring-circle" class="ring-dash fx" cx="780" cy="285" r="170" fill="none" stroke="#6d3f9e" stroke-width="2.2"></circle>
+      <g id="ring-label" class="fx"><text class="label-halo-text" x="780" y="277" text-anchor="middle" fill="#5b2d8a" font-size="30" font-weight="600">Cyber resilience</text><text class="label-halo-text delay" x="780" y="277" text-anchor="middle" fill="#5b2d8a" font-size="30" font-weight="600">Cyber resilience</text><text class="label-main" x="780" y="277" text-anchor="middle" fill="#5b2d8a" font-size="30" font-weight="600">Cyber resilience</text></g>
+      <g style="display:none">
+        <g><animateMotion dur="9s" begin="0s" repeatCount="indefinite" rotate="auto"><mpath href="#ring"></mpath></animateMotion><polygon points="-8,-6 8,0 -8,6" fill="#2f7d4f"><animate attributeName="fill" values="#2f7d4f;#c4622d;#6d3f9e;#2f7d4f" keyTimes="0;0.33;0.67;1" dur="9s" begin="0s" repeatCount="indefinite"/></polygon></g>
+        <g><animateMotion dur="9s" begin="-1.8s" repeatCount="indefinite" rotate="auto"><mpath href="#ring"></mpath></animateMotion><polygon points="-8,-6 8,0 -8,6" fill="#2f7d4f"><animate attributeName="fill" values="#2f7d4f;#c4622d;#6d3f9e;#2f7d4f" keyTimes="0;0.33;0.67;1" dur="9s" begin="-1.8s" repeatCount="indefinite"/></polygon></g>
+        <g><animateMotion dur="9s" begin="-3.6s" repeatCount="indefinite" rotate="auto"><mpath href="#ring"></mpath></animateMotion><polygon points="-8,-6 8,0 -8,6" fill="#2f7d4f"><animate attributeName="fill" values="#2f7d4f;#c4622d;#6d3f9e;#2f7d4f" keyTimes="0;0.33;0.67;1" dur="9s" begin="-3.6s" repeatCount="indefinite"/></polygon></g>
+        <g><animateMotion dur="9s" begin="-5.4s" repeatCount="indefinite" rotate="auto"><mpath href="#ring"></mpath></animateMotion><polygon points="-8,-6 8,0 -8,6" fill="#2f7d4f"><animate attributeName="fill" values="#2f7d4f;#c4622d;#6d3f9e;#2f7d4f" keyTimes="0;0.33;0.67;1" dur="9s" begin="-5.4s" repeatCount="indefinite"/></polygon></g>
+        <g><animateMotion dur="9s" begin="-7.2s" repeatCount="indefinite" rotate="auto"><mpath href="#ring"></mpath></animateMotion><polygon points="-8,-6 8,0 -8,6" fill="#2f7d4f"><animate attributeName="fill" values="#2f7d4f;#c4622d;#6d3f9e;#2f7d4f" keyTimes="0;0.33;0.67;1" dur="9s" begin="-7.2s" repeatCount="indefinite"/></polygon></g>
+        
+        
+        
+        
+      </g>
+      <g id="ring-heads" class="fx">
+        <g><animateMotion dur="9s" begin="0s" repeatCount="indefinite" rotate="auto"><mpath href="#ring"></mpath></animateMotion><polygon points="-8,-6 8,0 -8,6" fill="#2f7d4f"><animate attributeName="fill" values="#2f7d4f;#c4622d;#6d3f9e;#2f7d4f" keyTimes="0;0.33;0.67;1" dur="9s" begin="0s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" values="1;1.35;1" dur="1.2s" begin="0s" repeatCount="indefinite"/></polygon></g>
+        <g><animateMotion dur="9s" begin="-1.5s" repeatCount="indefinite" rotate="auto"><mpath href="#ring"></mpath></animateMotion><polygon points="-8,-6 8,0 -8,6" fill="#2f7d4f"><animate attributeName="fill" values="#2f7d4f;#c4622d;#6d3f9e;#2f7d4f" keyTimes="0;0.33;0.67;1" dur="9s" begin="-1.5s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" values="1;1.35;1" dur="1.2s" begin="-1.5s" repeatCount="indefinite"/></polygon></g>
+        <g><animateMotion dur="9s" begin="-3s" repeatCount="indefinite" rotate="auto"><mpath href="#ring"></mpath></animateMotion><polygon points="-8,-6 8,0 -8,6" fill="#2f7d4f"><animate attributeName="fill" values="#2f7d4f;#c4622d;#6d3f9e;#2f7d4f" keyTimes="0;0.33;0.67;1" dur="9s" begin="-3s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" values="1;1.35;1" dur="1.2s" begin="-3s" repeatCount="indefinite"/></polygon></g>
+        <g><animateMotion dur="9s" begin="-4.5s" repeatCount="indefinite" rotate="auto"><mpath href="#ring"></mpath></animateMotion><polygon points="-8,-6 8,0 -8,6" fill="#2f7d4f"><animate attributeName="fill" values="#2f7d4f;#c4622d;#6d3f9e;#2f7d4f" keyTimes="0;0.33;0.67;1" dur="9s" begin="-4.5s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" values="1;1.35;1" dur="1.2s" begin="-4.5s" repeatCount="indefinite"/></polygon></g>
+        <g><animateMotion dur="9s" begin="-6s" repeatCount="indefinite" rotate="auto"><mpath href="#ring"></mpath></animateMotion><polygon points="-8,-6 8,0 -8,6" fill="#2f7d4f"><animate attributeName="fill" values="#2f7d4f;#c4622d;#6d3f9e;#2f7d4f" keyTimes="0;0.33;0.67;1" dur="9s" begin="-6s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" values="1;1.35;1" dur="1.2s" begin="-6s" repeatCount="indefinite"/></polygon></g>
+        <g><animateMotion dur="9s" begin="-7.5s" repeatCount="indefinite" rotate="auto"><mpath href="#ring"></mpath></animateMotion><polygon points="-8,-6 8,0 -8,6" fill="#2f7d4f"><animate attributeName="fill" values="#2f7d4f;#c4622d;#6d3f9e;#2f7d4f" keyTimes="0;0.33;0.67;1" dur="9s" begin="-7.5s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" values="1;1.35;1" dur="1.2s" begin="-7.5s" repeatCount="indefinite"/></polygon></g>
+      </g>
+      <g id="static-dots" class="fx"><circle id="s1" r="9" fill="#2f7d4f" stroke="#f6f1e7" stroke-width="2.5"></circle><circle id="s2" r="9" fill="#c4622d" stroke="#f6f1e7" stroke-width="2.5"></circle></g>
+      <g id="hand-1" class="fx">
+        <line x1="642" y1="115" x2="226" y2="202" stroke="#2f7d4f" stroke-width="2" marker-end="url(#arrowGreen)"></line>
+        <circle id="h1-a" class="pulse" r="9" fill="#2f7d4f"></circle><circle id="h1-b" class="pulse delay" r="9" fill="#2f7d4f"></circle><circle id="h1-dot" r="9" fill="#2f7d4f" stroke="#f6f1e7" stroke-width="2.5"></circle>
+        <rect class="fx pulse-border" id="b-hand-1" x="646" y="81" width="268" height="68" rx="16" ry="16" stroke="#2f7d4f"></rect>
+        <rect style="fill: var(--paper)" x="650" y="85" rx="12" ry="12" width="260" height="60"></rect>
+        <rect x="650" y="85" rx="12" ry="12" width="260" height="60" fill="rgba(63, 125, 90, 0.18)"></rect>
+        <text x="780" y="111" font-weight="700" text-anchor="middle" fill="#1e6b43" font-size="18">1st hand-off: CROC decides</text>
+        <text x="780" y="133" font-style="italic" text-anchor="middle" fill="#1e6b43" font-size="18">Proactive takes over</text>
+      </g>
+      <g id="hand-2" class="fx">
+        <line x1="495" y1="370" x2="272" y2="398" stroke="#c4622d" stroke-width="2" marker-end="url(#arrowOrange)"></line>
+        <circle id="h2-a" class="pulse" r="9" fill="#c4622d"></circle><circle id="h2-b" class="pulse delay" r="9" fill="#c4622d"></circle><circle id="h2-dot" r="9" fill="#c4622d" stroke="#f6f1e7" stroke-width="2.5"></circle>
+        <rect class="fx pulse-border" id="b-hand-2" x="499" y="336" width="268" height="68" rx="16" ry="16" stroke="#c4622d"></rect>
+        <rect style="fill: var(--paper)" x="503" y="340" rx="12" ry="12" width="260" height="60"></rect>
+        <rect x="503" y="340" rx="12" ry="12" width="260" height="60" fill="rgba(196, 98, 45, 0.18)"></rect>
+        <text x="633" y="366" font-weight="700" text-anchor="middle" fill="#8a3f17" font-size="18">2nd hand-off: SOC executes</text>
+        <text x="633" y="388" font-style="italic" text-anchor="middle" fill="#8a3f17" font-size="18">Pre-authorized response</text>
+      </g>
+      <g id="loop" class="fx">
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        <path id="ring" d="M780 115 A170 170 0 1 0 780 455 A170 170 0 1 0 780 115" fill="none" stroke="none"></path>
+        
+        
+        
+        
+        
+        
+        
+        <rect class="fx pulse-border" id="b-loop" x="793" y="336" width="268" height="68" rx="16" ry="16" stroke="#6d3f9e"></rect>
+        <rect style="fill: var(--paper)" x="797" y="340" rx="12" ry="12" width="260" height="60"></rect>
+        <rect x="797" y="340" rx="12" ry="12" width="260" height="60" fill="rgba(109, 63, 158, 0.16)"></rect>
+        <text x="927" y="366" font-weight="700" text-anchor="middle" fill="#5b2d8a" font-size="18">Continuous defense loop</text>
+        <text x="927" y="388" font-style="italic" text-anchor="middle" fill="#5b2d8a" font-size="18">Learn &amp; improve</text>
+      </g>
+    <!-- Step 23: Proactive Defense example card, styled like the reference -->
+      <g id="pd-card" class="fx" transform="translate(0 60)">
+        <rect x="820" y="36" width="600" height="400" rx="16" fill="#ecfbef" stroke="#1a8a3a" stroke-width="4"></rect>
+        <rect x="824" y="40" width="592" height="80" rx="12" fill="#cdf3d4"></rect>
+        <text x="1120" y="88" text-anchor="middle" fill="#0b6b26" font-size="40" font-weight="700">Proactive Defense (PD)</text>
+        <rect x="846" y="136" width="548" height="104" rx="8" fill="#ffffff" stroke="#3dbb5e" stroke-width="1.5"></rect>
+        <text x="1120" y="206" text-anchor="middle" fill="#111827" font-size="38"><tspan font-style="italic">E</tspan><tspan font-size="24" dy="8">PD</tspan><tspan dy="-8">(t) = 0.30 + 0.60 e</tspan><tspan dy="-24" font-size="28">−6t</tspan></text>
+        <text x="866" y="282" fill="#111827" font-size="20" font-style="italic">Initial value (t = 0):</text>
+        <text x="1100" y="282" fill="#111827" font-size="20">0.90</text>
+        <text x="866" y="310" fill="#111827" font-size="20" font-style="italic">Decay rate (k<tspan font-size="14" dy="5">PD</tspan><tspan dy="-5">):</tspan></text>
+        <text x="1100" y="310" fill="#111827" font-size="20">6</text>
+        <text x="866" y="338" fill="#111827" font-size="20" font-style="italic">Long-term value:</text>
+        <text x="1100" y="338" fill="#111827" font-size="20">0.30</text>
+        <rect x="846" y="368" width="548" height="52" rx="8" fill="#c9f2d2"></rect>
+        <text x="1120" y="388" text-anchor="middle" fill="#0b6b26" font-size="18">Maintains effectiveness over time, approaching</text>
+        <text x="1120" y="410" text-anchor="middle" fill="#0b6b26" font-size="18">the minimum decision effectiveness without crossing it.</text>
+      </g>
+      <!-- Step 22: Reactive Response example card, styled like the reference -->
+      <g id="rr-card" class="fx" transform="translate(0 60)">
+        <rect x="820" y="36" width="600" height="400" rx="16" fill="#fff1e8" stroke="#ff4d12" stroke-width="4"></rect>
+        <rect x="824" y="40" width="592" height="80" rx="12" fill="#fdd9bf"></rect>
+        <text x="1120" y="88" text-anchor="middle" fill="#e8430a" font-size="40" font-weight="700">Reactive Response (SOC)</text>
+        <rect x="846" y="136" width="548" height="104" rx="8" fill="#ffffff" stroke="#ff9a6b" stroke-width="1.5"></rect>
+        <text x="1120" y="206" text-anchor="middle" fill="#111827" font-size="38"><tspan font-style="italic">E</tspan><tspan font-size="24" dy="8">RR</tspan><tspan dy="-8">(t) = 0.70 e</tspan><tspan dy="-24" font-size="28">−5t</tspan></text>
+        <text x="866" y="282" fill="#111827" font-size="20" font-style="italic">Initial value (t = 0):</text>
+        <text x="1100" y="282" fill="#111827" font-size="20">0.70</text>
+        <text x="866" y="310" fill="#111827" font-size="20" font-style="italic">Decay rate (k<tspan font-size="14" dy="5">RR</tspan><tspan dy="-5">):</tspan></text>
+        <text x="1100" y="310" fill="#111827" font-size="20">5 (medium)</text>
+        <text x="866" y="338" fill="#111827" font-size="20" font-style="italic">Long-term value:</text>
+        <text x="1100" y="338" fill="#111827" font-size="20">0</text>
+        <rect x="846" y="368" width="548" height="52" rx="8" fill="#fdd3b5"></rect>
+        <text x="1120" y="388" text-anchor="middle" fill="#e8430a" font-size="18">Effectiveness decreases as the SOC responds to incidents</text>
+        <text x="1120" y="410" text-anchor="middle" fill="#e8430a" font-size="18">but loses impact over time.</text>
+      </g>
+      <!-- Step 21: Reactive Precision example card, styled like the reference -->
+      <g id="rp-card" class="fx" transform="translate(0 60)">
+        <rect x="820" y="36" width="600" height="400" rx="16" fill="#eaf4ff" stroke="#1e6fe0" stroke-width="4"></rect>
+        <rect x="824" y="40" width="592" height="80" rx="12" fill="#cfe6fb"></rect>
+        <text x="1120" y="88" text-anchor="middle" fill="#0b3fa3" font-size="40" font-weight="700">Reactive Precision (RP)</text>
+        <rect x="846" y="136" width="548" height="104" rx="8" fill="#ffffff" stroke="#7fb6f0" stroke-width="1.5"></rect>
+        <text x="1120" y="206" text-anchor="middle" fill="#111827" font-size="38"><tspan font-style="italic">E</tspan><tspan font-size="24" dy="8">RP</tspan><tspan dy="-8">(t) = 1.00 e</tspan><tspan dy="-24" font-size="28">−12t</tspan></text>
+        <text x="866" y="282" fill="#111827" font-size="20" font-style="italic">Initial value (t = 0):</text>
+        <text x="1100" y="282" fill="#111827" font-size="20">1.00</text>
+        <text x="866" y="310" fill="#111827" font-size="20" font-style="italic">Decay rate (k<tspan font-size="14" dy="5">RP</tspan><tspan dy="-5">):</tspan></text>
+        <text x="1100" y="310" fill="#111827" font-size="20">12 (high)</text>
+        <text x="866" y="338" fill="#111827" font-size="20" font-style="italic">Long-term value:</text>
+        <text x="1100" y="338" fill="#111827" font-size="20">0</text>
+        <rect x="846" y="368" width="548" height="52" rx="8" fill="#cfe6fb"></rect>
+        <text x="1120" y="388" text-anchor="middle" fill="#0b3fa3" font-size="18">Effectiveness drops quickly as new</text>
+        <text x="1120" y="410" text-anchor="middle" fill="#0b3fa3" font-size="18">information becomes available.</text>
+      </g>
+      <!-- Step 20: generic formula card, styled like the reference -->
+      <g id="formula-card" class="fx" transform="translate(0 60)">
+        <rect x="820" y="36" width="600" height="400" rx="16" fill="#eef2f6" stroke="#1f2a44" stroke-width="4"></rect>
+        <rect x="824" y="40" width="592" height="80" rx="12" fill="#d5dde7"></rect>
+        <text x="1120" y="84" text-anchor="middle" fill="#1f2a44" font-size="40" font-weight="700">Generic Formula</text>
+        <text x="1120" y="110" text-anchor="middle" fill="#1f2a44" font-size="22" font-style="italic">(Exponential Decay)</text>
+        <rect x="846" y="136" width="548" height="104" rx="8" fill="#ffffff" stroke="#8ea3b8" stroke-width="1.5"></rect>
+        <text x="1120" y="206" text-anchor="middle" fill="#1f2a44" font-size="56"><tspan font-style="italic">E(t) = A e</tspan><tspan dy="-24" font-size="34">−kt</tspan></text>
+        <text x="870" y="280" fill="#1f2a44" font-size="24" font-style="italic">E(t)</text>
+        <text x="920" y="280" fill="#1f2a44" font-size="22">=</text>
+        <text x="955" y="280" fill="#1f2a44" font-size="18">Effectiveness at time t</text>
+        <text x="870" y="304" fill="#1f2a44" font-size="24" font-style="italic">A</text>
+        <text x="920" y="304" fill="#1f2a44" font-size="22">=</text>
+        <text x="955" y="304" fill="#1f2a44" font-size="18">Initial effectiveness (value at t = 0)</text>
+        <text x="870" y="328" fill="#1f2a44" font-size="24" font-style="italic">k</text>
+        <text x="920" y="328" fill="#1f2a44" font-size="22">=</text>
+        <text x="955" y="328" fill="#1f2a44" font-size="18">Decay rate (how fast effectiveness decreases)</text>
+        <text x="870" y="352" fill="#1f2a44" font-size="24" font-style="italic">t</text>
+        <text x="920" y="352" fill="#1f2a44" font-size="22">=</text>
+        <text x="955" y="352" fill="#1f2a44" font-size="18">Time to decide</text>
+        <rect x="846" y="368" width="548" height="52" rx="8" fill="#d5dde7"></rect>
+        <text x="1120" y="390" text-anchor="middle" fill="#1f2a44" font-size="17">Effectiveness decreases exponentially over time.</text>
+        <text x="1120" y="410" text-anchor="middle" fill="#1f2a44" font-size="17">A higher decay rate (k) means a faster loss of effectiveness.</text>
+      </g>
+      <!-- Step 20: generic formula card on the chart -->
+      <g id="formula-card-old" class="fx">
+        <rect x="900" y="90" width="500" height="210" fill="#fbf8f1" stroke="#1f2a44" stroke-width="2"></rect>
+        <text x="1150" y="130" text-anchor="middle" fill="#1f2a44" font-size="30" font-weight="600">Generic Formula</text>
+        <text x="1150" y="156" text-anchor="middle" fill="#6b7280" font-size="17" font-style="italic">(Exponential Decay)</text>
+        <text x="1150" y="212" text-anchor="middle" fill="#1f2a44" font-size="40">E(t) = A e<tspan dy="-16" font-size="24">−kt</tspan></text>
+        <text x="1150" y="246" text-anchor="middle" fill="#3b4660" font-size="15">E(t) effectiveness  ·  A initial value  ·  k decay rate</text>
+        <text x="1150" y="268" text-anchor="middle" fill="#3b4660" font-size="15">t time to decide</text>
+      </g>
+    </svg>
+
+    <figcaption>
+      <strong>Figure 1.</strong> Decision effectiveness against time to decide for three strategies. Each curve decays over time; the dashed line marks the minimum effectiveness at which a decision can still change the outcome.
+    </figcaption>
+  </figure>
+
+  <section id="appendix" class="appendix" style="display:none">
+      <h2>Appendix: The mathematical foundation of the decision effectiveness curve</h2>
+      <p>The decision effectiveness curve is grounded in exponential decay functions that model how decision effectiveness changes over time as the defender races against the attacker's momentum. Each strategy follows a distinct mathematical pattern that reflects its underlying operational reality.</p>
+      <div class="formula-card">
+        <div class="fc-title">Generic Formula</div>
+        <div class="fc-sub">(Exponential Decay)</div>
+        <div class="fc-eq">E(t) = A · e<sup>−kt</sup></div>
+        <dl>
+          <dt>E(t)</dt><dd>Effectiveness at time t</dd>
+          <dt>A</dt><dd>Initial effectiveness (value at t = 0)</dd>
+          <dt>k</dt><dd>Decay rate (how fast effectiveness decreases)</dd>
+          <dt>t</dt><dd>Time to decide</dd>
+        </dl>
+        <p class="fc-note">Effectiveness decreases exponentially over time. A higher decay rate (k) means a faster loss of effectiveness.</p>
+      </div>
+    </section>
+
+  <section class="story" aria-live="polite">
+    <div class="count" id="count"></div>
+    <h2 id="title"></h2>
+    <div class="story-body" id="body"><p></p></div>
+    <nav class="controls" aria-label="Story steps">
+      <button id="prev" type="button">Back</button>
+      <button id="next" type="button">Start</button>
+    </nav>
+    <div class="dots" role="group" aria-label="Jump to step" id="dots"></div>
+    <p class="hint">Use the arrow keys to move through the steps.</p>
+  </section>
+
+  <footer id="site-footer">
+    Based on "Reactive Precision Crashes. Reactive Response Fails. Proactive Defense Wins." by Juan Pablo Castro. The curves are drawn from fitted decay functions, so their shapes are approximate.
+  </footer>
+  <p id="credit" class="credit">Article: <a href="https://www.researchgate.net/publication/414199824" target="_blank" rel="noopener">Reactive Precision Crashes. Reactive Response Fails. Proactive Defense Wins.</a>, Juan Pablo Castro Vilaró. DOI: <a href="https://doi.org/10.13140/RG.2.2.12466.98244/1" target="_blank" rel="noopener">10.13140/RG.2.2.12466.98244/1</a></p>
+
+</div>
+
+<script>
+(function () {
+  // Plot geometry (matches the 1500 x 880 viewBox)
+  const X0 = 200, X1 = 1450, YB = 760, SCALE = 650;
+  const X = t => X0 + t * (X1 - X0);     // t in [0, 1]
+  const Y = E => YB - E * SCALE;         // E in [0, 1]
+  const NS = 120;
+
+  // Minimum decision effectiveness
+  const THR = 0.30;
+
+  // Decay functions, E(t) = floor + (start - floor) e^(-k t)
+  const FUNCS = {
+    rp: t => 0.02 + 0.98 * Math.exp(-12 * t),
+    rr: t => 0.03 + 0.67 * Math.exp(-5 * t),
+    pd: t => 0.31 + 0.59 * Math.exp(-6 * t)
+  };
+
+  function el(id) { return document.getElementById(id); }
+
+  function curvePath(f) {
+    let d = '';
+    for (let i = 0; i <= NS; i++) {
+      const t = i / NS;
+      d += (i ? 'L' : 'M') + X(t).toFixed(1) + ' ' + Y(f(t)).toFixed(1);
+    }
+    return d;
+  }
+
+  // Find t where f(t) = THR, if it exists in [0, 1]
+  function crossing(f) {
+    if (f(0) <= THR || f(1) >= THR) return null;
+    let lo = 0, hi = 1;
+    for (let i = 0; i < 60; i++) {
+      const mid = (lo + hi) / 2;
+      if (f(mid) > THR) lo = mid; else hi = mid;
+    }
+    return (lo + hi) / 2;
+  }
+
+  el('curve-rp').setAttribute('d', curvePath(FUNCS.rp));
+  el('curve-rr').setAttribute('d', curvePath(FUNCS.rr));
+  el('res-area').setAttribute('d', curvePath(FUNCS.pd) + 'L' + X(1).toFixed(1) + ' ' + Y(0).toFixed(1) + 'L' + X(0).toFixed(1) + ' ' + Y(0).toFixed(1) + 'Z');
+  el('curve-pd').setAttribute('d', curvePath(FUNCS.pd));
+  el('thr-line').setAttribute('y1', Y(THR));
+  el('thr-line').setAttribute('y2', Y(THR));
+  el('thr-label').setAttribute('y', Y(THR) + 23);
+  el('thr-label-2').setAttribute('y', Y(THR) + 45);
+
+  // Place the crossing markers at the crossings, solved from the same functions
+  function placeCrossing(group, f) {
+    const t = crossing(f);
+    const g = el(group);
+    if (t === null) { g.style.display = 'none'; return; }
+    const cx = X(t), cy = Y(THR);
+    g.querySelector('circle').setAttribute('cx', cx);
+    g.querySelector('circle').setAttribute('cy', cy);
+    const ld = g.querySelector('line');
+    ld.setAttribute('x1', cx - 6); ld.setAttribute('y1', cy + 9);
+  }
+  // the blue marker is placed in the markup
+  // the orange marker is placed in the markup
+
+  // Defender advantage: the area above the minimum line and below each curve
+  function areaPath(f, t0, t1) {
+    const N2 = 120;
+    let d = '';
+    for (let i = 0; i <= N2; i++) {
+      const t = t0 + (t1 - t0) * i / N2;
+      d += (i ? 'L' : 'M') + X(t).toFixed(1) + ' ' + Y(f(t)).toFixed(1);
+    }
+    d += 'L' + X(t1).toFixed(1) + ' ' + Y(THR).toFixed(1);
+    d += 'L' + X(t0).toFixed(1) + ' ' + Y(THR).toFixed(1) + 'Z';
+    return d;
+  }
+  el('def-blue').setAttribute('d', areaPath(FUNCS.rp, 0, crossing(FUNCS.rp)));
+  el('def-orange').setAttribute('d', areaPath(FUNCS.rr, 0, crossing(FUNCS.rr)));
+  el('def-green').setAttribute('d', areaPath(FUNCS.pd, 0, 1));
+
+  // Handoff dots sit where the curves meet, solved from the same functions
+  function meet(fa, fb, lo, hi) {
+    const g = t => fa(t) - fb(t);
+    let a = lo, b = hi;
+    for (let i = 0; i < 60; i++) {
+      const m = (a + b) / 2;
+      if (g(m) * g(a) > 0) a = m; else b = m;
+    }
+    return (a + b) / 2;
+  }
+  const tH1 = meet(FUNCS.rp, FUNCS.pd, 0.005, 0.03);
+  const tH2 = meet(FUNCS.rp, FUNCS.rr, 0.03, 0.08);
+  el('s1').setAttribute('cx', X(tH1)); el('s1').setAttribute('cy', Y(FUNCS.rp(tH1)));
+  el('s2').setAttribute('cx', X(tH2)); el('s2').setAttribute('cy', Y(FUNCS.rp(tH2)));
+  [['h1', tH1], ['h2', tH2]].forEach(([id, t]) => {
+    const cx = X(t), cy = Y(FUNCS.rp(t));
+    ['-a', '-b', '-dot'].forEach(s => {
+      el(id + s).setAttribute('cx', cx);
+      el(id + s).setAttribute('cy', cy);
+    });
+  });
+
+  // Prepare stroke reveal for drawable paths
+  function prep(node) {
+    const L = node.getTotalLength();
+    node.style.strokeDasharray = L + ' ' + L;
+    node.style.strokeDashoffset = L;
+    node.dataset.len = L;
+  }
+  document.querySelectorAll('.draw').forEach(prep);
+
+  function setDraw(id, on) {
+    const node = el(id);
+    clearTimeout(node._hideT);
+    if (on) {
+      node.style.visibility = 'visible';
+      node.style.strokeDashoffset = 0;
+    } else {
+      // After the erase finishes, hide the path completely so no round line-cap dot is left behind
+      node.style.strokeDashoffset = node.dataset.len;
+      node._hideT = setTimeout(() => { node.style.visibility = 'hidden'; }, 1700);
+    }
+  }
+  function setFx(ids, on) {
+    ids.forEach(id => el(id).classList.toggle('on', on));
+  }
+
+  // Story steps (no formulas or numeric values)
+  const steps = [
+    {
+      count: 'Start',
+      title: 'Three strategies, one clock',
+      body: 'We will draw the chart one piece at a time. Each strategy answers the same question: how much does a decision still matter as time passes?',
+      accent: '#1f2a44',
+      cta: 'Start'
+    },
+    {
+      count: 'Step 1 of 18',
+      title: 'The axes',
+      body: 'The horizontal axis is time to decide, from fast decisions on the left to slow decisions on the right. The vertical axis is decision effectiveness, from lower at the bottom to higher at the top.',
+      accent: '#1f2a44',
+      cta: 'Next'
+    },
+    {
+      count: 'Step 2 of 18',
+      title: 'The minimum line',
+      body: 'The dashed line marks minimum decision effectiveness. Once a decision falls below it, it can no longer change the outcome. Every strategy is judged by when it crosses this line.',
+      accent: '#6b7280',
+      cta: 'Next'
+    },
+    {
+      count: 'Step 3 of 18',
+      title: 'Reactive Precision',
+      body: 'Wait for enough information, then decide with high confidence. Confidence starts highest, but it drops fastest, because the situation changes while the analysis runs. It crosses the minimum early, before the decision is ready to act on.',
+      accent: '#2f5d9e',
+      cta: 'Next'
+    },
+    {
+      count: 'Step 4 of 18',
+      title: 'Reactive Response (SOC)',
+      body: 'Respond quickly, on incomplete information. It starts lower, but it drops more slowly, so it stays in the game longer. It still crosses the minimum, and that is where control passes from the defender to the attacker.',
+      accent: '#c4622d',
+      cta: 'Next'
+    },
+    {
+      count: 'Step 5 of 18',
+      title: 'Proactive Defense (CROC)',
+      body: 'Decide before the pressure arrives, then keep reducing exposure. It starts at the top of the chart and levels off above the minimum line. It never crosses it, so the attacker never inherits the timeline.',
+      accent: '#3f7d5a',
+      cta: 'Next'
+    },
+    {
+      count: 'Step 6 of 18',
+      title: 'Reactive Precision crosses first',
+      body: 'The blue curve is the first to reach the minimum line. By the time its decision is ready, the window has already closed. This is where precision-based decisions become obsolete. This is Death by Friction: the time to decide exceeds the time to act, so a defense that cannot act in time loses the window.',
+      accent: '#2f5d9e',
+      cta: 'Next'
+    },
+    {
+      count: 'Step 7 of 18',
+      title: 'Reactive Response crosses next',
+      body: 'The orange curve reaches the minimum line second. This is where the attacker\'s momentum overtakes the defender\'s decision speed, and control passes from the defender to the attacker.',
+      accent: '#c4622d',
+      cta: 'Next'
+    }
+  ];
+
+  steps.push({
+      count: 'Step 8 of 18',
+      title: 'Attacker\'s advantage',
+      body: 'Below the minimum line, a decision can no longer change the outcome, so the defender loses control here. The attacker sets the timeline, and this red area marks where that advantage applies. Attackers plan the campaign around the crossing point: they move slowly during setup to stay under detection, then accelerate once they reach it.',
+      accent: '#9b1c1c',
+      cta: 'Next'
+    });
+  steps.push(
+    {
+      count: 'Step 9 of 18',
+      title: 'Recon and Preparation',
+      body: 'The attacker stays low and builds access, learning the environment before making any visible move. This is the window where what the attacker can find is still shaped by the defender.',
+      accent: '#1f2a44',
+      cta: 'Next'
+    },
+    {
+      count: 'Step 10 of 18',
+      title: 'Initial Compromise',
+      body: 'The attacker gains a foothold inside the environment. The first successful access marks the point where preparation turns into an intrusion.',
+      accent: '#c4622d',
+      cta: 'Next'
+    },
+    {
+      count: 'Step 11 of 18',
+      title: 'Lateral Movement',
+      body: 'From the foothold, the attacker expands access, moving between systems and accounts to reach the assets they want.',
+      accent: '#1f2a44',
+      cta: 'Next'
+    },
+    {
+      count: 'Step 12 of 18',
+      title: 'Objectives',
+      body: 'The attacker exfiltrates data, disrupts operations, or monetizes access. By this stage the timeline belongs entirely to the attacker.',
+      accent: '#9b1c1c',
+      cta: 'Next'
+    }
+  );
+  steps.push(
+    {
+      count: 'Step 13 of 18',
+      title: 'Defender advantage',
+      body: 'Before the attacker arrives, the defender still holds the advantage. The area above the minimum line and behind the blue curve is where a decision can still change the outcome, and for Reactive Precision it closes quickly.',
+      accent: '#2f5d9e',
+      cta: 'Next'
+    },
+    {
+      count: 'Step 14 of 18',
+      title: 'Reactive Response keeps control longer',
+      body: 'The area below the orange curve and above the minimum line stays open for longer, because the SOC responds faster. It closes where the orange curve crosses the minimum line.',
+      accent: '#c4622d',
+      cta: 'Next'
+    },
+    {
+      count: 'Step 15 of 18',
+      title: 'Proactive Defense never closes',
+      body: 'The area below the green curve and above the minimum line never closes. Decisions made before the pressure arrives keep the defender in control at every point in time. The defender who decides first owns the timeline: the attacker inherits the environment the defender has already built.',
+      accent: '#3f7d5a',
+      cta: 'Next'
+    }
+  );
+  steps.push(
+    {
+      count: 'Step 17 of 19',
+      title: '1st hand-off: CROC decides',
+      body: 'Before the pressure arrives, the CROC decides. The green dot marks the point where proactive defense takes over the timeline from the start.',
+      accent: '#2f7d4f',
+      cta: 'Next'
+    },
+    {
+      count: 'Step 18 of 19',
+      title: '2nd hand-off: SOC executes',
+      body: 'Where the blue and orange curves meet, the SOC executes a response the CROC has already pre-authorized. It is faster because the threat picture was built in advance, and its results improve the next cycle of the loop.',
+      accent: '#c4622d',
+      cta: 'Next'
+    },
+    {
+      count: 'Step 19 of 19',
+      title: 'The continuous defense loop',
+      body: 'The CROC and SOC form one learning loop. Each incident shows the CROC which exposures the attacker actually used, so the next cycle is better informed. The CROC runs seven stages continuously: identify, contextualize, measure, prioritize, mitigate, verify, and monitor.',
+      accent: '#1f2a44',
+      cta: 'Next'
+    },
+    {
+      count: 'Step 22 of 26',
+      title: 'Cyber resilience',
+      body: 'This is where cyber resilience is built: not by preventing every incident, but by understanding each one better, so the organization comes out stronger than before.',
+      accent: '#5b2d8a',
+      cta: 'Next'
+    }
+  );
+  steps.splice(16, 0, {
+    count: 'Step 16 of 19',
+    title: 'Two handoffs',
+    body: 'Defense does not hand over control in one jump. The first handoff happens where the blue and green curves meet: the CROC has already reduced exposure, so the attack paths the attacker needs are gone. The second happens where the blue and orange curves meet: the SOC executes a response the CROC pre-authorized, working against a reduced attack surface.',
+    accent: '#1f2a44',
+    cta: 'Next'
+  });
+  steps.push({
+    count: 'Step 20 of 20',
+    title: 'Appendix: the mathematical foundation',
+    body: 'Each strategy follows an exponential decay curve. The three curves share the same general form and differ in their starting value A and their decay rate k, which is how the formula shows each strategy\'s operational reality.',
+    accent: '#1f2a44',
+    cta: 'Next'
+  });
+  steps.push({
+    count: 'Step 21 of 21',
+    title: 'Reactive Precision (RP)',
+    body: 'Initial effectiveness is highest (1.00) because analysis produces high confidence decisions. However, the decay rate is extreme (k<sub>RP</sub> = 12), reflecting how quickly the analyzed situation becomes obsolete as the threat landscape changes. At approximately t = 0.10, Reactive Precision reaches the minimum decision effectiveness threshold (0.30). Beyond this crossing point, the decision becomes worthless as the decision window closes.',
+    accent: '#0b3fa3',
+    cta: 'Next'
+  });
+  steps.push({
+    count: 'Step 22 of 22',
+    title: 'Reactive Response (SOC)',
+    body: 'Initial effectiveness is lower (0.70) because speed requires decisions on incomplete information. The decay rate is moderate (k<sub>RR</sub> = 5), so fast reaction keeps the organization in the game longer, but effectiveness still decays. The orange curve crosses the minimum decision effectiveness threshold (0.30). At that point, control passes from the defender to the attacker.',
+    accent: '#e8430a',
+    cta: 'Next'
+  });
+  steps.push({
+    count: 'Step 23 of 23',
+    title: 'Proactive Defense (CROC)',
+    body: 'Initial effectiveness is nearly as high as Reactive Precision (0.90), because decisions were made before pressure arrived. The decay rate is low (k<sub>PD</sub> = 6), and the curve approaches the minimum decision effectiveness (0.30) without ever crossing it. Decisions grounded in continuous risk understanding keep the defender in control.',
+    accent: '#0b6b26',
+    cta: 'Next'
+  });
+  steps.push({
+    count: 'Step 24 of 24',
+    title: 'Why adoption is within reach',
+    body: 'The SOC was easy to build because it answered a question the industry already knew how to ask: how do we contain it? The CROC answers a different question: what is our exposure, continuously, so we can decide before the pressure arrives. The barrier is organizational, not technological. It requires continuous work, the authority to say no to risky initiatives, and treating cyber risk as a business function. AI agents make this more urgent, because they route around controls at machine speed, so decisions must be made in advance and enforced structurally.',
+    accent: '#1f2a44',
+    cta: 'Start over'
+  });
+steps.splice(3, 0, {
+    count: 'Step 3',
+    title: "Defender's battlefield",
+    body: "The green area above the minimum line is the defender's battlefield. Here decisions are still made calmly, before pressure arrives, so the defender shapes the conditions of the fight.",
+    accent: '#1e6b43',
+    cta: 'Next'
+  }, {
+    count: 'Step 4',
+    title: "Attacker's battlefield",
+    body: "The red area below the minimum line is the attacker's battlefield. Once a decision falls here it can no longer change the outcome, and control belongs to the attacker.",
+    accent: '#9b1c1c',
+    cta: 'Next'
+  });
+  const last = steps.length - 1;
+  let current = 0;
+
+  // Step dots
+  const dotsWrap = el('dots');
+  steps.forEach((_, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'dot';
+    b.setAttribute('aria-label', 'Go to step ' + i);
+    b.addEventListener('click', () => go(i));
+    dotsWrap.appendChild(b);
+  });
+
+  // Axis labels appear in order: decision effectiveness, then time to decide, then the four end labels
+  const labelGroups = { title: [], time: [], yends: [], xends: [] };
+  document.querySelectorAll('#axis-labels text').forEach(t => {
+    const x = t.getAttribute('x'), y = t.getAttribute('y');
+    const key = t.textContent === 'Time to decide' ? 'time'
+      : (x === '186' && (y === '400' || y === '422')) ? 'title' : (x === '186') ? 'yends' : 'xends';
+    t.classList.add('fx');
+    t.style.transitionDelay = (key === 'title' || key === 'time') ? '1.6s' : key === 'yends' ? '2.6s' : '3.6s';
+    labelGroups[key].push(t);
+  });
+
+  // Show and hide the axis labels in order: appear in sequence, disappear in reverse
+  function showLabels(list, on, onDelay, offDelay) {
+    list.forEach(t => {
+      t.style.transitionDelay = on ? onDelay : '0s';
+      t.classList.toggle('on', on);
+    });
+  }
+
+// Languages: English, Spanish, Portuguese, Japanese (detected from the browser)
+  const T = {
+    es: {
+      "Proactive vs Reactive: Three Decision Strategies in Cybersecurity": "Proactivo vs Reactivo: Tres estrategias de decisión en ciberseguridad",
+      "How to beat the attacker's advantage": "Cómo vencer la ventaja del atacante",
+      "Higher": "Mayor", "effectiveness": "efectividad", "Lower": "Menor", "Decision": "Decisión",
+      "Fast decisions": "Decisiones rápidas", "(short time)": "(tiempo corto)", "Time to decide": "Tiempo para decidir",
+      "Slow decisions": "Decisiones lentas", "(long time)": "(tiempo largo)", "Minimum decision": "Decisión mínima",
+      "Recon and": "Reconocimiento y", "Preparation": "preparación", "Initial": "Compromiso", "Compromise": "inicial",
+      "Lateral Movement": "Movimiento lateral", "Recon and Preparation": "Reconocimiento y preparación", "Initial Compromise": "Compromiso inicial", "Objectives": "Objetivos", "Defender's battlefield": "Campo de batalla del defensor", "Attacker's battlefield": "Campo de batalla del atacante", "Attacker's advantage": "Ventaja del atacante",
+      "SOC Decision Window": "Ventana de decisión del SOC", "Defender can still influence": "El defensor aún puede influir", "the outcome": "el resultado",
+      "1st hand-off: CROC decides": "1.er traspaso: el CROC decide", "Proactive takes over": "la defensa proactiva asume",
+      "2nd hand-off: SOC executes": "2.º traspaso: el SOC ejecuta", "Pre-authorized response": "respuesta preautorizada", "Improves the next cycle": "mejora el siguiente ciclo",
+      "Continuous defense loop": "Bucle continuo de defensa", "Learn & improve": "Aprender y mejorar", "Cyber resilience": "Ciber resiliencia", "Proactive Defense": "Defensa proactiva", "CROC Reduces Exposure": "El CROC reduce la exposición", "Attack Paths Disappear": "desaparecen las rutas de ataque", "SOC Executes Against": "El SOC actúa frente a", "Reduced Attack Surface": "superficie de ataque reducida", "Incident Teaches CROC": "El incidente enseña al CROC", "The Cycle Tightens": "el ciclo se refuerza",
+      "Reactive Precision": "Precisión reactiva", "reaches the threshold": "alcanza el umbral",
+      "Reactive Response (SOC)": "Respuesta reactiva (SOC)", "Control passes to the attacker": "El control pasa al atacante",
+      "Death by": "Muerte por", "Friction": "fricción", "Time to Decide": "Tiempo para decidir", "Exceeds": "supera", "Time to Act": "tiempo para actuar",
+      "Defender advantage": "Ventaja del defensor",
+      "Reactive Precision (RP)": "Precisión reactiva (RP)", "Proactive Defense (PD)": "Defensa proactiva (PD)", "Proactive Defense (CROC)": "Defensa proactiva (CROC)",
+      "Generic Formula": "Fórmula general", "(Exponential Decay)": "(decaimiento exponencial)",
+      "Effectiveness at time t": "Efectividad en el tiempo t", "Initial effectiveness (value at t = 0)": "Efectividad inicial (valor en t = 0)",
+      "Decay rate (how fast effectiveness decreases)": "Tasa de decaimiento (velocidad de caída)",
+      "Effectiveness decreases exponentially over time.": "La efectividad disminuye exponencialmente con el tiempo.",
+      "A higher decay rate (k) means a faster loss of effectiveness.": "Mayor tasa de decaimiento (k) = pérdida más rápida.",
+      "Initial value (t = 0):": "Valor inicial (t = 0):", "Decay rate (k": "Tasa de decaimiento (k", "5 (medium)": "5 (media)", "12 (high)": "12 (alta)", "Long-term value:": "Valor a largo plazo:",
+      "Effectiveness drops quickly as new": "La efectividad cae rápidamente cuando", "information becomes available.": "surge nueva información.",
+      "Effectiveness decreases as the SOC responds to incidents": "La efectividad disminuye mientras el SOC responde",
+      "but loses impact over time.": "a incidentes, pero pierde impacto con el tiempo.",
+      "Maintains effectiveness over time, approaching": "Mantiene la efectividad con el tiempo, acercándose",
+      "the minimum decision effectiveness without crossing it.": "al mínimo de decisión sin cruzarlo.",
+      "Three strategies, one clock": "Tres estrategias, un solo reloj", "The axes": "Los ejes", "The minimum line": "La línea mínima",
+      "Reactive Precision crosses first": "La precisión reactiva cruza primero", "Reactive Response crosses next": "La respuesta reactiva cruza después",
+      "Reactive Response keeps control longer": "La respuesta reactiva mantiene el control más tiempo", "Proactive Defense never closes": "La defensa proactiva nunca se cierra",
+      "Two handoffs": "Dos traspasos", "The continuous defense loop": "El bucle continuo de defensa",
+      "Appendix: the mathematical foundation": "Apéndice: la base matemática", "Reactive Precision (RP)": "Precisión reactiva (RP)",
+      "Why adoption is within reach": "Por qué la adopción está al alcance",
+      "Start": "Empezar", "Next": "Siguiente", "Play": "Reproducir", "Pause": "Pausa", "Start over": "Empezar de nuevo", "Back": "Atrás",
+      "Use the arrow keys to move through the steps.": "Usa las flechas del teclado para avanzar por los pasos."
+    },
+    pt: {
+      "Proactive vs Reactive: Three Decision Strategies in Cybersecurity": "Proativo vs Reativo: Três estratégias de decisão em cibersegurança",
+      "How to beat the attacker's advantage": "Como vencer a vantagem do atacante",
+      "Higher": "Maior", "effectiveness": "eficácia", "Lower": "Menor", "Decision": "Decisão",
+      "Fast decisions": "Decisões rápidas", "(short time)": "(tempo curto)", "Time to decide": "Tempo para decidir",
+      "Slow decisions": "Decisões lentas", "(long time)": "(tempo longo)", "Minimum decision": "Decisão mínima",
+      "Recon and": "Reconhecimento e", "Preparation": "preparação", "Initial": "Comprometimento", "Compromise": "inicial",
+      "Lateral Movement": "Movimento lateral", "Recon and Preparation": "Reconhecimento e preparação", "Initial Compromise": "Comprometimento inicial", "Objectives": "Objetivos", "Defender's battlefield": "Campo de batalha do defensor", "Attacker's battlefield": "Campo de batalha do atacante", "Attacker's advantage": "Vantagem do atacante",
+      "SOC Decision Window": "Janela de decisão do SOC", "Defender can still influence": "O defensor ainda pode influenciar", "the outcome": "o resultado",
+      "1st hand-off: CROC decides": "1.º repasse: o CROC decide", "Proactive takes over": "a defesa proativa assume",
+      "2nd hand-off: SOC executes": "2.º repasse: o SOC executa", "Pre-authorized response": "resposta pré-autorizada", "Improves the next cycle": "melhora o próximo ciclo",
+      "Continuous defense loop": "Ciclo contínuo de defesa", "Learn & improve": "Aprender e melhorar", "Cyber resilience": "Ciber resiliência", "Proactive Defense": "Defesa proativa", "CROC Reduces Exposure": "O CROC reduz a exposição", "Attack Paths Disappear": "caminhos de ataque desaparecem", "SOC Executes Against": "O SOC executa contra", "Reduced Attack Surface": "superfície de ataque reduzida", "Incident Teaches CROC": "O incidente ensina o CROC", "The Cycle Tightens": "o ciclo se fortalece",
+      "Reactive Precision": "Precisão reativa", "reaches the threshold": "atinge o limite",
+      "Reactive Response (SOC)": "Resposta reativa (SOC)", "Control passes to the attacker": "O controle passa ao atacante",
+      "Death by": "Morte por", "Friction": "atrito", "Time to Decide": "Tempo para decidir", "Exceeds": "excede", "Time to Act": "tempo para agir",
+      "Defender advantage": "Vantagem do defensor",
+      "Reactive Precision (RP)": "Precisão reativa (RP)", "Proactive Defense (PD)": "Defesa proativa (PD)", "Proactive Defense (CROC)": "Defesa proativa (CROC)",
+      "Generic Formula": "Fórmula geral", "(Exponential Decay)": "(decaimento exponencial)",
+      "Effectiveness at time t": "Eficácia no tempo t", "Initial effectiveness (value at t = 0)": "Eficácia inicial (valor em t = 0)",
+      "Decay rate (how fast effectiveness decreases)": "Taxa de decaimento (velocidade de queda)",
+      "Effectiveness decreases exponentially over time.": "A eficácia diminui exponencialmente com o tempo.",
+      "A higher decay rate (k) means a faster loss of effectiveness.": "Maior taxa de decaimento (k) = perda mais rápida.",
+      "Initial value (t = 0):": "Valor inicial (t = 0):", "Decay rate (k": "Taxa de decaimento (k", "5 (medium)": "5 (média)", "12 (high)": "12 (alta)", "Long-term value:": "Valor de longo prazo:",
+      "Effectiveness drops quickly as new": "A eficácia cai rapidamente quando", "information becomes available.": "surgem novas informações.",
+      "Effectiveness decreases as the SOC responds to incidents": "A eficácia diminui à medida que o SOC responde a incidentes",
+      "but loses impact over time.": "mas perde impacto com o tempo.",
+      "Maintains effectiveness over time, approaching": "Mantém a eficácia ao longo do tempo, aproximando-se",
+      "the minimum decision effectiveness without crossing it.": "do mínimo de decisão sem cruzá-lo.",
+      "Three strategies, one clock": "Três estratégias, um só relógio", "The axes": "Os eixos", "The minimum line": "A linha mínima",
+      "Reactive Precision crosses first": "A precisão reativa cruza primeiro", "Reactive Response crosses next": "A resposta reativa cruza em seguida",
+      "Reactive Response keeps control longer": "A resposta reativa mantém o controle por mais tempo", "Proactive Defense never closes": "A defesa proativa nunca se fecha",
+      "Two handoffs": "Dois repasses", "The continuous defense loop": "O ciclo contínuo de defesa",
+      "Appendix: the mathematical foundation": "Apêndice: a base matemática", "Reactive Precision (RP)": "Precisão reativa (RP)",
+      "Why adoption is within reach": "Por que a adoção está ao alcance",
+      "Start": "Começar", "Next": "Próximo", "Play": "Reproduzir", "Pause": "Pausar", "Start over": "Recomeçar", "Back": "Voltar",
+      "Use the arrow keys to move through the steps.": "Use as setas do teclado para avançar pelas etapas."
+    },
+    ja: {
+      "Proactive vs Reactive: Three Decision Strategies in Cybersecurity": "プロアクティブ vs リアクティブ：サイバーセキュリティにおける3つの意思決定戦略",
+      "How to beat the attacker's advantage": "攻撃者の優位を覆す方法",
+      "Higher": "高い", "effectiveness": "有効性", "Lower": "低い", "Decision": "意思決定",
+      "Fast decisions": "速い意思決定", "(short time)": "（短い時間）", "Time to decide": "意思決定までの時間",
+      "Slow decisions": "遅い意思決定", "(long time)": "（長い時間）", "Minimum decision": "最低の意思決定",
+      "Recon and": "偵察と", "Preparation": "準備", "Initial": "初期", "Compromise": "侵害",
+      "Lateral Movement": "横方向移動", "Recon and Preparation": "偵察と準備", "Initial Compromise": "初期侵入", "Objectives": "目的", "Defender's battlefield": "防御側の戦場", "Attacker's battlefield": "攻撃者の戦場", "Attacker's advantage": "攻撃者の優位",
+      "SOC Decision Window": "SOCの意思決定ウィンドウ", "Defender can still influence": "防御側はまだ影響を与えられる", "the outcome": "結果",
+      "1st hand-off: CROC decides": "第1の引き継ぎ：CROCが決定", "Proactive takes over": "プロアクティブが主導",
+      "2nd hand-off: SOC executes": "第2の引き継ぎ：SOCが実行", "Pre-authorized response": "事前承認された対応", "Improves the next cycle": "次のサイクルを改善",
+      "Continuous defense loop": "継続的防御ループ", "Learn & improve": "学習と改善", "Cyber resilience": "サイバーレジリエンス", "Proactive Defense": "プロアクティブ防御", "CROC Reduces Exposure": "CROCが露出を減らす", "Attack Paths Disappear": "攻撃経路が消える", "SOC Executes Against": "SOCが実行", "Reduced Attack Surface": "縮小された攻撃対象", "Incident Teaches CROC": "インシデントがCROCを教える", "The Cycle Tightens": "サイクルが引き締まる",
+      "Reactive Precision": "リアクティブ精度", "reaches the threshold": "閾値に到達",
+      "Reactive Response (SOC)": "リアクティブ対応（SOC）", "Control passes to the attacker": "主導権は攻撃者に移る",
+      "Death by": "摩擦による", "Friction": "死", "Time to Decide": "意思決定までの時間", "Exceeds": "超過", "Time to Act": "行動までの時間",
+      "Defender advantage": "防御側の優位",
+      "Reactive Precision (RP)": "リアクティブ精度（RP）", "Proactive Defense (PD)": "プロアクティブ防御（PD）", "Proactive Defense (CROC)": "プロアクティブ防御（CROC）",
+      "Generic Formula": "一般式", "(Exponential Decay)": "（指数減衰）",
+      "Effectiveness at time t": "時刻tにおける有効性", "Initial effectiveness (value at t = 0)": "初期有効性（t = 0 の値）",
+      "Decay rate (how fast effectiveness decreases)": "減衰率（有効性が低下する速さ）",
+      "Effectiveness decreases exponentially over time.": "有効性は時間とともに指数関数的に低下する。",
+      "A higher decay rate (k) means a faster loss of effectiveness.": "減衰率（k）が大きいほど有効性の低下は速い。",
+      "Initial value (t = 0):": "初期値（t = 0）:", "Decay rate (k": "減衰率（k", "5 (medium)": "5（中）", "12 (high)": "12（高）", "Long-term value:": "長期値:",
+      "Effectiveness drops quickly as new": "新しい情報が入ると有効性は", "information becomes available.": "急速に低下する。",
+      "Effectiveness decreases as the SOC responds to incidents": "SOCがインシデントに対応するにつれ有効性は低下する",
+      "but loses impact over time.": "しかし時間とともに効果を失う。",
+      "Maintains effectiveness over time, approaching": "時間とともに有効性を維持し、",
+      "the minimum decision effectiveness without crossing it.": "最小有効性に近づくが下回らない。",
+      "Three strategies, one clock": "3つの戦略、ひとつの時計", "The axes": "軸", "The minimum line": "最低ライン",
+      "Reactive Precision crosses first": "リアクティブ精度が最初に交差", "Reactive Response crosses next": "次にリアクティブ対応が交差",
+      "Reactive Response keeps control longer": "リアクティブ対応は主導権を長く保つ", "Proactive Defense never closes": "プロアクティブ防御は閉じない",
+      "Two handoffs": "2つの引き継ぎ", "The continuous defense loop": "継続的防御ループ",
+      "Appendix: the mathematical foundation": "付録：数学的基礎", "Reactive Precision (RP)": "リアクティブ精度（RP）",
+      "Why adoption is within reach": "導入は十分に現実的",
+      "Start": "開始", "Next": "次へ", "Play": "再生", "Pause": "一時停止", "Start over": "最初から", "Back": "戻る",
+      "Use the arrow keys to move through the steps.": "矢印キーでステップを移動できます。"
+    }
+  };
+  let curLang = 'en';
+  function tr(s) { const d = T[curLang]; return (d && d[s]) || s; }
+  function trCount(s) {
+    if (s === 'Start') return tr('Start');
+    const m = s.match(/^Step (\d+) of (\d+)$/);
+    if (!m || curLang === 'en') return s;
+    const f = { es: 'Paso $1 de $2', pt: 'Passo $1 de $2', ja: 'ステップ $1/$2' }[curLang];
+    return f.replace('$1', m[1]).replace('$2', m[2]);
+  }
+  // Two-line labels are translated as one phrase, split across both lines
+  const OVR = {
+    es: { 'ylab1': 'Efectividad', 'ylab2': 'de la decisión', 'thr-label': 'Efectividad mínima', 'thr-label-2': 'de la decisión', 'site-footer': 'Basado en "Reactive Precision Crashes. Reactive Response Fails. Proactive Defense Wins." de Juan Pablo Castro. Las curvas se dibujan a partir de funciones de decaimiento ajustadas, por lo que sus formas son aproximadas.' },
+    pt: { 'ylab1': 'Eficácia', 'ylab2': 'da decisão', 'thr-label': 'Eficácia mínima', 'thr-label-2': 'da decisão', 'site-footer': 'Baseado em "Reactive Precision Crashes. Reactive Response Fails. Proactive Defense Wins.", de Juan Pablo Castro. As curvas são desenhadas a partir de funções de decaimento ajustadas, por isso suas formas são aproximadas.' },
+    ja: { 'ylab1': '意思決定の', 'ylab2': '有効性', 'thr-label': '意思決定の', 'thr-label-2': '最低有効性', 'site-footer': '本記事はJuan Pablo Castro氏の「Reactive Precision Crashes. Reactive Response Fails. Proactive Defense Wins.」に基づく。曲線は近似的な減衰関数から描いており、形状は概算である。' }
+  };
+  function translateDom() {
+    const d = T[curLang] || {};
+    const walker = document.createTreeWalker(document.querySelector('.wrap'), NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n => {
+      if (n.parentElement && n.parentElement.closest('#body, #title, #count, #lang-bar, #theme-toggle, #credit, #site-footer')) return;
+      if (n.__orig === undefined) n.__orig = n.textContent;
+      const key = n.__orig.trim();
+      const ov = curLang !== 'en' && OVR[curLang] && n.parentElement && OVR[curLang][n.parentElement.id];
+      if (ov) { n.textContent = ov; return; }
+      if (curLang === 'en' || !d[key]) { n.textContent = n.__orig; return; }
+      n.textContent = n.__orig.replace(key, d[key]);
+    });
+  }
+// SOC Decision Window label: translated lines, placed to fit the shaded box
+  const SOC = {
+    en: { t: ['SOC Decision Window'], d: ['Defender can still influence', 'the outcome'] },
+    es: { t: ['Ventana de decisión', 'del SOC'], d: ['El defensor aún puede', 'influir en el resultado'] },
+    pt: { t: ['Janela de decisão', 'do SOC'], d: ['O defensor ainda pode', 'influenciar o resultado'] },
+    ja: { t: ['SOCの意思決定', 'ウィンドウ'], d: ['防御側はまだ', '結果に影響を与えられる'] }
+  };
+  function layoutSoc(l) {
+    const s = SOC[l] || SOC.en;
+    const twoTitle = s.t.length === 2;
+    const tY = twoTitle ? [650, 672] : [668, 674];
+    const dY = twoTitle ? [700, 718, 736] : [690, 708, 726];
+    ['soc-t1', 'soc-t2'].forEach((id, i) => { el(id).textContent = s.t[i] || ''; el(id).setAttribute('y', tY[i]); });
+    ['soc-d1', 'soc-d2', 'soc-d3'].forEach((id, i) => { el(id).textContent = s.d[i] || ''; el(id).setAttribute('y', dY[i]); });
+  }
+// Death by Friction box: translated lines, sized to fit the shaded box
+  const DEATH = {
+    en: { t: ['Death by', 'Friction'], s: ['Time to Decide', 'Exceeds', 'Time to Act', ''] },
+    es: { t: ['Muerte por', 'fricción'], s: ['Tiempo', 'para decidir', 'supera el', 'tiempo de actuar'] },
+    pt: { t: ['Morte por', 'atrito'], s: ['Tempo para', 'decidir excede', 'o tempo de agir', ''] },
+    ja: { t: ['摩擦による', '死'], s: ['意思決定の', '時間が行動', '時間を超過', ''] }
+  };
+  function layoutDeath(l) {
+    const d = DEATH[l] || DEATH.en;
+    const subFs = l === 'es' ? 13 : 14;
+    const subY = [672, 690, 708, 726];
+    ['dt1', 'dt2'].forEach((id, i) => { el(id).textContent = d.t[i] || ''; });
+    ['dsub1', 'dsub2', 'dsub3', 'dsub4'].forEach((id, i) => {
+      el(id).textContent = d.s[i] || '';
+      el(id).setAttribute('y', subY[i]);
+      el(id).setAttribute('font-size', subFs);
+    });
+  }
+// Step descriptions, by step index (0 to 24). English uses the text in the steps list.
+  const BODY = {
+    es: [
+      "Dibujaremos el gráfico una pieza a la vez. Cada estrategia responde a la misma pregunta: ¿cuánto importa todavía una decisión a medida que pasa el tiempo?",
+      "El eje horizontal es el tiempo para decidir, desde decisiones rápidas a la izquierda hasta decisiones lentas a la derecha. El eje vertical es la efectividad de la decisión, de abajo, con menor efectividad, hacia arriba, con mayor efectividad.",
+      "La línea discontinua marca la efectividad mínima de la decisión. Una vez que una decisión cae por debajo de ella, ya no puede cambiar el resultado. Cada estrategia se juzga por cuándo cruza esta línea.",
+      "El área verde por encima de la línea mínima es el campo de batalla del defensor. Aquí las decisiones todavía se toman con calma, antes de que llegue la presión, así que el defensor da forma a las condiciones de la lucha.",
+      "El área roja por debajo de la línea mínima es el campo de batalla del atacante. Una vez que una decisión cae aquí, ya no puede cambiar el resultado, y el control pertenece al atacante.",
+      "Espera a tener información suficiente y luego decide con alta confianza. La confianza empieza en su punto más alto, pero cae más rápido, porque la situación cambia mientras corre el análisis. Cruza el mínimo pronto, antes de que la decisión esté lista para actuar.",
+      "Responde rápido, con información incompleta. Empieza más bajo, pero cae más lentamente, así que se mantiene en juego más tiempo. Aun así cruza el mínimo, y ahí es donde el control pasa del defensor al atacante.",
+      "Decide antes de que llegue la presión y luego sigue reduciendo la exposición. Empieza en la parte superior del gráfico y se nivela por encima de la línea mínima. Nunca la cruza, así que el atacante nunca hereda la línea de tiempo.",
+      "La curva azul es la primera en llegar a la línea mínima. Cuando su decisión está lista, la ventana ya se ha cerrado. Aquí es donde las decisiones basadas en precisión quedan obsoletas. Esto es la muerte por fricción: el tiempo para decidir supera al tiempo para actuar, así que una defensa que no puede actuar a tiempo pierde la ventana.",
+      "La curva naranja alcanza la línea mínima en segundo lugar. Aquí el impulso del atacante supera la velocidad de decisión del defensor, y el control pasa del defensor al atacante.",
+      "Por debajo de la línea mínima, una decisión ya no puede cambiar el resultado, así que el defensor pierde el control aquí. El atacante marca la línea de tiempo, y esta área roja señala dónde aplica esa ventaja. Los atacantes planean la campaña alrededor del punto de cruce: se mueven despacio durante la preparación para evitar la detección y luego aceleran al llegar a él.",
+      "El atacante se mantiene discreto y construye acceso, aprendiendo el entorno antes de hacer ningún movimiento visible. Esta es la ventana en la que lo que el atacante puede encontrar todavía depende de lo que haga el defensor.",
+      "El atacante gana un punto de apoyo dentro del entorno. El primer acceso exitoso marca el momento en que la preparación se convierte en intrusión.",
+      "Desde el punto de apoyo, el atacante amplía el acceso, moviéndose entre sistemas y cuentas para alcanzar los activos que quiere.",
+      "El atacante extrae datos, interrumpe operaciones o monetiza el acceso. En esta etapa la línea de tiempo pertenece por completo al atacante.",
+      "Antes de que llegue el atacante, el defensor todavía tiene la ventaja. El área por encima de la línea mínima y detrás de la curva azul es donde una decisión todavía puede cambiar el resultado, y en el caso de la precisión reactiva se cierra rápidamente.",
+      "El área por debajo de la curva naranja y por encima de la línea mínima permanece abierta más tiempo, porque el SOC responde más rápido. Se cierra donde la curva naranja cruza la línea mínima.",
+      "El área por debajo de la curva verde y por encima de la línea mínima nunca se cierra. Las decisiones tomadas antes de que llegue la presión mantienen al defensor en control en todo momento. El defensor que decide primero es dueño de la línea de tiempo: el atacante hereda el entorno que el defensor ya construyó.",
+      "La defensa no cede el control en un solo salto. El primer traspaso está donde se encuentran las curvas azul y verde: el CROC ya ha reducido la exposición, así que desaparecen las rutas de ataque que necesita el atacante. El segundo está donde se encuentran las curvas azul y naranja: el SOC ejecuta una respuesta preautorizada por el CROC, trabajando sobre una superficie de ataque reducida.",
+      "Antes de que llegue la presión, el CROC decide. El punto verde marca el momento en que la defensa proactiva toma la línea de tiempo desde el inicio.",
+      "Donde se encuentran las curvas azul y naranja, el SOC ejecuta una respuesta que el CROC ya ha preautorizado. Es más rápida porque el panorama de amenazas se construyó con antelación, y sus resultados mejoran el siguiente ciclo del bucle.",
+      "El CROC y el SOC forman un solo bucle de aprendizaje. Cada incidente muestra al CROC qué exposiciones usó realmente el atacante, así que el siguiente ciclo está mejor informado. El CROC ejecuta siete etapas de forma continua: identificar, contextualizar, medir, priorizar, mitigar, verificar y monitorear.",
+      "Aquí se construye la ciber resiliencia: no evitando cada incidente, sino entendiendo cada uno mejor, para que la organización salga más fuerte que antes.",
+      "Cada estrategia sigue una curva de decaimiento exponencial. Las tres curvas comparten la misma forma general y se diferencian en su valor inicial A y en su tasa de decaimiento k, que es como la fórmula muestra la realidad operativa de cada estrategia.",
+      "La efectividad inicial es la más alta (1.00) porque el análisis produce decisiones de alta confianza. Sin embargo, la tasa de decaimiento es extrema (k<sub>RP</sub> = 12), lo que refleja con qué rapidez la situación analizada queda obsoleta a medida que cambia el panorama de amenazas. Hacia t ≈ 0.10, la precisión reactiva alcanza el umbral de efectividad mínima de la decisión (0.30). Más allá de este punto de cruce, la decisión pierde todo valor a medida que se cierra la ventana de decisión.",
+      "La efectividad inicial es más baja (0.70), porque la velocidad exige decidir con información incompleta. La tasa de decaimiento es moderada (k<sub>RR</sub> = 5), así que la reacción rápida mantiene a la organización en juego más tiempo, pero la efectividad sigue cayendo. La curva naranja cruza el umbral de efectividad mínima de la decisión (0.30). En ese punto, el control pasa del defensor al atacante.",
+      "La efectividad inicial es casi tan alta como la de la precisión reactiva (0.90), porque las decisiones se tomaron antes de que llegara la presión. La tasa de decaimiento es baja (k<sub>PD</sub> = 6), y la curva se acerca a la efectividad mínima de la decisión (0.30) sin cruzarla nunca. Las decisiones basadas en una comprensión continua del ciber riesgo mantienen al defensor en control.",
+      "El SOC fue fácil de construir porque respondía a una pregunta que la industria ya sabía formular: ¿cómo lo contenemos? El CROC responde a una pregunta distinta: ¿cuál es nuestra exposición, de forma continua, para poder decidir antes de que llegue la presión? La barrera es organizacional, no tecnológica. Exige trabajo continuo, la autoridad para decir no a iniciativas riesgosas y tratar el ciber riesgo como una función de negocio. Los agentes de IA hacen esto más urgente, porque rodean los controles a velocidad de máquina, así que las decisiones deben tomarse con antelación y aplicarse de forma estructural."
+    ],
+    pt: [
+      "Vamos desenhar o gráfico uma peça de cada vez. Cada estratégia responde à mesma pergunta: quanto uma decisão ainda importa à medida que o tempo passa?",
+      "O eixo horizontal é o tempo para decidir, de decisões rápidas à esquerda até decisões lentas à direita. O eixo vertical é a eficácia da decisão, de menor embaixo até maior em cima.",
+      "A linha tracejada marca a eficácia mínima da decisão. Quando uma decisão cai abaixo dela, não pode mais mudar o resultado. Cada estratégia é julgada pelo momento em que cruza esta linha.",
+      "A área verde acima da linha mínima é o campo de batalha do defensor. Aqui as decisões ainda são tomadas com calma, antes que a pressão chegue, então o defensor molda as condições da luta.",
+      "A área vermelha abaixo da linha mínima é o campo de batalha do atacante. Quando uma decisão cai aqui, ela não pode mais mudar o resultado, e o controle pertence ao atacante.",
+      "Espere informação suficiente e então decida com alta confiança. A confiança começa no ponto mais alto, mas cai mais rápido, porque a situação muda enquanto a análise acontece. Cruza o mínimo cedo, antes que a decisão esteja pronta para agir.",
+      "Responda rápido, com informação incompleta. Começa mais baixo, mas cai mais devagar, então permanece no jogo por mais tempo. Mesmo assim cruza o mínimo, e é aí que o controle passa do defensor para o atacante.",
+      "Decida antes que a pressão chegue e continue reduzindo a exposição. Começa no topo do gráfico e se estabiliza acima da linha mínima. Nunca a cruza, então o atacante nunca herda a linha do tempo.",
+      "A curva azul é a primeira a alcançar a linha mínima. Quando sua decisão está pronta, a janela já se fechou. É aqui que as decisões baseadas em precisão se tornam obsoletas. Esta é a morte por atrito: o tempo para decidir excede o tempo para agir, então uma defesa que não consegue agir a tempo perde a janela.",
+      "A curva laranja alcança a linha mínima em segundo lugar. Aqui o impulso do atacante supera a velocidade de decisão do defensor, e o controle passa do defensor para o atacante.",
+      "Abaixo da linha mínima, uma decisão não pode mais mudar o resultado, então o defensor perde o controle aqui. O atacante define a linha do tempo, e esta área vermelha marca onde essa vantagem se aplica. Os atacantes planejam a campanha em torno do ponto de cruzamento: movem-se devagar durante a preparação para evitar a detecção e depois aceleram ao chegar nele.",
+      "O atacante permanece discreto e constrói acesso, aprendendo o ambiente antes de fazer qualquer movimento visível. Esta é a janela em que o que o atacante pode encontrar ainda depende do que o defensor fez.",
+      "O atacante ganha uma base dentro do ambiente. O primeiro acesso bem-sucedido marca o ponto em que a preparação se transforma em intrusão.",
+      "A partir da base, o atacante amplia o acesso, movendo-se entre sistemas e contas para alcançar os ativos que deseja.",
+      "O atacante extrai dados, interrompe operações ou monetiza o acesso. Nesta etapa, a linha do tempo pertence inteiramente ao atacante.",
+      "Antes que o atacante chegue, o defensor ainda tem a vantagem. A área acima da linha mínima e atrás da curva azul é onde uma decisão ainda pode mudar o resultado, e para a precisão reativa ela se fecha rapidamente.",
+      "A área abaixo da curva laranja e acima da linha mínima permanece aberta por mais tempo, porque o SOC responde mais rápido. Ela se fecha onde a curva laranja cruza a linha mínima.",
+      "A área abaixo da curva verde e acima da linha mínima nunca se fecha. Decisões tomadas antes que a pressão chegue mantêm o defensor no controle em todos os momentos. O defensor que decide primeiro é dono da linha do tempo: o atacante herda o ambiente que o defensor já construiu.",
+      "A defesa não entrega o controle de uma só vez. O primeiro repasse ocorre onde se encontram as curvas azul e verde: o CROC já reduziu a exposição, então desaparecem os caminhos de ataque que o atacante precisa. O segundo ocorre onde se encontram as curvas azul e laranja: o SOC executa uma resposta pré-autorizada pelo CROC, atuando sobre uma superfície de ataque reduzida.",
+      "Antes que a pressão chegue, o CROC decide. O ponto verde marca o momento em que a defesa proativa assume a linha do tempo desde o início.",
+      "Onde as curvas azul e laranja se encontram, o SOC executa uma resposta que o CROC já pré-autorizou. Ela é mais rápida porque o panorama de ameaças foi construído com antecedência, e seus resultados melhoram o próximo ciclo.",
+      "O CROC e o SOC formam um único ciclo de aprendizado. Cada incidente mostra ao CROC quais exposições o atacante realmente usou, então o ciclo seguinte está mais bem informado. O CROC executa sete etapas continuamente: identificar, contextualizar, medir, priorizar, mitigar, verificar e monitorar.",
+      "É aqui que se constrói a ciber resiliência: não evitando todo incidente, mas entendendo cada um melhor, para que a organização saia mais forte do que antes.",
+      "Cada estratégia segue uma curva de decaimento exponencial. As três curvas compartilham a mesma forma geral e diferem no valor inicial A e na taxa de decaimento k, que é como a fórmula mostra a realidade operacional de cada estratégia.",
+      "A eficácia inicial é a mais alta (1.00) porque a análise produz decisões de alta confiança. No entanto, a taxa de decaimento é extrema (k<sub>RP</sub> = 12), refletindo a rapidez com que a situação analisada se torna obsoleta à medida que o panorama de ameaças muda. Por volta de t ≈ 0.10, a precisão reativa alcança o limite de eficácia mínima da decisão (0.30). Depois desse ponto de cruzamento, a decisão perde todo o valor à medida que a janela de decisão se fecha.",
+      "A eficácia inicial é mais baixa (0.70), porque a velocidade exige decidir com informação incompleta. A taxa de decaimento é moderada (k<sub>RR</sub> = 5), então a reação rápida mantém a organização no jogo por mais tempo, mas a eficácia ainda cai. A curva laranja cruza o limite de eficácia mínima da decisão (0.30). Nesse ponto, o controle passa do defensor para o atacante.",
+      "A eficácia inicial é quase tão alta quanto a da precisão reativa (0.90), porque as decisões foram tomadas antes que a pressão chegasse. A taxa de decaimento é baixa (k<sub>PD</sub> = 6), e a curva se aproxima da eficácia mínima da decisão (0.30) sem jamais cruzá-la. Decisões fundamentadas em uma compreensão contínua do ciber risco mantêm o defensor no controle.",
+      "O SOC foi fácil de construir porque respondia a uma pergunta que o setor já sabia formular: como contê-lo? O CROC responde a uma pergunta diferente: qual é a nossa exposição, de forma contínua, para podermos decidir antes que a pressão chegue? A barreira é organizacional, não tecnológica. Exige trabalho contínuo, a autoridade para dizer não a iniciativas arriscadas e tratar o ciber risco como uma função de negócio. Agentes de IA tornam isso mais urgente, porque contornam os controles na velocidade das máquinas, então as decisões precisam ser tomadas com antecedência e aplicadas de forma estrutural."
+    ],
+    ja: [
+      "グラフを一度に一つずつ描いていきます。どの戦略も同じ問いに答えます：時間が経つにつれ、意思決定はどれだけ重要であり続けるのか。",
+      "横軸は意思決定までの時間で、左側の速い意思決定から右側の遅い意思決定へ進みます。縦軸は意思決定の有効性で、下が低く、上が高くなります。",
+      "破線は意思決定の最低有効性を示します。意思決定がこの線を下回ると、もはや結果を変えることはできません。どの戦略も、この線をいつ横切るかで評価されます。",
+      "最低ラインより上の緑の領域は、防御側の戦場です。ここでは圧力が来る前に、まだ落ち着いて決定でき、防御側が戦いの条件を形作ります。",
+      "最低ラインより下の赤い領域は、攻撃者の戦場です。決定がここに落ちると、もはや結果を変えられず、主導権は攻撃者に属します。",
+      "十分な情報を待ち、そのうえで高い確信をもって決定します。確信は最初が最も高いものの、分析が進む間に状況が変わるため、最も速く低下します。決定が行動できる状態になる前に、早い段階で最低ラインを下回ります。",
+      "不完全な情報のもとで素早く対応します。出発点は低いものの、低下は緩やかなので、より長く競争に残ります。それでも最低ラインを下回り、そこで主導権が防御側から攻撃者へ移ります。",
+      "プレッシャーが来る前に決定し、その後も露出を減らし続けます。グラフの上端から始まり、最低ラインより上で横ばいになります。決して下回らないため、攻撃者がタイムラインを引き継ぐことはありません。",
+      "青い曲線は最初に最低ラインに到達します。意思決定の準備が整う頃には、すでに機会の窓は閉じています。ここが精度に基づく意思決定が時代遅れになる地点です。これが摩擦による死です。意思決定にかかる時間が行動にかかる時間を超えるため、時間内に行動できない防御は機会を失います。",
+      "オレンジの曲線は二番目に最低ラインに到達します。ここでは攻撃者の勢いが防御側の意思決定の速さを上回り、主導権が防御側から攻撃者へ移ります。",
+      "最低ラインより下では、意思決定はもはや結果を変えられないため、防御側はここで主導権を失います。攻撃者がタイムラインを決め、この赤い領域はその優位が働く範囲を示します。攻撃者は交差点を中心に作戦を立てます。準備段階では検知を避けるために慎重に動き、交差点に達するとスピードを上げます。",
+      "攻撃者は目立たない位置にとどまり、目に見える動きをする前に環境を学びながらアクセスを築きます。攻撃者が何を見つけられるかが、まだ防御側によって形作られている段階です。",
+      "攻撃者は環境内に足がかりを得ます。最初の侵入に成功した時点で、準備は侵入へと変わります。",
+      "足がかりから、攻撃者はシステムやアカウントの間を移動してアクセスを広げ、狙う資産に到達します。",
+      "攻撃者はデータを盗み出し、業務を妨害し、アクセスを収益化します。この段階では、タイムラインは完全に攻撃者のものです。",
+      "攻撃者が到達する前、防御側はまだ優位にあります。最低ラインより上で、青い曲線の内側にある領域は、意思決定がまだ結果を変えられる範囲です。リアクティブ精度の場合、この領域は速く閉じます。",
+      "オレンジの曲線より下で、最低ラインより上の領域は、SOCの対応が速いため長く開いたままです。オレンジの曲線が最低ラインを横切る地点で閉じます。",
+      "緑の曲線より下で、最低ラインより上の領域は決して閉じません。プレッシャーが来る前に行われた決定により、防御側はあらゆる時点で主導権を保ちます。先に決定する防御側がタイムラインの所有者になります。攻撃者は、防御側がすでに構築した環境を引き継ぎます。",
+      "防御は一度に主導権を手放すわけではありません。最初の引き継ぎは青と緑の曲線が交わる地点で、CROCがすでに露出を減らしているため、攻撃者が必要とする攻撃経路は消えています。二番目は青とオレンジの曲線が交わる地点で、CROCが事前承認した対応をSOCが、縮小された攻撃対象の上で実行します。",
+      "プレッシャーが来る前に、CROCが決定します。緑の点は、プロアクティブ防御が最初からタイムラインを引き継ぐ地点を示します。",
+      "青とオレンジの曲線が交わる地点で、SOCが、CROCがあらかじめ承認した対応を実行します。脅威の全体像が事前に構築されているため、対応は速くなり、その結果はループの次のサイクルも改善します。",
+      "CROCとSOCは一つの学習ループを形成します。インシデントのたびに、攻撃者が実際に使った露出がCROCに示されるため、次のサイクルはより的確な情報に基づきます。CROCは七つの段階を継続的に実行します：特定、文脈化、測定、優先順位付け、軽減、検証、監視。",
+      "ここでサイバーレジリエンスが築かれます。すべてのインシデントを防ぐことではなく、一つひとつをより深く理解することで、組織は以前より強くなります。",
+      "どの戦略も指数関数的減衰曲線に従います。三つの曲線は同じ一般形を共有し、初期値Aと減衰率kで異なります。これは式が、それぞれの戦略の運用上の現実をどのように表しているかを示しています。",
+      "初期有効性は最も高く（1.00）、分析が高い確信をもつ決定を生むためです。しかし減衰率は極端（k<sub>RP</sub> = 12）で、脅威の状況が変わるにつれ分析された状況がどれほど速く陳腐化するかを反映しています。t ≈ 0.10 付近で、リアクティブ精度は最低の意思決定有効性の閾値（0.30）に到達します。この交差点を過ぎると、意思決定の窓が閉じるにつれ価値を失います。",
+      "初期有効性はより低く（0.70）、速さが不完全な情報のもとでの決定を要求するためです。減衰率は中程度（k<sub>RR</sub> = 5）なので、速い反応が組織をより長く競争に残しますが、有効性は依然として低下します。オレンジの曲線は最低の意思決定有効性の閾値（0.30）を横切ります。その時点で主導権は防御側から攻撃者へ移ります。",
+      "初期有効性はリアクティブ精度と同程度に高く（0.90）、圧力が来る前に決定が行われたためです。減衰率は低く（k<sub>PD</sub> = 6）、曲線は決して横切ることなく最低の意思決定有効性（0.30）に近づきます。継続的なサイバーリスクの理解に基づく決定が、防御側を主導権のもとに保ちます。",
+      "SOCは、業界がすでに問い方を知っていた問いに答えたため、構築が容易でした：どう封じ込めるか。CROCは別の問いに答えます：プレッシャーが来る前に決定できるよう、継続的に自社の露出はどこにあるか。障壁は技術的ではなく組織的です。継続的な取り組み、リスクの高い取り組みに「ノー」と言える権限、そしてサイバーリスクをビジネス機能として扱うことが必要です。AIエージェントは機械の速度で統制を迂回するため、これをより緊急の課題にします。だからこそ、決定は事前に行われ、構造的に徹底される必要があります。"
+    ]
+  };
+// Footer with links, in each language
+  const FOOT = {
+    en: 'Based on "<a href="https://www.researchgate.net/publication/414199824" target="_blank" rel="noopener">Reactive Precision Crashes. Reactive Response Fails. Proactive Defense Wins.</a>" by <a href="https://www.linkedin.com/in/jpcastro/" target="_blank" rel="noopener">Juan Pablo Castro Vilaró</a> (DOI <a href="https://doi.org/10.13140/RG.2.2.12466.98244/1" target="_blank" rel="noopener">10.13140/RG.2.2.12466.98244/1</a>). The curves are drawn from fitted decay functions, so their shapes are approximate.',
+    es: 'Basado en "<a href="https://www.researchgate.net/publication/414199824" target="_blank" rel="noopener">Reactive Precision Crashes. Reactive Response Fails. Proactive Defense Wins.</a>" de <a href="https://www.linkedin.com/in/jpcastro/" target="_blank" rel="noopener">Juan Pablo Castro Vilaró</a> (DOI <a href="https://doi.org/10.13140/RG.2.2.12466.98244/1" target="_blank" rel="noopener">10.13140/RG.2.2.12466.98244/1</a>). Las curvas se dibujan a partir de funciones de decaimiento ajustadas, por lo que sus formas son aproximadas.',
+    pt: 'Baseado em "<a href="https://www.researchgate.net/publication/414199824" target="_blank" rel="noopener">Reactive Precision Crashes. Reactive Response Fails. Proactive Defense Wins.</a>", de <a href="https://www.linkedin.com/in/jpcastro/" target="_blank" rel="noopener">Juan Pablo Castro Vilaró</a> (DOI <a href="https://doi.org/10.13140/RG.2.2.12466.98244/1" target="_blank" rel="noopener">10.13140/RG.2.2.12466.98244/1</a>). As curvas são desenhadas a partir de funções de decaimento ajustadas, por isso suas formas são aproximadas.',
+    ja: '本記事は「<a href="https://www.researchgate.net/publication/414199824" target="_blank" rel="noopener">Reactive Precision Crashes. Reactive Response Fails. Proactive Defense Wins.</a>」（<a href="https://www.linkedin.com/in/jpcastro/" target="_blank" rel="noopener">Juan Pablo Castro Vilaró</a>氏、DOI <a href="https://doi.org/10.13140/RG.2.2.12466.98244/1" target="_blank" rel="noopener">10.13140/RG.2.2.12466.98244/1</a>）に基づく。曲線は近似的な減衰関数から描いており、形状は概算である。'
+  };
+  function applyLang(lang) {
+    curLang = lang;
+    document.documentElement.lang = lang;
+    translateDom();
+    layoutSoc(curLang);
+    el('site-footer').innerHTML = FOOT[curLang] || FOOT.en;
+    layoutDeath(curLang);
+    // Card values: move right in Spanish and Portuguese so long row labels don't overlap them
+    document.querySelectorAll('#rp-card text, #rr-card text, #pd-card text').forEach(t => {
+      if (t.__x0 === undefined) t.__x0 = parseFloat(t.getAttribute('x'));
+      if (t.__x0 === 1100) t.setAttribute('x', (curLang === 'es' || curLang === 'pt') ? 1140 : 1100);
+    });
+    // Handoff and loop boxes: slightly smaller text in translated versions so each line fits its box
+    document.querySelectorAll('#hand-1 text, #hand-2 text, #loop text').forEach(t => {
+      t.setAttribute('font-size', curLang === 'en' ? 18 : 16);
+    });
+    renderStory(current);
+  }
+  function initLang() {
+    const detected = (navigator.language || 'en').slice(0, 2).toLowerCase();
+    const pick = ['es', 'pt', 'ja'].includes(detected) ? detected : 'en';
+    const toggle = el('lang-toggle');
+    toggle.addEventListener('click', () => {
+      const open = el('lang-menu').classList.toggle('open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', e => {
+      if (!el('lang-bar').contains(e.target)) {
+        el('lang-menu').classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+    document.querySelectorAll('#lang-menu button').forEach(b => {
+      b.addEventListener('click', () => {
+        el('lang-menu').classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        el('lang-toggle-label').textContent = b.dataset.lang.toUpperCase();
+        applyLang(b.dataset.lang);
+      });
+    });
+    el('lang-toggle-label').textContent = pick.toUpperCase();
+    // Light / dark theme: starts from the system setting, then the button switches it
+    const themeBtn = el('theme-toggle');
+    const setTheme = t => {
+      document.documentElement.setAttribute('data-theme', t);
+      renderStory(current);
+      themeBtn.textContent = t === 'dark' ? '\u2600' : '\u25d0';
+      themeBtn.setAttribute('aria-label', t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    };
+    setTheme(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    themeBtn.addEventListener('click', () => setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+    applyLang(pick);
+  }
+
+  function renderVisuals(i) {
+    // Battlefield steps (3 and 4) come before the curves; the steps after them use their earlier numbering
+    setFx(['def-battle'], i >= 3);
+    document.getElementById('def-battle').classList.toggle('dim', i >= 5);
+    document.getElementById('att-battle').classList.toggle('dim', i >= 5);
+    setFx(['att-battle'], i >= 4);
+    i = i >= 5 ? i - 2 : Math.min(i, 2);
+    // Axes and labels
+    const axesOn = i >= 1;
+    setDraw('axis-y', axesOn);
+    setDraw('axis-x', axesOn);
+    setFx(['arrow-y', 'arrow-x', 'ticks'], axesOn);
+    showLabels(labelGroups.title, axesOn, '1.6s', '2s');
+    showLabels(labelGroups.time, axesOn, '1.6s', '2s');
+    showLabels(labelGroups.yends, axesOn, '2.6s', '1s');
+    showLabels(labelGroups.xends, axesOn, '3.6s', '0s');
+
+    // Minimum line
+    el('thrRect').style.width = i >= 2 ? '1260px' : '0px';
+    setFx(['thr-label', 'thr-label-2'], i >= 2);
+
+    // Curves and crossings
+    setDraw('curve-rp', i >= 3);
+    setFx(['mk-rp'], i === 6);
+    setFx(['lg-rp'], i >= 3);
+
+    setDraw('curve-rr', i >= 4);
+    setFx(['mk-rr'], i === 7);
+    setFx(['lg-rr'], i >= 4);
+
+    setDraw('curve-pd', i >= 5);
+    setFx(['lg-pd'], i >= 5);
+    setFx(['attacker-zone'], i >= 8);
+    setFx(['stage-1'], i >= 9);
+    setFx(['boundary-1'], i >= 9);
+    setFx(['stage-2'], i >= 10);
+    setFx(['boundary-2'], i >= 10);
+    setFx(['stage-3'], i >= 11);
+    setFx(['boundary-3'], i >= 11);
+    setFx(['def-blue'], i >= 13);
+    setFx(['def-orange'], i >= 14);
+    setFx(['def-green'], i >= 15);
+    setFx(['def-banner'], i >= 13);
+    setFx(['def-arrow-blue'], i >= 13);
+    setFx(['def-arrow-orange'], i >= 14);
+    setFx(['def-arrow-green'], i >= 15);
+    setFx(['stage-4'], i >= 12);
+    // Steps 16 to 18: keep only the three curves, then add the handoffs and the loop
+    if (i >= 16) {
+      setFx(['attacker-zone', 'stage-1', 'stage-2', 'stage-3', 'stage-4', 'boundary-1', 'boundary-2', 'boundary-3', 'def-blue', 'def-orange', 'def-green', 'def-banner', 'def-arrow-blue', 'def-arrow-orange', 'def-arrow-green', 'mk-rp', 'mk-rr'], false);
+    }
+    setFx(['static-dots'], i >= 16);
+    setFx(['hand-1'], i >= 17);
+    setFx(['hand-2'], i >= 18);
+    setFx(['loop'], i >= 19);
+    // Curve legends stay until the formula steps, then hide
+    if (i >= 21) setFx(['lg-rp', 'lg-rr', 'lg-pd'], false);
+    setFx(['ring-circle'], i >= 19 && i <= 20);
+    setFx(['ring-heads'], i >= 19 && i <= 20);
+    setFx(['ring-label'], i === 20);
+    setFx(['b-hand-1', 'b-hand-2', 'b-loop'], i >= 19 && i <= 20);
+    el('chart-svg').style.display = '';
+    el('appendix').style.display = 'none';
+    if (i >= 21) setFx(['hand-1', 'hand-2', 'static-dots', 'loop'], false);
+    setFx(['formula-card'], i === 21);
+    setFx(['rp-card'], i === 22);
+    setFx(['rr-card'], i === 23);
+    setFx(['pd-card'], i === 24);
+    el('curve-rp').classList.toggle('pulse-line', i === 22);
+    el('curve-rr').classList.toggle('pulse-line', i === 23);
+    el('curve-pd').classList.toggle('pulse-line', i === 24);
+    // Cyber resilience step: the area under the green curve, down to zero, turns purple and pulses
+    setFx(['res-area', 'res-label'], i === 20);
+  }
+
+  // Step title colors: brighter variants in dark mode so they stay readable
+  function accentFor(c) {
+    if (c === '#1f2a44') return 'var(--ink)';
+    if (document.documentElement.getAttribute('data-theme') !== 'dark') return c;
+    const m = { '#2f5d9e': '#6aa0ff', '#c4622d': '#ff9a5c', '#3f7d5a': '#5cd39a', '#0b6b26': '#5cd39a', '#e8430a': '#ff7a45', '#0b3fa3': '#6aa0ff', '#9b1c1c': '#f08a8a', '#5b2d8a': '#b79cf0', '#8b95a9': '#8b95a9' };
+    return m[c] || c;
+  }
+  function renderStory(i) {
+    const s = steps[i];
+    const body = el('body');
+    body.style.opacity = 0;
+    setTimeout(() => {
+      el('count').textContent = i === 0 ? trCount('Start') : trCount('Step ' + i + ' of ' + (steps.length - 1));
+      el('title').textContent = tr(s.title);
+      el('title').style.color = accentFor((i >= 11 && i <= 14) ? '#9b1c1c' : i === 21 ? '#5b2d8a' : s.accent);
+      body.querySelector('p').innerHTML = (BODY[curLang] && BODY[curLang][i]) || s.body;
+      body.style.opacity = 1;
+    }, 180);
+
+    el('prev').disabled = i === 0;
+    el('next').textContent = tr(s.cta);
+    if (typeof playBtn !== 'undefined') playBtn.textContent = tr(timer ? 'Pause' : 'Play');
+
+    [...dotsWrap.children].forEach((d, idx) => {
+      if (idx === i) d.setAttribute('aria-current', 'step');
+      else d.removeAttribute('aria-current');
+    });
+  }
+
+  function go(i) {
+    current = Math.max(0, Math.min(last, i));
+    renderVisuals(current);
+    renderStory(current);
+  }
+
+  el('next').addEventListener('click', () => {
+    go(current === last ? 0 : current + 1);
+  });
+  // Autoplay: moves to the next step every few seconds. Back during autoplay returns to step 0 and keeps playing.
+  let timer = null;
+  const AUTO_MS = 2000;
+  const playBtn = document.createElement('button');
+  playBtn.type = 'button';
+  playBtn.id = 'play';
+  el('next').insertAdjacentElement('afterend', playBtn);
+  // How long each step stays on screen: long enough for its drawing and label animations to finish
+  function waitFor(i) {
+    if (i === 1) return 4600; // axes, then the labels fade in one after another
+    if (i === 2) return 2400; // minimum line draws in
+    if (i === 22) return 5000; // cyber resilience: a longer pause on this step
+    // Longer paragraphs need more reading time: 3 seconds, otherwise 2
+    const text = (BODY[curLang] && BODY[curLang][i]) || steps[i].body;
+    const limit = curLang === 'ja' ? 90 : 200;
+    return text.length > limit ? 3000 : 2000;
+  }
+  function stopAuto() {
+    clearTimeout(timer);
+    timer = null;
+    playBtn.textContent = tr(timer ? 'Pause' : 'Play');
+    syncCmd();
+  }
+  function startAuto() {
+    if (current >= last) go(0);
+    clearTimeout(timer);
+    const tick = () => {
+      if (current >= last) { stopAuto(); return; }
+      timer = setTimeout(() => { go(current + 1); tick(); }, waitFor(current));
+    };
+    tick();
+    playBtn.textContent = tr('Pause');
+    syncCmd();
+  }
+  playBtn.addEventListener('click', () => (timer ? stopAuto() : startAuto()));
+  // Icon-only copies of the playback controls
+  const cmdIcons = {
+    play: '<svg viewBox="0 0 24 24"><path d="M8 5.5v13L19 12z" fill="currentColor"/></svg>',
+    pause: '<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1" fill="currentColor"/><rect x="13.8" y="5" width="4.2" height="14" rx="1" fill="currentColor"/></svg>'
+  };
+  function syncCmd() { el('cmd-play').innerHTML = timer ? cmdIcons.pause : cmdIcons.play; }
+  el('cmd-prev').addEventListener('click', () => el('prev').click());
+  el('cmd-play').addEventListener('click', () => playBtn.click());
+  el('cmd-next').addEventListener('click', () => el('next').click());
+  syncCmd();
+  el('prev').addEventListener('click', () => {
+    if (timer) { stopAuto(); go(0); } else go(current - 1);
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') go(current === last ? current : current + 1);
+    if (e.key === 'ArrowLeft') go(current - 1);
+  });
+
+  // Keep the two growing copies showing the same words as the main label in every language
+  const presentBtn = el('present-toggle');
+  const setPresent = on => {
+    document.body.classList.toggle('present', on);
+    presentBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    presentBtn.textContent = on ? '✕' : '⛶';
+  };
+  presentBtn.addEventListener('click', () => setPresent(!document.body.classList.contains('present')));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setPresent(false); });
+  const labelMain = document.querySelector('#ring-label .label-main');
+  const syncLabelCopies = () => document.querySelectorAll('#ring-label .label-halo-text').forEach(t => { t.textContent = labelMain.textContent; });
+  new MutationObserver(syncLabelCopies).observe(labelMain, { childList: true, characterData: true, subtree: true });
+  syncLabelCopies();
+  initLang();
+  go(0);
+  startAuto();
+})();
+</script>
+</body>
+</html>

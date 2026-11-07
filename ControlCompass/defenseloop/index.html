@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>The Future of SOC is ∞</title>
+<style>
+  *,*::before,*::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #000; min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #f5f5f7;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 3rem;
+  }
+  .lang-bar {
+    display: flex;
+    gap: 6px;
+    padding: 4px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 999px;
+    margin-bottom: 1.5rem;
+  }
+  .lang-bar button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: rgba(245,245,247,0.55);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 160ms ease, background-color 160ms ease;
+  }
+  .lang-bar button:hover { color: rgba(245,245,247,0.85); }
+  .lang-bar button.active {
+    background: rgba(255,255,255,0.10);
+    color: #f5f5f7;
+  }
+  .diagram-wrap {
+    width: min(100%, 980px);
+  }
+
+
+  #pub-link {
+    position: fixed;
+    bottom: 16px;
+    right: 18px;
+    z-index: 50;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+    text-align: right;
+    max-width: 46%;
+    pointer-events: auto;
+  }
+  #pub-link a {
+    text-decoration: none;
+    color: rgba(255,255,255,0.75);
+    transition: color 160ms ease;
+  }
+  #pub-link a#t-pub-title { display: block; color: rgba(255,255,255,0.75); }
+  #pub-link a:hover { color: #ffffff; }
+  #pub-link .pub-doi { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+  #pub-link .pub-doi a { color: rgba(255,255,255,0.55); }
+  #pub-link .pub-doi a:hover { color: rgba(255,255,255,0.9); }
+  #page-credit {
+    position: fixed;
+    bottom: 16px;
+    left: 18px;
+    z-index: 50;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+    text-align: left;
+    pointer-events: auto;
+  }
+  #page-credit a {
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    transition: color 160ms ease;
+  }
+  #page-credit a:hover { color: #ffffff; }
+
+  /* ============================================================
+     CTA PILL TOOLTIP — appears over the central compass on hover
+     Pattern reference: cta_pill_tooltip_example.html
+     ============================================================ */
+  .cta-tooltip {
+    position: fixed;
+    z-index: 100;
+    padding: 7px 14px;
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1.5px solid #E01C24;
+    border-radius: 999px;
+    color: #FFFFFF;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.015em;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -100%) translateY(-14px) scale(0.95);
+    transform-origin: center bottom;
+    transition: opacity 200ms ease,
+                transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  }
+  .cta-tooltip.visible {
+    opacity: 1;
+    transform: translate(-50%, -100%) translateY(-14px) scale(1);
+  }
+  .cta-tooltip.flipped {
+    transform: translate(-50%, 0) translateY(20px) scale(0.95);
+    transform-origin: center top;
+  }
+  .cta-tooltip.flipped.visible {
+    transform: translate(-50%, 0) translateY(20px) scale(1);
+  }
+
+  /* ============================================================
+     NODE INFO TOOLTIP — appears over SOC / CROC on hover or tap
+     ============================================================ */
+  .node-tooltip {
+    position: fixed;
+    z-index: 100;
+    width: min(320px, 78vw);
+    padding: 14px 18px;
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 14px;
+    color: #f0f0f4;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 13.5px;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -100%) translateY(-16px) scale(0.96);
+    transform-origin: center bottom;
+    transition: opacity 200ms ease,
+                transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+  .node-tooltip.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -100%) translateY(-16px) scale(1);
+  }
+  .node-tooltip.flipped {
+    transform: translate(-50%, 0) translateY(16px) scale(0.96);
+    transform-origin: center top;
+  }
+  .node-tooltip.flipped.visible {
+    transform: translate(-50%, 0) translateY(16px) scale(1);
+  }
+  .node-tooltip.soc { border: 1.5px solid #aab2ff; }
+  .node-tooltip.croc { border: 1.5px solid #ff9d8a; }
+  .node-tooltip strong {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .node-tooltip.soc strong { color: #aab2ff; }
+  .node-tooltip.croc strong { color: #ff9d8a; }
+  .node-tip-link {
+    display: block;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    pointer-events: auto;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+    width: fit-content;
+  }
+  .node-tooltip.soc .node-tip-link { color: #aab2ff; }
+  .node-tooltip.croc .node-tip-link { color: #ff9d8a; }
+  .node-tip-link:hover { opacity: 0.8; }
+</style>
+</head>
+<body>
+
+<div class="lang-bar" role="tablist" aria-label="Language">
+  <button type="button" role="tab" data-lang="en" class="active" aria-selected="true">EN</button>
+  <button type="button" role="tab" data-lang="es" aria-selected="false">ES</button>
+  <button type="button" role="tab" data-lang="pt" aria-selected="false">PT</button>
+  <button type="button" role="tab" data-lang="fr" aria-selected="false">FR</button>
+  <button type="button" role="tab" data-lang="ja" aria-selected="false">JA</button>
+  <button type="button" role="tab" data-lang="ar" aria-selected="false">AR</button>
+</div>
+
+<div class="diagram-wrap">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="335 -53 1000 1000" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block;" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <!-- Background -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000000"/>
+      <stop offset="1" stop-color="#000000"/>
+    </linearGradient>
+    <radialGradient id="vign" cx="50%" cy="45%" r="65%">
+      <stop offset="0" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- The loop stroke: cool SOC side to red CROC side -->
+    <linearGradient id="loopGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0.00" stop-color="#3a4cff"/>
+      <stop offset="0.30" stop-color="#6b6fe0"/>
+      <stop offset="0.50" stop-color="#e8e8ee"/>
+      <stop offset="0.70" stop-color="#ff5a3c"/>
+      <stop offset="1.00" stop-color="#ff2018"/>
+    </linearGradient>
+    <linearGradient id="titleInf" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0.00" stop-color="#3a4cff"/>
+      <stop offset="0.40" stop-color="#6b6fe0"/>
+      <stop offset="0.60" stop-color="#ff5a3c"/>
+      <stop offset="1.00" stop-color="#ff2018"/>
+    </linearGradient>
+
+    <radialGradient id="socNode" cx="50%" cy="40%" r="70%">
+      <stop offset="0" stop-color="#5b6bff"/>
+      <stop offset="1" stop-color="#222a7a"/>
+    </radialGradient>
+    <radialGradient id="crocNode" cx="50%" cy="40%" r="70%">
+      <stop offset="0" stop-color="#ff5238"/>
+      <stop offset="1" stop-color="#7a1810"/>
+    </radialGradient>
+
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+
+    <!-- The infinity path. Two lobes centered at x=560 and x=1040, y=470 -->
+    <path id="infinity" fill="none"
+      d="M 560 470
+         C 560 340, 720 340, 800 470
+         C 880 600, 1040 600, 1040 470
+         C 1040 340, 880 340, 800 470
+         C 720 600, 560 600, 560 470 Z"/>
+  </defs>
+
+  <rect x="0" y="-100" width="1600" height="1200" fill="url(#bg)"/>
+  <rect x="0" y="-100" width="1600" height="1200" fill="url(#vign)"/>
+
+  <!-- Title -->
+  <text id="t-title" x="1015" y="120" text-anchor="end" fill="#f5f5f7" font-size="52" font-weight="700" letter-spacing="0.5">The Future of SOC is</text>
+  <!-- Title infinity drawn as a vector path so the gradient is renderer-independent -->
+  <g id="title-infinity" transform="translate(1073, 104)">
+    <path d="M -34 0
+             C -34 -19, -7 -19, 0 0
+             C 7 19, 34 19, 34 0
+             C 34 -19, 7 -19, 0 0
+             C -7 19, -34 19, -34 0 Z"
+          fill="none" stroke="url(#titleInf)" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <text id="t-subtitle" x="800" y="166" text-anchor="middle" fill="#8a8a93" font-size="23" font-weight="400" letter-spacing="3">A LOOP THAT DOES NOT MOVE IS NOT A LOOP</text>
+
+  <!-- Soft glow under the loop -->
+  <use href="#infinity" stroke="#ff3520" stroke-width="20" opacity="0.18" filter="url(#softGlow)"/>
+
+  <!-- The loop itself -->
+  <use href="#infinity" stroke="url(#loopGrad)" stroke-width="6" opacity="0.95" filter="url(#glow)"/>
+  <!-- faint dashed underlay to suggest "the diagram" beneath the live loop -->
+  <use href="#infinity" stroke="#3a3a45" stroke-width="1.5" stroke-dasharray="3 9" opacity="0.6"/>
+
+  <!-- Moving intelligence: particles traveling the path -->
+  <g filter="url(#glow)">
+    <circle r="7" fill="#dfe2ff">
+      <animateMotion dur="6s" repeatCount="indefinite" rotate="auto"><mpath href="#infinity"/></animateMotion>
+    </circle>
+    <circle r="6" fill="#ff6a4a">
+      <animateMotion dur="6s" begin="-1.5s" repeatCount="indefinite" rotate="auto"><mpath href="#infinity"/></animateMotion>
+    </circle>
+    <circle r="7" fill="#ffd0c4">
+      <animateMotion dur="6s" begin="-3s" repeatCount="indefinite" rotate="auto"><mpath href="#infinity"/></animateMotion>
+    </circle>
+    <circle r="6" fill="#9aa0ff">
+      <animateMotion dur="6s" begin="-4.5s" repeatCount="indefinite" rotate="auto"><mpath href="#infinity"/></animateMotion>
+    </circle>
+  </g>
+
+  <!-- SOC node (left lobe) -->
+  <circle cx="560" cy="470" r="92" fill="url(#socNode)" filter="url(#glow)"/>
+  <circle cx="560" cy="470" r="92" fill="none" stroke="#aab2ff" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- Power pulse: 1.5s initial delay, then a 2.5s pulse, then 1.5s wait before it repeats -->
+  <circle cx="560" cy="470" r="92" fill="#ffffff" opacity="0">
+    <animate attributeName="opacity" values="0;0.4;0;0" keyTimes="0;0.075;0.625;1" begin="1.5s" dur="4s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="560" cy="470" r="92" fill="none" stroke="#dfe2ff" stroke-width="3" opacity="0">
+    <animate attributeName="r" values="88;88;115;115" keyTimes="0;0.0625;0.625;1" calcMode="spline"
+      keySplines="0.2 0.8 0.2 1;0.2 0.8 0.2 1;0 0 1 1" begin="1.5s" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.9;0;0" keyTimes="0;0.0625;0.625;1" calcMode="spline"
+      keySplines="0.2 0.8 0.2 1;0.3 0 0.6 1;0 0 1 1" begin="1.5s" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="stroke-width" values="4;3;0.5;0.5" keyTimes="0;0.0625;0.625;1" begin="1.5s" dur="4s" repeatCount="indefinite"/>
+  </circle>
+
+  <text x="560" y="452" text-anchor="middle" fill="#ffffff" font-size="46" font-weight="800" letter-spacing="2">SOC</text>
+  <text id="t-soc-sub" x="560" y="478" text-anchor="middle" fill="#aab2ff" font-size="14" font-weight="500" letter-spacing="1">SecOps</text>
+  <text id="t-soc-1" x="560" y="506" text-anchor="middle" fill="#cdd2ff" font-size="17" font-weight="600" letter-spacing="1">PROTECTS</text>
+  <text id="t-soc-2" x="560" y="528" text-anchor="middle" fill="#cdd2ff" font-size="17" font-weight="600" letter-spacing="1">TODAY</text>
+
+  <!-- CROC node (right lobe) -->
+  <circle cx="1040" cy="470" r="92" fill="url(#crocNode)" filter="url(#glow)"/>
+  <circle cx="1040" cy="470" r="92" fill="none" stroke="#ff9d8a" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- Power pulse: 1.5s initial delay, then a 2.5s pulse, then 1.5s wait before it repeats -->
+  <circle cx="1040" cy="470" r="92" fill="#ffffff" opacity="0">
+    <animate attributeName="opacity" values="0;0.4;0;0" keyTimes="0;0.075;0.625;1" begin="1.5s" dur="4s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="1040" cy="470" r="92" fill="none" stroke="#ffb8a8" stroke-width="3" opacity="0">
+    <animate attributeName="r" values="88;88;115;115" keyTimes="0;0.0625;0.625;1" calcMode="spline"
+      keySplines="0.2 0.8 0.2 1;0.2 0.8 0.2 1;0 0 1 1" begin="1.5s" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.9;0;0" keyTimes="0;0.0625;0.625;1" calcMode="spline"
+      keySplines="0.2 0.8 0.2 1;0.3 0 0.6 1;0 0 1 1" begin="1.5s" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="stroke-width" values="4;3;0.5;0.5" keyTimes="0;0.0625;0.625;1" begin="1.5s" dur="4s" repeatCount="indefinite"/>
+  </circle>
+
+  <text x="1040" y="452" text-anchor="middle" fill="#ffffff" font-size="44" font-weight="800" letter-spacing="2">CROC</text>
+  <text id="t-croc-sub" x="1040" y="478" text-anchor="middle" fill="#ff9d8a" font-size="14" font-weight="500" letter-spacing="1">CyberRiskOps</text>
+  <text id="t-croc-1" x="1040" y="506" text-anchor="middle" fill="#ffd2c8" font-size="17" font-weight="600" letter-spacing="1">PROTECTS</text>
+  <text id="t-croc-2" x="1040" y="528" text-anchor="middle" fill="#ffd2c8" font-size="17" font-weight="600" letter-spacing="1">TOMORROW</text>
+
+  <!-- Crossover label at the center -->
+  <text id="t-crossover" x="800" y="635" text-anchor="middle" fill="#e8e8ee" font-size="22" font-weight="600" letter-spacing="0.5">Intelligence moves at machine speed, or it is history.</text>
+
+  <!-- Process verbs over each arc, from the loop's two cycles -->
+  <text id="t-proc-left" x="560" y="238" text-anchor="middle" fill="#c6cbff" font-size="16" font-weight="600" letter-spacing="1">DETECT  ·  INVESTIGATE  ·  RESPOND</text>
+  <text id="t-proc-right" x="1040" y="238" text-anchor="middle" fill="#ffb0a0" font-size="16" font-weight="600" letter-spacing="1">IDENTIFY · PRIORITIZE · REDUCE · VERIFY · MONITOR</text>
+
+  <!-- Flow captions: what travels each way -->
+  <text id="t-flow-left" x="560" y="266" text-anchor="middle" fill="#9aa0ff" font-size="15" font-weight="500" letter-spacing="0.5">incidents, detections, actionable insight</text>
+  <text id="t-flow-right" x="1040" y="266" text-anchor="middle" fill="#ff8a73" font-size="15" font-weight="500" letter-spacing="0.5">exposures, risk scores, asset criticality</text>
+  <text id="t-bot-left" x="560" y="712" text-anchor="middle" fill="#6f6f7a" font-size="15" font-weight="400" letter-spacing="0.5">what is happening right now?</text>
+  <text id="t-bot-right" x="1040" y="712" text-anchor="middle" fill="#6f6f7a" font-size="15" font-weight="400" letter-spacing="0.5">what is our exposure, and what do we do today?</text>
+
+  <!-- Feedback note -->
+  <text id="t-footer" x="800" y="800" text-anchor="middle" fill="#5a5a63" font-size="15" font-weight="400" letter-spacing="2">EVERY CYCLE POWERS THE NEXT</text>
+
+  <!-- Compass triple-arrow ring (thin body, wedge tip, spinning clockwise) -->
+  <g id="compass-arrows">
+    <animateTransform attributeName="transform" attributeType="XML"
+      type="rotate"
+      from="0 800 470" to="360 800 470"
+      dur="12s" repeatCount="indefinite"/>
+    
+    <path d="M 805.23 420.27 A 50 50 0 0 1 848.06 483.78 L 851.91 484.88 L 839.84 493.00 L 836.53 480.47 L 840.37 481.58 A 42 42 0 0 0 804.39 428.23 Z" fill="#B71C1C" stroke="none"/>
+    <path d="M 840.45 499.39 A 50 50 0 0 1 764.03 504.73 L 761.16 507.51 L 760.16 493.00 L 772.67 496.40 L 769.79 499.18 A 42 42 0 0 0 833.98 494.69 Z" fill="#8B1418" stroke="none"/>
+    <path d="M 754.32 490.34 A 50 50 0 0 1 787.90 421.49 L 786.94 417.60 L 800.00 424.00 L 790.81 433.13 L 789.84 429.25 A 42 42 0 0 0 761.63 487.08 Z" fill="#E11B22" stroke="none"/>
+  </g>
+
+<!-- Cybersecurity Compass: small dial only -->
+<g><circle cx="800" cy="470" r="34" fill="#0c0c0e" stroke="#2a2a30" stroke-width="1.2"/><circle cx="800" cy="470" r="30" fill="#f3f1ec" stroke="#d8d5cd" stroke-width="1"/><line x1="828.0" y1="470.0" x2="824.0" y2="470.0" stroke="#9a968c" stroke-width="1.2"/><line x1="827.8" y1="473.7" x2="826.3" y2="473.5" stroke="#9a968c" stroke-width="0.6"/><line x1="827.0" y1="477.2" x2="825.6" y2="476.9" stroke="#9a968c" stroke-width="0.6"/><line x1="825.9" y1="480.7" x2="824.5" y2="480.1" stroke="#9a968c" stroke-width="0.6"/><line x1="824.2" y1="484.0" x2="822.9" y2="483.2" stroke="#9a968c" stroke-width="0.6"/><line x1="822.2" y1="487.0" x2="821.0" y2="486.1" stroke="#9a968c" stroke-width="0.6"/><line x1="819.8" y1="489.8" x2="817.0" y2="487.0" stroke="#9a968c" stroke-width="1.2"/><line x1="817.0" y1="492.2" x2="816.1" y2="491.0" stroke="#9a968c" stroke-width="0.6"/><line x1="814.0" y1="494.2" x2="813.2" y2="492.9" stroke="#9a968c" stroke-width="0.6"/><line x1="810.7" y1="495.9" x2="810.1" y2="494.5" stroke="#9a968c" stroke-width="0.6"/><line x1="807.2" y1="497.0" x2="806.9" y2="495.6" stroke="#9a968c" stroke-width="0.6"/><line x1="803.7" y1="497.8" x2="803.5" y2="496.3" stroke="#9a968c" stroke-width="0.6"/><line x1="800.0" y1="498.0" x2="800.0" y2="494.0" stroke="#9a968c" stroke-width="1.2"/><line x1="796.3" y1="497.8" x2="796.5" y2="496.3" stroke="#9a968c" stroke-width="0.6"/><line x1="792.8" y1="497.0" x2="793.1" y2="495.6" stroke="#9a968c" stroke-width="0.6"/><line x1="789.3" y1="495.9" x2="789.9" y2="494.5" stroke="#9a968c" stroke-width="0.6"/><line x1="786.0" y1="494.2" x2="786.8" y2="492.9" stroke="#9a968c" stroke-width="0.6"/><line x1="783.0" y1="492.2" x2="783.9" y2="491.0" stroke="#9a968c" stroke-width="0.6"/><line x1="780.2" y1="489.8" x2="783.0" y2="487.0" stroke="#9a968c" stroke-width="1.2"/><line x1="777.8" y1="487.0" x2="779.0" y2="486.1" stroke="#9a968c" stroke-width="0.6"/><line x1="775.8" y1="484.0" x2="777.1" y2="483.2" stroke="#9a968c" stroke-width="0.6"/><line x1="774.1" y1="480.7" x2="775.5" y2="480.1" stroke="#9a968c" stroke-width="0.6"/><line x1="773.0" y1="477.2" x2="774.4" y2="476.9" stroke="#9a968c" stroke-width="0.6"/><line x1="772.2" y1="473.7" x2="773.7" y2="473.5" stroke="#9a968c" stroke-width="0.6"/><line x1="772.0" y1="470.0" x2="776.0" y2="470.0" stroke="#9a968c" stroke-width="1.2"/><line x1="772.2" y1="466.3" x2="773.7" y2="466.5" stroke="#9a968c" stroke-width="0.6"/><line x1="773.0" y1="462.8" x2="774.4" y2="463.1" stroke="#9a968c" stroke-width="0.6"/><line x1="774.1" y1="459.3" x2="775.5" y2="459.9" stroke="#9a968c" stroke-width="0.6"/><line x1="775.8" y1="456.0" x2="777.1" y2="456.8" stroke="#9a968c" stroke-width="0.6"/><line x1="777.8" y1="453.0" x2="779.0" y2="453.9" stroke="#9a968c" stroke-width="0.6"/><line x1="780.2" y1="450.2" x2="783.0" y2="453.0" stroke="#9a968c" stroke-width="1.2"/><line x1="783.0" y1="447.8" x2="783.9" y2="449.0" stroke="#9a968c" stroke-width="0.6"/><line x1="786.0" y1="445.8" x2="786.8" y2="447.1" stroke="#9a968c" stroke-width="0.6"/><line x1="789.3" y1="444.1" x2="789.9" y2="445.5" stroke="#9a968c" stroke-width="0.6"/><line x1="792.8" y1="443.0" x2="793.1" y2="444.4" stroke="#9a968c" stroke-width="0.6"/><line x1="796.3" y1="442.2" x2="796.5" y2="443.7" stroke="#9a968c" stroke-width="0.6"/><line x1="800.0" y1="442.0" x2="800.0" y2="446.0" stroke="#9a968c" stroke-width="1.2"/><line x1="803.7" y1="442.2" x2="803.5" y2="443.7" stroke="#9a968c" stroke-width="0.6"/><line x1="807.2" y1="443.0" x2="806.9" y2="444.4" stroke="#9a968c" stroke-width="0.6"/><line x1="810.7" y1="444.1" x2="810.1" y2="445.5" stroke="#9a968c" stroke-width="0.6"/><line x1="814.0" y1="445.8" x2="813.2" y2="447.1" stroke="#9a968c" stroke-width="0.6"/><line x1="817.0" y1="447.8" x2="816.1" y2="449.0" stroke="#9a968c" stroke-width="0.6"/><line x1="819.8" y1="450.2" x2="817.0" y2="453.0" stroke="#9a968c" stroke-width="1.2"/><line x1="822.2" y1="453.0" x2="821.0" y2="453.9" stroke="#9a968c" stroke-width="0.6"/><line x1="824.2" y1="456.0" x2="822.9" y2="456.8" stroke="#9a968c" stroke-width="0.6"/><line x1="825.9" y1="459.3" x2="824.5" y2="459.9" stroke="#9a968c" stroke-width="0.6"/><line x1="827.0" y1="462.8" x2="825.6" y2="463.1" stroke="#9a968c" stroke-width="0.6"/><line x1="827.8" y1="466.3" x2="826.3" y2="466.5" stroke="#9a968c" stroke-width="0.6"/><g id="needle"><path d="M 780.7 457.5 L 802.7 465.8 L 797.3 474.2 Z" fill="#E11B22"/><path d="M 819.3 482.5 L 797.3 474.2 L 802.7 465.8 Z" fill="#1a1a1e"/></g><circle cx="800" cy="470" r="5" fill="#1a1a1e"/><path d="M 800 467 L 803 470 L 800 473 L 797 470 Z" fill="#E11B22"/></g>
+
+  <!-- Click/hover target on the small compass (opens the full Cybersecurity Compass modal) -->
+  <circle id="compass-hit" cx="800" cy="470" r="65" fill="transparent" style="cursor:pointer;" onclick="openCompass()"></circle>
+
+  <!-- Hover/tap targets for SOC and CROC info tooltips -->
+  <circle id="soc-hit" cx="560" cy="470" r="92" fill="transparent" style="cursor:help;"></circle>
+  <circle id="croc-hit" cx="1040" cy="470" r="92" fill="transparent" style="cursor:help;"></circle>
+</svg>
+
+</div>
+
+<!-- CTA pill tooltip — shared single instance, shown when hovering the central compass -->
+<div id="cta-tip" class="cta-tooltip" role="status" aria-hidden="true" aria-live="polite">
+  <span id="cta-tip-text">Click to Explore the Cybersecurity Compass →</span>
+</div>
+
+<!-- SOC / CROC info tooltips -->
+<div id="soc-tip" class="node-tooltip soc" role="status" aria-hidden="true">
+  <strong id="soc-tip-label">SOC · SecOps</strong>
+  <span id="soc-tip-text"></span>
+  <a id="soc-tip-link" class="node-tip-link" href="https://www.researchgate.net/publication/407425831" target="_blank" rel="noopener"></a>
+</div>
+<div id="croc-tip" class="node-tooltip croc" role="status" aria-hidden="true">
+  <strong id="croc-tip-label">CROC · CyberRiskOps</strong>
+  <span id="croc-tip-text"></span>
+  <a id="croc-tip-link" class="node-tip-link" href="https://www.researchgate.net/publication/402149983" target="_blank" rel="noopener"></a>
+</div>
+
+<script>
+  const T = {"en": {"t-title": "The Future of SOC is", "t-subtitle": "A LOOP THAT DOES NOT MOVE IS NOT A LOOP", "t-soc-sub": "SecOps", "t-soc-1": "PROTECTS", "t-soc-2": "TODAY", "t-croc-sub": "CyberRiskOps", "t-croc-1": "PROTECTS", "t-croc-2": "TOMORROW", "t-crossover": "Intelligence moves at machine speed, or it is history.", "t-proc-left": "DETECT  ·  INVESTIGATE  ·  RESPOND", "t-proc-right": "IDENTIFY · PRIORITIZE · REDUCE · VERIFY · MONITOR", "t-flow-left": "incidents, detections, actionable insight", "t-flow-right": "exposures, risk scores, asset criticality", "t-bot-left": "what is happening right now?", "t-bot-right": "what is our exposure, and what do we do today?", "t-footer": "EVERY CYCLE POWERS THE NEXT", "t-credit": "Created and Designed by:", "t-pub-title": "The Future of SOC Is ∞"}, "es": {"t-title": "El Futuro del SOC es", "t-subtitle": "UN CICLO QUE NO SE MUEVE NO ES UN CICLO", "t-soc-sub": "SecOps", "t-soc-1": "PROTEGE", "t-soc-2": "EL HOY", "t-croc-sub": "CyberRiskOps", "t-croc-1": "PROTEGE", "t-croc-2": "EL MAÑANA", "t-crossover": "La inteligencia se mueve a velocidad de máquina, o es historia.", "t-proc-left": "DETECTAR  ·  INVESTIGAR  ·  RESPONDER", "t-proc-right": "IDENTIFICAR · PRIORIZAR · REDUCIR · VERIFICAR · MONITOREAR", "t-flow-left": "incidentes, detecciones, insights accionables", "t-flow-right": "exposiciones, puntajes de riesgo, criticidad de activos", "t-bot-left": "¿qué está pasando en este momento?", "t-bot-right": "¿cuál es nuestra exposición, y qué hacemos hoy?", "t-footer": "CADA CICLO POTENCIA EL SIGUIENTE", "t-credit": "Creado y Diseñado por:", "t-pub-title": "El Futuro del SOC Es ∞"}, "pt": {"t-title": "O Futuro do SOC é", "t-subtitle": "UM CICLO QUE NÃO SE MOVE NÃO É UM CICLO", "t-soc-sub": "SecOps", "t-soc-1": "PROTEGE", "t-soc-2": "O HOJE", "t-croc-sub": "CyberRiskOps", "t-croc-1": "PROTEGE", "t-croc-2": "O AMANHÃ", "t-crossover": "A inteligência se move em velocidade de máquina, ou é história.", "t-proc-left": "DETECTAR  ·  INVESTIGAR  ·  RESPONDER", "t-proc-right": "IDENTIFICAR · PRIORIZAR · REDUZIR · VERIFICAR · MONITORAR", "t-flow-left": "incidentes, detecções, insights acionáveis", "t-flow-right": "exposições, scores de risco, criticidade dos ativos", "t-bot-left": "o que está acontecendo agora?", "t-bot-right": "qual é a nossa exposição, e o que fazemos hoje?", "t-footer": "CADA CICLO POTENCIA O PRÓXIMO", "t-credit": "Criado e Projetado por:", "t-pub-title": "O Futuro do SOC É ∞"}, "fr": {"t-title": "Le Futur du SOC est", "t-subtitle": "UNE BOUCLE QUI NE BOUGE PAS N'EST PAS UNE BOUCLE", "t-soc-sub": "SecOps", "t-soc-1": "PROTÈGE", "t-soc-2": "AUJOURD'HUI", "t-croc-sub": "CyberRiskOps", "t-croc-1": "PROTÈGE", "t-croc-2": "DEMAIN", "t-crossover": "L'intelligence circule à la vitesse de la machine, ou c'est de l'histoire.", "t-proc-left": "DÉTECTER  ·  ENQUÊTER  ·  RÉPONDRE", "t-proc-right": "IDENTIFIER · PRIORISER · RÉDUIRE · VÉRIFIER · SURVEILLER", "t-flow-left": "incidents, détections, insights exploitables", "t-flow-right": "expositions, scores de risque, criticité des actifs", "t-bot-left": "qu'est-ce qui se passe en ce moment ?", "t-bot-right": "quelle est notre exposition, et que faisons-nous aujourd'hui ?", "t-footer": "CHAQUE CYCLE ALIMENTE LE SUIVANT", "t-credit": "Créé et Conçu par :", "t-pub-title": "Le Futur du SOC Est ∞"}, "ja": {"t-title": "SOCの未来は", "t-subtitle": "動かないループはループではない", "t-soc-sub": "SecOps", "t-soc-1": "守るのは", "t-soc-2": "今日", "t-croc-sub": "CyberRiskOps", "t-croc-1": "守るのは", "t-croc-2": "明日", "t-crossover": "インテリジェンスは機械の速度で動く。さもなければ、それは過去の遺物だ。", "t-proc-left": "検知  ·  調査  ·  対応", "t-proc-right": "特定 · 優先順位付け · 低減 · 検証 · 監視", "t-flow-left": "インシデント、検知、実用的なインサイト", "t-flow-right": "エクスポージャー、リスクスコア、資産の重要度", "t-bot-left": "今、何が起きているのか?", "t-bot-right": "我々のエクスポージャーは何か、そして今日何をすべきか?", "t-footer": "すべてのサイクルが次のサイクルを強化する", "t-credit": "作成・デザイン:", "t-pub-title": "The Future of SOC Is ∞"}, "ar": {"t-title": "مستقبل الـ SOC هو", "t-subtitle": "الحلقة التي لا تتحرك ليست حلقة", "t-soc-sub": "SecOps", "t-soc-1": "تحمي", "t-soc-2": "اليوم", "t-croc-sub": "CyberRiskOps", "t-croc-1": "تحمي", "t-croc-2": "الغد", "t-crossover": "الاستخبارات تتحرك بسرعة الآلة، أو تصبح من الماضي.", "t-proc-left": "الكشف  ·  التحقيق  ·  الاستجابة", "t-proc-right": "التحديد · تحديد الأولويات · التقليل · التحقق · المراقبة", "t-flow-left": "الحوادث، الاكتشافات، رؤى قابلة للتنفيذ", "t-flow-right": "التعرضات، درجات الخطر، أهمية الأصول", "t-bot-left": "ماذا يحدث الآن؟", "t-bot-right": "ما هو تعرضنا، وماذا نفعل اليوم؟", "t-footer": "كل دورة تغذي التي تليها", "t-credit": "إنشاء وتصميم:", "t-pub-title": "The Future of SOC Is ∞"}};
+  const buttons = document.querySelectorAll('.lang-bar button');
+
+  function centerTitleGroup() {
+    const titleEl = document.getElementById('t-title');
+    const iconGroup = document.getElementById('title-infinity');
+    if (!titleEl || !iconGroup) return;
+    const GAP = 24;        // gap between end of title text and start of the infinity glyph
+    const ICON_WIDTH = 68; // the glyph path spans -34..+34
+    const CENTER_X = 800;  // same horizontal center used by the subtitle below
+    let textWidth;
+    try { textWidth = titleEl.getBBox().width; } catch (e) { return; }
+    const combinedWidth = textWidth + GAP + ICON_WIDTH;
+    const leftEdge = CENTER_X - combinedWidth / 2;
+    const textEndX = leftEdge + textWidth;
+    titleEl.setAttribute('x', textEndX);
+    const iconCenterX = textEndX + GAP + ICON_WIDTH / 2;
+    iconGroup.setAttribute('transform', 'translate(' + iconCenterX + ', 104)');
+  }
+
+  function setLang(lang) {
+    const dict = T[lang];
+    if (!dict) return;
+    Object.entries(dict).forEach(([id, text]) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    });
+    buttons.forEach(b => {
+      const isActive = b.dataset.lang === lang;
+      b.classList.toggle('active', isActive);
+      b.setAttribute('aria-selected', String(isActive));
+    });
+    document.documentElement.setAttribute('lang', lang);
+    centerTitleGroup();
+  }
+
+  buttons.forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+
+  // Auto-detect browser language: use it if supported, otherwise default to English.
+  (function () {
+    const supported = ['en', 'es', 'pt', 'fr', 'ja', 'ar'];
+    const raw = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+    const code = raw.split('-')[0];
+    setLang(supported.indexOf(code) !== -1 ? code : 'en');
+  })();
+
+  /* ============================================================
+     CTA PILL TOOLTIP — wires the central compass click target
+     to a cursor-following pill that says "Click to Explore..."
+     ============================================================ */
+  (function () {
+    const cta = document.getElementById('cta-tip');
+    const ctaText = document.getElementById('cta-tip-text');
+    const trigger = document.getElementById('compass-hit');
+    if (!cta || !ctaText || !trigger) return;
+
+    const LABELS = {
+      en: 'Click to Explore the Cybersecurity Compass →',
+      es: 'Haz clic para Explorar la Brújula de Ciberseguridad →',
+      pt: 'Clique para Explorar a Bússola de Cibersegurança →',
+      fr: 'Cliquez pour Explorer la Boussole de Cybersécurité →',
+      ja: 'クリックしてサイバーセキュリティ・コンパスを探索 →',
+      ar: 'انقر لاستكشاف بوصلة الأمن السيبراني →'
+    };
+    const labelForCurrentLang = () => {
+      const lang = document.documentElement.getAttribute('lang') || 'en';
+      return LABELS[lang] || LABELS.en;
+    };
+
+    let active = false;
+
+    function positionAt(x, y) {
+      cta.style.left = x + 'px';
+      cta.style.top  = y + 'px';
+      cta.classList.remove('flipped');
+      requestAnimationFrame(() => {
+        const r = cta.getBoundingClientRect();
+        // Flip below cursor if no room above
+        if (r.top < 8) cta.classList.add('flipped');
+        // Clamp horizontally to ±12px from viewport edges
+        const halfW = r.width / 2;
+        if (x - halfW < 12) {
+          cta.style.left = (12 + halfW) + 'px';
+        } else if (x + halfW > window.innerWidth - 12) {
+          cta.style.left = (window.innerWidth - 12 - halfW) + 'px';
+        }
+      });
+    }
+
+    trigger.addEventListener('mouseenter', e => {
+      active = true;
+      ctaText.textContent = labelForCurrentLang();
+      positionAt(e.clientX, e.clientY);
+      cta.classList.add('visible');
+      cta.setAttribute('aria-hidden', 'false');
+    });
+    trigger.addEventListener('mousemove', e => {
+      if (!active) return;
+      positionAt(e.clientX, e.clientY);
+      // Update text in case the language was switched mid-hover
+      ctaText.textContent = labelForCurrentLang();
+    });
+    trigger.addEventListener('mouseleave', () => {
+      active = false;
+      cta.classList.remove('visible');
+      cta.setAttribute('aria-hidden', 'true');
+    });
+    // Hide the pill once the modal opens, in case the click lands before mouseleave fires
+    trigger.addEventListener('click', () => {
+      active = false;
+      cta.classList.remove('visible');
+      cta.setAttribute('aria-hidden', 'true');
+    });
+  })();
+
+  /* ============================================================
+     SOC / CROC INFO TOOLTIPS — hover on desktop, tap-to-toggle
+     on touch devices (mirrors the CTA pill mechanics)
+     ============================================================ */
+  (function () {
+    const NODE_COPY = {
+      en: {
+        socLabel: 'SOC · SecOps', crocLabel: 'CROC · CyberRiskOps',
+        soc: 'The SOC protects today. It watches what is happening right now. It detects the intrusion, investigates the alert, responds to the incident in front of it. Its clock is the live event.',
+        croc: 'The CROC protects tomorrow. It does not wait for the alert. It asks what our exposure is right now, how it is changing, and what we should do today to reduce it before it ever becomes an incident. Its clock is the changing environment.',
+        socLink: 'Read: The Future of SOC Is ∞ →',
+        crocLink: 'Read: CyberRiskOps, The Operating Model →'
+      },
+      es: {
+        socLabel: 'SOC · SecOps', crocLabel: 'CROC · CyberRiskOps',
+        soc: 'El SOC protege el hoy. Observa lo que está sucediendo en este momento. Detecta la intrusión, investiga la alerta, responde al incidente que tiene enfrente. Su reloj es el evento en vivo.',
+        croc: 'El CROC protege el mañana. No espera la alerta. Pregunta cuál es nuestra exposición en este momento, cómo está cambiando, y qué deberíamos hacer hoy para reducirla antes de que se convierta en un incidente. Su reloj es el entorno que cambia.',
+        socLink: 'Leer: The Future of SOC Is ∞ →',
+        crocLink: 'Leer: CyberRiskOps, The Operating Model →'
+      },
+      pt: {
+        socLabel: 'SOC · SecOps', crocLabel: 'CROC · CyberRiskOps',
+        soc: 'O SOC protege o hoje. Observa o que está acontecendo agora. Detecta a intrusão, investiga o alerta, responde ao incidente que tem à frente. Seu relógio é o evento ao vivo.',
+        croc: 'O CROC protege o amanhã. Não espera pelo alerta. Pergunta qual é a nossa exposição agora, como ela está mudando, e o que devemos fazer hoje para reduzi-la antes que se torne um incidente. Seu relógio é o ambiente em mudança.',
+        socLink: 'Ler: The Future of SOC Is ∞ →',
+        crocLink: 'Ler: CyberRiskOps, The Operating Model →'
+      },
+      fr: {
+        socLabel: 'SOC · SecOps', crocLabel: 'CROC · CyberRiskOps',
+        soc: "Le SOC protège aujourd'hui. Il regarde ce qui se passe en temps réel. Il détecte l'intrusion, analyse l'alerte et répond à l'incident. Son horloge est l'événement en direct.",
+        croc: "Le CROC protège demain. Il n'attend pas l'alerte. Il observe l'exposition actuelle, son évolution, et les actions à mener maintenant pour réduire le risque avant qu'il ne devienne un incident. Son horloge est l'environnement changeant.",
+        socLink: 'Lire : The Future of SOC Is ∞ →',
+        crocLink: 'Lire : CyberRiskOps, The Operating Model →'
+      },
+      ja: {
+        socLabel: 'SOC · SecOps', crocLabel: 'CROC · CyberRiskOps',
+        soc: 'SOCが守るのは今日だ。今、この瞬間に何が起きているかを監視する。侵入を検知し、アラートを調査し、目の前のインシデントに対応する。その時計が刻むのは、今まさに起きているイベントだ。',
+        croc: 'CROCが守るのは明日だ。アラートを待つことはない。今この瞬間のエクスポージャーは何か、それはどう変化しているか、そしてインシデントになる前に今日何をすべきかを問い続ける。その時計が刻むのは、変化し続ける環境そのものだ。',
+        socLink: '読む: The Future of SOC Is ∞ →',
+        crocLink: '読む: CyberRiskOps, The Operating Model →'
+      },
+      ar: {
+        socLabel: 'SOC · SecOps', crocLabel: 'CROC · CyberRiskOps',
+        soc: 'مركز العمليات الأمنية (SOC) يحمي اليوم. يراقب ما يحدث الآن. يكتشف الاختراق، ويحقق في التنبيه، ويستجيب للحادث الماثل أمامه. ساعته هي الحدث الحي.',
+        croc: 'مركز عمليات مخاطر الأمن السيبراني (CROC) يحمي الغد. لا ينتظر التنبيه. يسأل ما هو تعرضنا الآن، وكيف يتغير، وماذا يجب أن نفعله اليوم لتقليله قبل أن يتحول إلى حادث. ساعته هي البيئة المتغيرة.',
+        socLink: 'اقرأ: The Future of SOC Is ∞ →',
+        crocLink: 'اقرأ: CyberRiskOps, The Operating Model →'
+      }
+    };
+    const copyForCurrentLang = () => {
+      const lang = document.documentElement.getAttribute('lang') || 'en';
+      return NODE_COPY[lang] || NODE_COPY.en;
+    };
+
+    function wireNodeTooltip(hitId, tipId, labelId, textId, linkId, key) {
+      const hit = document.getElementById(hitId);
+      const tip = document.getElementById(tipId);
+      const label = document.getElementById(labelId);
+      const text = document.getElementById(textId);
+      const link = document.getElementById(linkId);
+      if (!hit || !tip || !label || !text || !link) return;
+
+      let active = false;
+
+      function fillCopy() {
+        const c = copyForCurrentLang();
+        label.textContent = key === 'soc' ? c.socLabel : c.crocLabel;
+        text.textContent = c[key];
+        link.textContent = key === 'soc' ? c.socLink : c.crocLink;
+      }
+
+      function positionAt(x, y) {
+        tip.style.left = x + 'px';
+        tip.style.top  = y + 'px';
+        tip.classList.remove('flipped');
+        requestAnimationFrame(() => {
+          const r = tip.getBoundingClientRect();
+          if (r.top < 8) tip.classList.add('flipped');
+          const halfW = r.width / 2;
+          if (x - halfW < 12) {
+            tip.style.left = (12 + halfW) + 'px';
+          } else if (x + halfW > window.innerWidth - 12) {
+            tip.style.left = (window.innerWidth - 12 - halfW) + 'px';
+          }
+        });
+      }
+
+      function show(x, y) {
+        active = true;
+        clearTimeout(hideTimer);
+        fillCopy();
+        positionAt(x, y);
+        tip.classList.add('visible');
+        tip.setAttribute('aria-hidden', 'false');
+      }
+      let hideTimer = null;
+      function hide() {
+        active = false;
+        tip.classList.remove('visible');
+        tip.setAttribute('aria-hidden', 'true');
+      }
+      // Small grace period so moving the cursor from the node to the
+      // tooltip itself (to click the link) doesn't dismiss it first.
+      function scheduleHide() {
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(hide, 150);
+      }
+
+      // Desktop hover
+      hit.addEventListener('mouseenter', e => show(e.clientX, e.clientY));
+      hit.addEventListener('mousemove', e => { if (active) positionAt(e.clientX, e.clientY); });
+      hit.addEventListener('mouseleave', scheduleHide);
+      tip.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+      tip.addEventListener('mouseleave', scheduleHide);
+
+      // Clicking the node while the tooltip is already showing opens
+      // its link directly, so the person doesn't have to aim for the
+      // small link text.
+      hit.addEventListener('click', () => {
+        if (tip.classList.contains('visible')) {
+          window.open(link.href, '_blank', 'noopener');
+        }
+      });
+
+      // Touch: tap to toggle, tap elsewhere to dismiss
+      hit.addEventListener('touchstart', e => {
+        e.stopPropagation();
+        const t = e.touches[0];
+        if (tip.classList.contains('visible')) { hide(); return; }
+        show(t.clientX, t.clientY);
+      }, { passive: true });
+      document.addEventListener('touchstart', () => { if (active) hide(); });
+      // Keep taps on the link itself from being swallowed by the document dismiss handler
+      link.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
+      link.addEventListener('click', e => e.stopPropagation());
+    }
+
+    wireNodeTooltip('soc-hit', 'soc-tip', 'soc-tip-label', 'soc-tip-text', 'soc-tip-link', 'soc');
+    wireNodeTooltip('croc-hit', 'croc-tip', 'croc-tip-label', 'croc-tip-text', 'croc-tip-link', 'croc');
+  })();
+</script>
+
+
+<!-- Cybersecurity Compass modal -->
+<style>
+  #cc-modal { position: fixed; inset: 0; z-index: 999; display: none; align-items: center; justify-content: center; }
+  #cc-modal.open { display: flex; }
+  #cc-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.80); opacity: 0; transition: opacity 220ms ease; }
+  #cc-modal.open #cc-backdrop { opacity: 1; }
+  #cc-frame-wrap { position: relative; width: min(94vw, 94vh); aspect-ratio: 1/1; transform: scale(0.96); opacity: 0; transition: opacity 240ms ease 60ms, transform 240ms ease 60ms; }
+  #cc-modal.open #cc-frame-wrap { opacity: 1; transform: scale(1); }
+  #cc-iframe { width: 100%; height: 100%; border: 0; background: transparent; display: block; }
+  #cc-close { position: absolute; top: 14px; right: 14px; z-index: 1001; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.18); background: rgba(0,0,0,0.55); color: #f5f5f7; font-size: 22px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background 160ms ease, border-color 160ms ease; }
+  #cc-close:hover { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.30); }
+  #compass-hit:hover { fill: rgba(255,255,255,0.04); }
+</style>
+
+<div id="cc-modal" role="dialog" aria-modal="true" aria-label="The Cybersecurity Compass">
+  <div id="cc-backdrop"></div>
+  <div id="cc-frame-wrap">
+    <button type="button" id="cc-close" aria-label="Close">×</button>
+    <iframe id="cc-iframe" title="The Cybersecurity Compass" allowtransparency="true" style="background:transparent;"></iframe>
+  </div>
+</div>
+
+<script>
+const COMPASS_HTML = `<!DOCTYPE html>
+<!-- saved from url=(0069)file:///Users/jpcastro/Downloads/CybersecurityCompass_animated_4.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Cybersecurity Compass</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:#000;height:100%;}
+@keyframes waveDrift{from{background-position:0 0,0 0;}to{background-position:1200px 0,-900px 0;}}
+@keyframes hazeFloat{0%{transform:translate3d(-2%,0,0) scale(1.05);}50%{transform:translate3d(2%,-1%,0) scale(1.09);}100%{transform:translate3d(-2%,0,0) scale(1.05);}}
+#wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#000;}
+#stage{position:relative;width:min(96vw,96vh);aspect-ratio:1/1;overflow:hidden;background:#0a0c0e;border-radius:6px;box-shadow:0 30px 80px rgba(0,0,0,.6);}
+.bg1{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 16%,#22262c 0%,#14171b 38%,#0a0c0e 70%,#050607 100%);}
+.bg2{position:absolute;inset:0;opacity:.55;background:linear-gradient(180deg,rgba(40,46,54,0) 42%,rgba(58,68,80,.22) 72%,rgba(7,9,11,.92) 100%);}
+.bg3{position:absolute;left:-10%;top:-12%;width:120%;height:66%;opacity:.4;background:radial-gradient(60% 80% at 30% 40%,rgba(124,134,144,.18),transparent 60%),radial-gradient(50% 70% at 76% 28%,rgba(92,102,112,.16),transparent 60%);animation:hazeFloat 26s ease-in-out infinite;}
+.bg4{position:absolute;left:0;right:0;bottom:0;height:48%;opacity:.16;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 2px,transparent 2px 9px),repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 1px,transparent 1px 14px);background-size:1200px 100%,900px 100%;animation:waveDrift 18s linear infinite;mix-blend-mode:screen;}
+.bg5{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(4,5,7,.62) 32%,rgba(4,5,7,.2) 56%,rgba(4,5,7,0) 70%);}
+#compass-svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
+/* UI overlays */
+#lang-bar{position:absolute;top:10px;right:10px;z-index:100;display:flex;gap:4px;align-items:center;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:4px 6px;}
+#lang-bar button{padding:3px 9px;border-radius:5px;border:none;cursor:pointer;font-weight:600;font-size:10px;font-family:Inter,system-ui,sans-serif;transition:all .2s;letter-spacing:.04em;}
+#compass-title{position:absolute;top:12px;left:14px;z-index:100;font-family:Inter,Arial,sans-serif;font-size:clamp(16px,3.2vmin,35px);font-weight:600;color:#fff;letter-spacing:.2px;pointer-events:none;}
+#credit{position:absolute;bottom:10px;left:12px;z-index:100;font-family:Inter,Arial,sans-serif;font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.04em;line-height:1.6;pointer-events:auto;}
+#pub-link{position:absolute;bottom:10px;right:12px;z-index:100;font-family:Inter,Arial,sans-serif;font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.03em;line-height:1.6;text-align:right;max-width:52%;pointer-events:auto;}
+/* Tooltip */
+#tt{position:absolute;pointer-events:none;z-index:300;opacity:0;transition:opacity .2s ease;width:285px;background:rgba(8,10,12,.94);border:1px solid rgba(255,255,255,.13);border-radius:10px;padding:14px 16px;backdrop-filter:blur(12px);}
+#tt.on{opacity:1;}
+#tt-h{font-family:Inter,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#E01C24;margin-bottom:4px;}
+#tt-s{font-family:Inter,Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:10px;}
+#tt-b{font-family:Inter,Arial,sans-serif;font-size:11px;line-height:1.7;color:rgba(255,255,255,.78);}
+/* Hit areas */
+#hits{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:50;}
+#hits path{pointer-events:all;cursor:pointer;fill:transparent;}
+
+/* injected overrides for embedded use */
+html,body,#wrap,#stage{background:transparent !important;}
+#stage{box-shadow:none !important;}
+.bg1,.bg2,.bg3,.bg4,.bg5{display:none !important;}
+#lang-bar{display:none !important;}
+#compass-title{left:0 !important; right:0 !important; text-align:center !important; font-size:clamp(26px,5.2vmin,58px) !important; font-weight:700 !important; letter-spacing:0.5px !important; text-shadow: 0 0 18px rgba(0,0,0,1), 0 0 42px rgba(0,0,0,0.95), 0 0 80px rgba(0,0,0,0.85), 0 0 130px rgba(0,0,0,0.6) !important;}
+</style>
+</head>
+<body>
+<div id="wrap">
+<div id="stage">
+  <div class="bg1"></div><div class="bg2"></div><div class="bg3"></div><div class="bg4"></div><div class="bg5"></div>
+
+  <svg id="compass-svg" viewBox="0 0 1080 1080" style="position:absolute;inset:0;width:100%;height:100%;display:block;">
+<defs><lineargradient id="bg0" gradientUnits="userSpaceOnUse" x1="885.8" y1="447.34" x2="742.84" y2="485.65"><stop offset="0" stop-color="#42454b"></stop><stop offset="1" stop-color="#0c0d10"></stop></lineargradient><lineargradient id="ag0" gradientUnits="userSpaceOnUse" x1="644.82" y1="148.8" x2="826.38" y2="826.38"><stop offset="0" stop-color="#4a1014"></stop><stop offset="1" stop-color="#E01C24"></stop></lineargradient><lineargradient id="bg1" gradientUnits="userSpaceOnUse" x1="447.34" y1="885.8" x2="485.65" y2="742.84"><stop offset="0" stop-color="#93989c"></stop><stop offset="1" stop-color="#494c50"></stop></lineargradient><lineargradient id="ag1" gradientUnits="userSpaceOnUse" x1="826.38" y1="826.38" x2="148.8" y2="644.82"><stop offset="0" stop-color="#4a1014"></stop><stop offset="1" stop-color="#E01C24"></stop></lineargradient><lineargradient id="bg2" gradientUnits="userSpaceOnUse" x1="286.86" y1="286.86" x2="391.51" y2="391.51"><stop offset="0" stop-color="#5a5e63"></stop><stop offset="1" stop-color="#2a2c30"></stop></lineargradient><lineargradient id="ag2" gradientUnits="userSpaceOnUse" x1="148.8" y1="644.82" x2="644.82" y2="148.8"><stop offset="0" stop-color="#4a1014"></stop><stop offset="1" stop-color="#E01C24"></stop></lineargradient><path id="pl0" d="M 679.63 288.11 A 288 288 0 0 1 786.86 688.33" fill="none"></path><path id="sl0" d="M 659.49 341.14 A 232 232 0 0 1 742.91 652.48" fill="none"></path><path id="ol0" d="M 723.87 179.14 A 405 405 0 0 1 879.66 760.58" fill="none"></path><path id="pl1" d="M 288.11 679.63 A 288 288 0 0 0 688.33 786.86" fill="none"></path><path id="sl1" d="M 341.14 659.49 A 232 232 0 0 0 652.48 742.91" fill="none"></path><path id="ol1" d="M 179.14 723.87 A 405 405 0 0 0 760.58 879.66" fill="none"></path><path id="pl2" d="M 252.04 545.03 A 288 288 0 0 1 545.03 252.04" fill="none"></path><path id="sl2" d="M 308.04 535.95 A 232 232 0 0 1 535.95 308.04" fill="none"></path><path id="ol2" d="M 135.56 561.2 A 405 405 0 0 1 561.2 135.56" fill="none"></path><path id="pz0" d="M 449.41 405.7 A 162 162 0 0 1 630.59 405.7" fill="none"></path><path id="pz1" d="M 611.02 685.6 A 162 162 0 0 0 701.61 528.7" fill="none"></path><path id="pz2" d="M 378.39 528.7 A 162 162 0 0 0 468.98 685.6" fill="none"></path></defs><g id="compassRoot" transform="translate(540,540) rotate(0.00) scale(1.000) translate(-540,-540)" opacity="1.000"><g class="grp" id="grp0" opacity="0.700"><path d="M 651.81 122.72 A 432 432 0 0 1 845.47 845.47 L 772.3 871.76 L 807.29 807.29 A 378 378 0 0 0 637.83 174.88 L 711.16 172.95 Z" fill="url(#ag0)"></path><path d="M 632.66 194.2 A 358 358 0 0 1 793.14 793.14 L 698.81 775.45 L 688.49 688.49 A 210 210 0 0 0 594.35 337.16 L 664.5 284.74 Z" fill="url(#bg0)"></path><path id="glow0" d="M 632.66 194.2 A 358 358 0 0 1 793.14 793.14 L 698.81 775.45 L 688.49 688.49 A 210 210 0 0 0 594.35 337.16 L 664.5 284.74 Z" fill="#ffffff" opacity="0.000"></path><text font-family="Inter,Arial" font-weight="600" font-size="35" fill="#ffffff" letter-spacing="0.2"><textpath href="#pl0" startOffset="50%" text-anchor="middle" id="t-crm">Gestión del Ciber Riesgo</textpath></text><text font-family="Inter,Arial" font-weight="500" font-size="17" fill="#d6d8da" letter-spacing="0.2"><textpath href="#sl0" startOffset="50%" text-anchor="middle" id="t-pap">Proactivo y Predictivo</textpath></text><text font-family="Inter,Arial" font-weight="600" font-size="25" fill="#ffffff" letter-spacing="0.2" dominant-baseline="central"><textpath href="#ol0" startOffset="50%" text-anchor="middle" dominant-baseline="central" id="t-bab">Antes de una Brecha</textpath></text></g><g class="grp" id="grp1" opacity="0.849"><path d="M 845.47 845.47 A 432 432 0 0 1 122.72 651.81 L 136.54 575.3 L 174.88 637.83 A 378 378 0 0 0 807.29 807.29 L 772.3 871.76 Z" fill="url(#ag1)"></path><path d="M 793.14 793.14 A 358 358 0 0 1 194.2 632.66 L 256.69 559.81 L 337.16 594.35 A 210 210 0 0 0 688.49 688.49 L 698.81 775.45 Z" fill="url(#bg1)"></path><path id="glow1" d="M 793.14 793.14 A 358 358 0 0 1 194.2 632.66 L 256.69 559.81 L 337.16 594.35 A 210 210 0 0 0 688.49 688.49 L 698.81 775.45 Z" fill="#ffffff" opacity="0.088"></path><text font-family="Inter,Arial" font-weight="600" font-size="35" fill="#ffffff" letter-spacing="0.2"><textpath href="#pl1" startOffset="50%" text-anchor="middle" id="t-dar">Detección y Respuesta</textpath></text><text font-family="Inter,Arial" font-weight="500" font-size="17" fill="#d6d8da" letter-spacing="0.2"><textpath href="#sl1" startOffset="50%" text-anchor="middle" id="t-rad">Reactivo y Defensivo</textpath></text><text font-family="Inter,Arial" font-weight="600" font-size="25" fill="#ffffff" letter-spacing="0.2" dominant-baseline="central"><textpath href="#ol1" startOffset="50%" text-anchor="middle" dominant-baseline="central" id="t-dub">Durante una Brecha</textpath></text></g><g class="grp" id="grp2" opacity="0.700"><path d="M 122.72 651.81 A 432 432 0 0 1 651.81 122.72 L 711.16 172.95 L 637.83 174.88 A 378 378 0 0 0 174.88 637.83 L 136.54 575.3 Z" fill="url(#ag2)"></path><path d="M 194.2 632.66 A 358 358 0 0 1 632.66 194.2 L 664.5 284.74 L 594.35 337.16 A 210 210 0 0 0 337.16 594.35 L 256.69 559.81 Z" fill="url(#bg2)"></path><path id="glow2" d="M 194.2 632.66 A 358 358 0 0 1 632.66 194.2 L 664.5 284.74 L 594.35 337.16 A 210 210 0 0 0 337.16 594.35 L 256.69 559.81 Z" fill="#ffffff" opacity="0.000"></path><text font-family="Inter,Arial" font-weight="600" font-size="35" fill="#ffffff" letter-spacing="0.2"><textpath href="#pl2" startOffset="50%" text-anchor="middle" id="t-cr">Ciber Resiliencia</textpath></text><text font-family="Inter,Arial" font-weight="500" font-size="17" fill="#d6d8da" letter-spacing="0.2"><textpath href="#sl2" startOffset="50%" text-anchor="middle" id="t-rai">Recuperar y Mejorar</textpath></text><text font-family="Inter,Arial" font-weight="600" font-size="25" fill="#ffffff" letter-spacing="0.2" dominant-baseline="central"><textpath href="#ol2" startOffset="50%" text-anchor="middle" dominant-baseline="central" id="t-aab">Después de una Brecha</textpath></text></g><circle cx="540" cy="540" r="372" fill="none" stroke="#ffffff" stroke-width="5"></circle><circle cx="540" cy="540" r="205" fill="none" stroke="#ffffff" stroke-width="5"></circle><g opacity="0.9"><line x1="540" y1="188" x2="540" y2="180" stroke="#ffffff" stroke-width="2"></line><line x1="564.55" y1="188.86" x2="565.11" y2="180.88" stroke="#ffffff" stroke-width="2"></line><line x1="588.99" y1="191.43" x2="590.1" y2="183.5" stroke="#ffffff" stroke-width="2"></line><line x1="613.18" y1="195.69" x2="614.85" y2="187.87" stroke="#ffffff" stroke-width="2"></line><line x1="637.02" y1="201.64" x2="639.23" y2="193.95" stroke="#ffffff" stroke-width="2"></line><line x1="660.39" y1="209.23" x2="663.13" y2="201.71" stroke="#ffffff" stroke-width="2"></line><line x1="683.17" y1="218.43" x2="686.43" y2="211.12" stroke="#ffffff" stroke-width="2"></line><line x1="705.25" y1="229.2" x2="709.01" y2="222.14" stroke="#ffffff" stroke-width="2"></line><line x1="726.53" y1="241.49" x2="730.77" y2="234.7" stroke="#ffffff" stroke-width="2"></line><line x1="746.9" y1="255.23" x2="751.6" y2="248.75" stroke="#ffffff" stroke-width="2"></line><line x1="766.26" y1="270.35" x2="771.4" y2="264.22" stroke="#ffffff" stroke-width="2"></line><line x1="784.52" y1="286.79" x2="790.08" y2="281.04" stroke="#ffffff" stroke-width="2"></line><line x1="801.59" y1="304.47" x2="807.53" y2="299.11" stroke="#ffffff" stroke-width="2"></line><line x1="817.38" y1="323.29" x2="823.68" y2="318.36" stroke="#ffffff" stroke-width="2"></line><line x1="831.82" y1="343.16" x2="838.45" y2="338.69" stroke="#ffffff" stroke-width="2"></line><line x1="844.84" y1="364" x2="851.77" y2="360" stroke="#ffffff" stroke-width="2"></line><line x1="856.38" y1="385.69" x2="863.57" y2="382.19" stroke="#ffffff" stroke-width="2"></line><line x1="866.37" y1="408.14" x2="873.79" y2="405.14" stroke="#ffffff" stroke-width="2"></line><line x1="874.77" y1="431.23" x2="882.38" y2="428.75" stroke="#ffffff" stroke-width="2"></line><line x1="881.54" y1="454.84" x2="889.31" y2="452.91" stroke="#ffffff" stroke-width="2"></line><line x1="886.65" y1="478.88" x2="894.53" y2="477.49" stroke="#ffffff" stroke-width="2"></line><line x1="890.07" y1="503.21" x2="898.03" y2="502.37" stroke="#ffffff" stroke-width="2"></line><line x1="891.79" y1="527.72" x2="899.78" y2="527.44" stroke="#ffffff" stroke-width="2"></line><line x1="891.79" y1="552.28" x2="899.78" y2="552.56" stroke="#ffffff" stroke-width="2"></line><line x1="890.07" y1="576.79" x2="898.03" y2="577.63" stroke="#ffffff" stroke-width="2"></line><line x1="886.65" y1="601.12" x2="894.53" y2="602.51" stroke="#ffffff" stroke-width="2"></line><line x1="881.54" y1="625.16" x2="889.31" y2="627.09" stroke="#ffffff" stroke-width="2"></line><line x1="874.77" y1="648.77" x2="882.38" y2="651.25" stroke="#ffffff" stroke-width="2"></line><line x1="866.37" y1="671.86" x2="873.79" y2="674.86" stroke="#ffffff" stroke-width="2"></line><line x1="856.38" y1="694.31" x2="863.57" y2="697.81" stroke="#ffffff" stroke-width="2"></line><line x1="844.84" y1="716" x2="851.77" y2="720" stroke="#ffffff" stroke-width="2"></line><line x1="831.82" y1="736.84" x2="838.45" y2="741.31" stroke="#ffffff" stroke-width="2"></line><line x1="817.38" y1="756.71" x2="823.68" y2="761.64" stroke="#ffffff" stroke-width="2"></line><line x1="801.59" y1="775.53" x2="807.53" y2="780.89" stroke="#ffffff" stroke-width="2"></line><line x1="784.52" y1="793.21" x2="790.08" y2="798.96" stroke="#ffffff" stroke-width="2"></line><line x1="766.26" y1="809.65" x2="771.4" y2="815.78" stroke="#ffffff" stroke-width="2"></line><line x1="746.9" y1="824.77" x2="751.6" y2="831.25" stroke="#ffffff" stroke-width="2"></line><line x1="726.53" y1="838.51" x2="730.77" y2="845.3" stroke="#ffffff" stroke-width="2"></line><line x1="705.25" y1="850.8" x2="709.01" y2="857.86" stroke="#ffffff" stroke-width="2"></line><line x1="683.17" y1="861.57" x2="686.43" y2="868.88" stroke="#ffffff" stroke-width="2"></line><line x1="660.39" y1="870.77" x2="663.13" y2="878.29" stroke="#ffffff" stroke-width="2"></line><line x1="637.02" y1="878.36" x2="639.23" y2="886.05" stroke="#ffffff" stroke-width="2"></line><line x1="613.18" y1="884.31" x2="614.85" y2="892.13" stroke="#ffffff" stroke-width="2"></line><line x1="588.99" y1="888.57" x2="590.1" y2="896.5" stroke="#ffffff" stroke-width="2"></line><line x1="564.55" y1="891.14" x2="565.11" y2="899.12" stroke="#ffffff" stroke-width="2"></line><line x1="540" y1="892" x2="540" y2="900" stroke="#ffffff" stroke-width="2"></line><line x1="515.45" y1="891.14" x2="514.89" y2="899.12" stroke="#ffffff" stroke-width="2"></line><line x1="491.01" y1="888.57" x2="489.9" y2="896.5" stroke="#ffffff" stroke-width="2"></line><line x1="466.82" y1="884.31" x2="465.15" y2="892.13" stroke="#ffffff" stroke-width="2"></line><line x1="442.98" y1="878.36" x2="440.77" y2="886.05" stroke="#ffffff" stroke-width="2"></line><line x1="419.61" y1="870.77" x2="416.87" y2="878.29" stroke="#ffffff" stroke-width="2"></line><line x1="396.83" y1="861.57" x2="393.57" y2="868.88" stroke="#ffffff" stroke-width="2"></line><line x1="374.75" y1="850.8" x2="370.99" y2="857.86" stroke="#ffffff" stroke-width="2"></line><line x1="353.47" y1="838.51" x2="349.23" y2="845.3" stroke="#ffffff" stroke-width="2"></line><line x1="333.1" y1="824.77" x2="328.4" y2="831.25" stroke="#ffffff" stroke-width="2"></line><line x1="313.74" y1="809.65" x2="308.6" y2="815.78" stroke="#ffffff" stroke-width="2"></line><line x1="295.48" y1="793.21" x2="289.92" y2="798.96" stroke="#ffffff" stroke-width="2"></line><line x1="278.41" y1="775.53" x2="272.47" y2="780.89" stroke="#ffffff" stroke-width="2"></line><line x1="262.62" y1="756.71" x2="256.32" y2="761.64" stroke="#ffffff" stroke-width="2"></line><line x1="248.18" y1="736.84" x2="241.55" y2="741.31" stroke="#ffffff" stroke-width="2"></line><line x1="235.16" y1="716" x2="228.23" y2="720" stroke="#ffffff" stroke-width="2"></line><line x1="223.62" y1="694.31" x2="216.43" y2="697.81" stroke="#ffffff" stroke-width="2"></line><line x1="213.63" y1="671.86" x2="206.21" y2="674.86" stroke="#ffffff" stroke-width="2"></line><line x1="205.23" y1="648.77" x2="197.62" y2="651.25" stroke="#ffffff" stroke-width="2"></line><line x1="198.46" y1="625.16" x2="190.69" y2="627.09" stroke="#ffffff" stroke-width="2"></line><line x1="193.35" y1="601.12" x2="185.47" y2="602.51" stroke="#ffffff" stroke-width="2"></line><line x1="189.93" y1="576.79" x2="181.97" y2="577.63" stroke="#ffffff" stroke-width="2"></line><line x1="188.21" y1="552.28" x2="180.22" y2="552.56" stroke="#ffffff" stroke-width="2"></line><line x1="188.21" y1="527.72" x2="180.22" y2="527.44" stroke="#ffffff" stroke-width="2"></line><line x1="189.93" y1="503.21" x2="181.97" y2="502.37" stroke="#ffffff" stroke-width="2"></line><line x1="193.35" y1="478.88" x2="185.47" y2="477.49" stroke="#ffffff" stroke-width="2"></line><line x1="198.46" y1="454.84" x2="190.69" y2="452.91" stroke="#ffffff" stroke-width="2"></line><line x1="205.23" y1="431.23" x2="197.62" y2="428.75" stroke="#ffffff" stroke-width="2"></line><line x1="213.63" y1="408.14" x2="206.21" y2="405.14" stroke="#ffffff" stroke-width="2"></line><line x1="223.62" y1="385.69" x2="216.43" y2="382.19" stroke="#ffffff" stroke-width="2"></line><line x1="235.16" y1="364" x2="228.23" y2="360" stroke="#ffffff" stroke-width="2"></line><line x1="248.18" y1="343.16" x2="241.55" y2="338.69" stroke="#ffffff" stroke-width="2"></line><line x1="262.62" y1="323.29" x2="256.32" y2="318.36" stroke="#ffffff" stroke-width="2"></line><line x1="278.41" y1="304.47" x2="272.47" y2="299.11" stroke="#ffffff" stroke-width="2"></line><line x1="295.48" y1="286.79" x2="289.92" y2="281.04" stroke="#ffffff" stroke-width="2"></line><line x1="313.74" y1="270.35" x2="308.6" y2="264.22" stroke="#ffffff" stroke-width="2"></line><line x1="333.1" y1="255.23" x2="328.4" y2="248.75" stroke="#ffffff" stroke-width="2"></line><line x1="353.47" y1="241.49" x2="349.23" y2="234.7" stroke="#ffffff" stroke-width="2"></line><line x1="374.75" y1="229.2" x2="370.99" y2="222.14" stroke="#ffffff" stroke-width="2"></line><line x1="396.83" y1="218.43" x2="393.57" y2="211.12" stroke="#ffffff" stroke-width="2"></line><line x1="419.61" y1="209.23" x2="416.87" y2="201.71" stroke="#ffffff" stroke-width="2"></line><line x1="442.98" y1="201.64" x2="440.77" y2="193.95" stroke="#ffffff" stroke-width="2"></line><line x1="466.82" y1="195.69" x2="465.15" y2="187.87" stroke="#ffffff" stroke-width="2"></line><line x1="491.01" y1="191.43" x2="489.9" y2="183.5" stroke="#ffffff" stroke-width="2"></line><line x1="515.45" y1="188.86" x2="514.89" y2="180.88" stroke="#ffffff" stroke-width="2"></line></g><polyline points="632.66 194.2 L 664.5 284.74 L 594.35 337.16" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"></polyline><polyline points="793.14 793.14 L 698.81 775.45 L 688.49 688.49" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"></polyline><polyline points="194.2 632.66 L 256.69 559.81 L 337.16 594.35" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"></polyline><g id="puzzle" transform="rotate(255.69 540 540)"><path d="M 366.79 440 A 200 200 0 0 1 713.21 440 L 687.66 454.75 A 15 15 0 1 1 672.07 463.75 L 646.52 478.5 A 123 123 0 0 0 433.48 478.5 L 407.93 463.75 A 15 15 0 1 0 392.34 454.75 L 366.79 440 Z" fill="#a4a8ac"></path><path d="M 713.21 440 A 200 200 0 0 1 540 740 L 540 710.5 A 15 15 0 1 1 540 692.5 L 540 663 A 123 123 0 0 0 646.52 478.5 L 672.07 463.75 A 15 15 0 1 0 687.66 454.75 L 713.21 440 Z" fill="#6a6e72"></path><path d="M 540 740 A 200 200 0 0 1 366.79 440 L 392.34 454.75 A 15 15 0 1 1 407.93 463.75 L 433.48 478.5 A 123 123 0 0 0 540 663 L 540 692.5 A 15 15 0 1 0 540 710.5 L 540 740 Z" fill="#878b8f"></path><text font-family="Inter,Arial" font-weight="600" font-size="29" fill="#ffffff" letter-spacing="0.2" dominant-baseline="central"><textpath href="#pz0" startOffset="50%" text-anchor="middle" dominant-baseline="central" id="t-ppl">Personas</textpath></text><text font-family="Inter,Arial" font-weight="600" font-size="29" fill="#ffffff" letter-spacing="0.2" dominant-baseline="central"><textpath href="#pz1" startOffset="50%" text-anchor="middle" dominant-baseline="central" id="t-prc">Procesos</textpath></text><text font-family="Inter,Arial" font-weight="600" font-size="29" fill="#ffffff" letter-spacing="0.2" dominant-baseline="central"><textpath href="#pz2" startOffset="50%" text-anchor="middle" dominant-baseline="central" id="t-tch">Tecnología</textpath></text></g><circle cx="540" cy="540" r="122" fill="#f4f4f3"></circle><g opacity="0.5"><line x1="540" y1="434" x2="540" y2="427" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="551.08" y1="434.58" x2="551.81" y2="427.62" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="562.04" y1="436.32" x2="563.49" y2="429.47" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="572.76" y1="439.19" x2="574.92" y2="432.53" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="583.11" y1="443.16" x2="585.96" y2="436.77" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="593" y1="448.2" x2="596.5" y2="442.14" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="602.31" y1="454.24" x2="606.42" y2="448.58" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="610.93" y1="461.23" x2="615.61" y2="456.02" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="618.77" y1="469.07" x2="623.98" y2="464.39" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="625.76" y1="477.69" x2="631.42" y2="473.58" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="631.8" y1="487" x2="637.86" y2="483.5" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="636.84" y1="496.89" x2="643.23" y2="494.04" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="640.81" y1="507.24" x2="647.47" y2="505.08" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="643.68" y1="517.96" x2="650.53" y2="516.51" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="645.42" y1="528.92" x2="652.38" y2="528.19" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="646" y1="540" x2="653" y2="540" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="645.42" y1="551.08" x2="652.38" y2="551.81" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="643.68" y1="562.04" x2="650.53" y2="563.49" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="640.81" y1="572.76" x2="647.47" y2="574.92" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="636.84" y1="583.11" x2="643.23" y2="585.96" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="631.8" y1="593" x2="637.86" y2="596.5" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="625.76" y1="602.31" x2="631.42" y2="606.42" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="618.77" y1="610.93" x2="623.98" y2="615.61" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="610.93" y1="618.77" x2="615.61" y2="623.98" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="602.31" y1="625.76" x2="606.42" y2="631.42" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="593" y1="631.8" x2="596.5" y2="637.86" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="583.11" y1="636.84" x2="585.96" y2="643.23" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="572.76" y1="640.81" x2="574.92" y2="647.47" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="562.04" y1="643.68" x2="563.49" y2="650.53" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="551.08" y1="645.42" x2="551.81" y2="652.38" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="540" y1="646" x2="540" y2="653" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="528.92" y1="645.42" x2="528.19" y2="652.38" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="517.96" y1="643.68" x2="516.51" y2="650.53" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="507.24" y1="640.81" x2="505.08" y2="647.47" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="496.89" y1="636.84" x2="494.04" y2="643.23" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="487" y1="631.8" x2="483.5" y2="637.86" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="477.69" y1="625.76" x2="473.58" y2="631.42" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="469.07" y1="618.77" x2="464.39" y2="623.98" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="461.23" y1="610.93" x2="456.02" y2="615.61" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="454.24" y1="602.31" x2="448.58" y2="606.42" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="448.2" y1="593" x2="442.14" y2="596.5" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="443.16" y1="583.11" x2="436.77" y2="585.96" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="439.19" y1="572.76" x2="432.53" y2="574.92" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="436.32" y1="562.04" x2="429.47" y2="563.49" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="434.58" y1="551.08" x2="427.62" y2="551.81" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="434" y1="540" x2="427" y2="540" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="434.58" y1="528.92" x2="427.62" y2="528.19" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="436.32" y1="517.96" x2="429.47" y2="516.51" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="439.19" y1="507.24" x2="432.53" y2="505.08" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="443.16" y1="496.89" x2="436.77" y2="494.04" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="448.2" y1="487" x2="442.14" y2="483.5" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="454.24" y1="477.69" x2="448.58" y2="473.58" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="461.23" y1="469.07" x2="456.02" y2="464.39" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="469.07" y1="461.23" x2="464.39" y2="456.02" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="477.69" y1="454.24" x2="473.58" y2="448.58" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="487" y1="448.2" x2="483.5" y2="442.14" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="496.89" y1="443.16" x2="494.04" y2="436.77" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="507.24" y1="439.19" x2="505.08" y2="432.53" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="517.96" y1="436.32" x2="516.51" y2="429.47" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="528.92" y1="434.58" x2="528.19" y2="427.62" stroke="#9a9ea2" stroke-width="1.6"></line></g><g id="rose"><path d="M 540 448 L 538.44 530.12 L 540 540 Z" fill="#dcdee0"></path><path d="M 540 448 L 541.56 530.12 L 540 540 Z" fill="#b9bcbf"></path><path d="M 605.05 474.95 L 545.88 531.91 L 540 540 Z" fill="#dcdee0"></path><path d="M 605.05 474.95 L 548.09 534.12 L 540 540 Z" fill="#b9bcbf"></path><path d="M 632 540 L 549.88 538.44 L 540 540 Z" fill="#dcdee0"></path><path d="M 632 540 L 549.88 541.56 L 540 540 Z" fill="#b9bcbf"></path><path d="M 605.05 605.05 L 548.09 545.88 L 540 540 Z" fill="#dcdee0"></path><path d="M 605.05 605.05 L 545.88 548.09 L 540 540 Z" fill="#b9bcbf"></path><path d="M 540 632 L 541.56 549.88 L 540 540 Z" fill="#dcdee0"></path><path d="M 540 632 L 538.44 549.88 L 540 540 Z" fill="#b9bcbf"></path><path d="M 474.95 605.05 L 534.12 548.09 L 540 540 Z" fill="#dcdee0"></path><path d="M 474.95 605.05 L 531.91 545.88 L 540 540 Z" fill="#b9bcbf"></path><path d="M 448 540 L 530.12 541.56 L 540 540 Z" fill="#dcdee0"></path><path d="M 448 540 L 530.12 538.44 L 540 540 Z" fill="#b9bcbf"></path><path d="M 474.95 474.95 L 531.91 534.12 L 540 540 Z" fill="#dcdee0"></path><path d="M 474.95 474.95 L 534.12 531.91 L 540 540 Z" fill="#b9bcbf"></path><path d="M 557.6 497.5 L 541.63 533.19 L 540 540 Z" fill="#e3e5e7"></path><path d="M 557.6 497.5 L 543.66 534.03 L 540 540 Z" fill="#cbced1"></path><path d="M 582.5 522.4 L 545.97 536.34 L 540 540 Z" fill="#e3e5e7"></path><path d="M 582.5 522.4 L 546.81 538.37 L 540 540 Z" fill="#cbced1"></path><path d="M 582.5 557.6 L 546.81 541.63 L 540 540 Z" fill="#e3e5e7"></path><path d="M 582.5 557.6 L 545.97 543.66 L 540 540 Z" fill="#cbced1"></path><path d="M 557.6 582.5 L 543.66 545.97 L 540 540 Z" fill="#e3e5e7"></path><path d="M 557.6 582.5 L 541.63 546.81 L 540 540 Z" fill="#cbced1"></path><path d="M 522.4 582.5 L 538.37 546.81 L 540 540 Z" fill="#e3e5e7"></path><path d="M 522.4 582.5 L 536.34 545.97 L 540 540 Z" fill="#cbced1"></path><path d="M 497.5 557.6 L 534.03 543.66 L 540 540 Z" fill="#e3e5e7"></path><path d="M 497.5 557.6 L 533.19 541.63 L 540 540 Z" fill="#cbced1"></path><path d="M 497.5 522.4 L 533.19 538.37 L 540 540 Z" fill="#e3e5e7"></path><path d="M 497.5 522.4 L 534.03 536.34 L 540 540 Z" fill="#cbced1"></path><path d="M 522.4 497.5 L 536.34 534.03 L 540 540 Z" fill="#e3e5e7"></path><path d="M 522.4 497.5 L 538.37 533.19 L 540 540 Z" fill="#cbced1"></path></g><g id="needle" transform="rotate(195.95 540 540)">
+  <!-- South: dark -->
+  <path d="M 540 540 L 526 540 L 540 632 L 554 540 Z" fill="#1a1c1f"></path>
+  <!-- North: red -->
+  <path d="M 540 540 L 526 540 L 540 448 L 554 540 Z" fill="#E01C24"></path>
+  <!-- Center diamond cap -->
+  <path d="M 540 526 L 554 540 L 540 554 L 526 540 Z" fill="#1a1c1f"></path>
+  <path d="M 540 531 L 549 540 L 540 549 L 531 540 Z" fill="#E01C24"></path>
+  <circle cx="540" cy="540" r="4" fill="#fff"></circle>
+</g></g>
+    </svg>
+
+  <svg id="hits" viewBox="0 0 1080 1080" style="pointer-events: all;">
+    <path id="hit0" d="M 651.81 122.72 A 432 432 0 0 1 845.47 845.47 L 688.49 688.49 A 210 210 0 0 0 594.35 337.16 Z" style="pointer-events: none;"></path>
+    <path id="hit1" d="M 845.47 845.47 A 432 432 0 0 1 122.72 651.81 L 337.16 594.35 A 210 210 0 0 0 688.49 688.49 Z" style="pointer-events: none;"></path>
+    <path id="hit2" d="M 122.72 651.81 A 432 432 0 0 1 651.81 122.72 L 594.35 337.16 A 210 210 0 0 0 337.16 594.35 Z" style="pointer-events: none;"></path>
+
+  </svg>
+
+  <div id="lang-bar">
+    <button id="btn-en" onclick="setLang('en')" style="background: rgba(255, 255, 255, 0.1); color: rgb(136, 136, 136);">EN</button>
+    <button id="btn-es" onclick="setLang('es')" style="background: rgb(224, 28, 36); color: rgb(255, 255, 255);">ES</button>
+    <button id="btn-pt" onclick="setLang('pt')" style="background: rgba(255, 255, 255, 0.1); color: rgb(136, 136, 136);">PT</button>
+    <button id="btn-fr" onclick="setLang('fr')" style="background: rgba(255, 255, 255, 0.1); color: rgb(136, 136, 136);">FR</button>
+    <button id="btn-ja" onclick="setLang('ja')" style="background: rgba(255, 255, 255, 0.1); color: rgb(136, 136, 136);">JA</button>
+    <button id="btn-ar" onclick="setLang('ar')" style="background: rgba(255, 255, 255, 0.1); color: rgb(136, 136, 136);">AR</button>
+  </div>
+
+  <div id="compass-title">La Brújula de Ciberseguridad</div>
+  <div id="credit">Creado y Diseñado por:<br><a href="https://www.linkedin.com/in/jpcastro/" target="_blank" style="color:rgba(255,255,255,.5);text-decoration:none;">Juan Pablo Castro Vilaró</a></div>
+  <div id="pub-link"><a href="https://www.researchgate.net/publication/389631500" target="_blank" style="color:rgba(255,255,255,.45);text-decoration:none;display:block;margin-bottom:3px;"><span style="display:inline;white-space:nowrap;">La Brújula de la Ciberseguridad:</span> <span style="display:inline;white-space:nowrap;">Navegando Estratégicamente el Tormentoso Océano Digital</span></a><a href="https://doi.org/10.13140/RG.2.2.20733.68322" target="_blank" style="color:rgba(255,255,255,.28);text-decoration:none;">DOI: 10.13140/RG.2.2.20733.68322</a></div>
+  <div id="tt" class="" style="left: 732.203px; top: 160.203px;"><div id="tt-h">Gestión del Ciber Riesgo</div><div id="tt-s">Antes de una Brecha · Proactivo y Predictivo</div><div id="tt-b">El norte verdadero de tu brújula de ciberseguridad. Sin él, las organizaciones derivan de crisis en crisis, reaccionando, recuperándose, sin reducir nunca el riesgo de forma real. La Gestión del Ciber Riesgo es la disciplina proactiva y predictiva que anticipa las amenazas antes de que se materialicen, prioriza lo que más importa, optimiza las inversiones en seguridad y da a los ejecutivos un lenguaje claro para tomar decisiones estratégicas. Los ciberdelincuentes no solo buscan vulnerabilidades técnicas. Buscan la incertidumbre y la indecisión que genera no tener un norte. Esto es lo que cierra esa brecha.</div></div>
+</div>
+</div>
+
+<script>
+const T={
+  en:{
+    crm:"Cyber Risk Management",pap:"Proactive and Predictive",bab:"Before a Breach",
+    dar:"Detection and Response",rad:"Reactive and Defensive",dub:"During a Breach",
+    cr:"Cyber Resilience",rai:"Recover and Improve",aab:"After a Breach",
+    ppl:"People",prc:"Process",tch:"Technology",
+    title:"The Cybersecurity Compass",credit:"Created and Designed by:",
+    pubLine1:"The Cybersecurity Compass:",pubLine2:"Strategically Navigating the Stormy Digital Ocean",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  },
+  es:{
+    crm:"Gestión del Ciber Riesgo",pap:"Proactivo y Predictivo",bab:"Antes de una Brecha",
+    dar:"Detección y Respuesta",rad:"Reactivo y Defensivo",dub:"Durante una Brecha",
+    cr:"Ciber Resiliencia",rai:"Recuperar y Mejorar",aab:"Después de una Brecha",
+    ppl:"Personas",prc:"Procesos",tch:"Tecnología",
+    title:"La Brújula de Ciberseguridad",credit:"Creado y Diseñado por:",
+    pubLine1:"La Brújula de la Ciberseguridad:",pubLine2:"Navegando Estratégicamente el Tormentoso Océano Digital",
+    pubUrl:"https://www.researchgate.net/publication/389631500",
+    pubDoi:"10.13140/RG.2.2.20733.68322",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.20733.68322"
+  },
+  pt:{
+    crm:"Gestão de Ciber Riscos",pap:"Proativo e Preditivo",bab:"Antes de uma Brecha",
+    dar:"Detecção e Resposta",rad:"Reativo e Defensivo",dub:"Durante uma Brecha",
+    cr:"Ciber Resiliência",rai:"Recuperar e Melhorar",aab:"Após uma Brecha",
+    ppl:"Pessoas",prc:"Processos",tch:"Tecnologia",
+    title:"A Bússola da Cibersegurança",credit:"Criado e Projetado por:",
+    pubLine1:"A Bússola da Cibersegurança:",pubLine2:"Navegando Estrategicamente pelo Tempestuoso Oceano Digital",
+    pubUrl:"https://www.researchgate.net/publication/389631493",
+    pubDoi:"10.13140/RG.2.2.14022.79687",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.14022.79687"
+  },
+  fr:{
+    crm:"Gestion du Cyber Risque",pap:"Proactif et Prédictif",bab:"Avant une Brèche",
+    dar:"Détection et Réponse",rad:"Réactif et Défensif",dub:"Pendant une Brèche",
+    cr:"Cyber Résilience",rai:"Récupérer et Améliorer",aab:"Après une Brèche",
+    ppl:"Personnes",prc:"Processus",tch:"Technologie",
+    title:"La Boussole de Cybersécurité",credit:"Créé et Conçu par :",
+    pubLine1:"La Boussole de Cybersécurité :",pubLine2:"Naviguer Stratégiquement dans l'Océan Numérique Tumultueux",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  },
+  ja:{
+    crm:"サイバーリスクマネジメント",pap:"プロアクティブかつ予測的",bab:"侵害前",
+    dar:"検知と対応",rad:"リアクティブかつ防御的",dub:"侵害中",
+    cr:"サイバーレジリエンス",rai:"復旧と改善",aab:"侵害後",
+    ppl:"人材",prc:"プロセス",tch:"テクノロジー",
+    title:"サイバーセキュリティ・コンパス",credit:"作成・デザイン:",
+    pubLine1:"サイバーセキュリティ・コンパス:",pubLine2:"荒れ狂うデジタルの海を戦略的に航海する",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  },
+  ar:{
+    crm:"إدارة المخاطر السيبرانية",pap:"استباقي وتنبؤي",bab:"قبل الاختراق",
+    dar:"الكشف والاستجابة",rad:"تفاعلي ودفاعي",dub:"أثناء الاختراق",
+    cr:"المرونة السيبرانية",rai:"التعافي والتحسين",aab:"بعد الاختراق",
+    ppl:"الأشخاص",prc:"العملية",tch:"التقنية",
+    title:"بوصلة الأمن السيبراني",credit:"إنشاء وتصميم:",
+    pubLine1:"بوصلة الأمن السيبراني:",pubLine2:"التنقل الاستراتيجي في المحيط الرقمي العاصف",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  }
+};
+
+const TT={
+  en:[
+    {h:"Cyber Risk Management",s:"Before a Breach · Proactive & Predictive",
+     b:"The true north of your cybersecurity compass. Without it, organizations drift from crisis to crisis, reacting, recovering, never truly reducing risk. Cyber Risk Management is the proactive and predictive discipline that anticipates threats before they materialize, prioritizes what matters most, optimizes security investments, and gives executives a clear language to make strategic decisions. Cybercriminals are not only searching for technical vulnerabilities. They are looking for the uncertainty and indecision that comes from having no north. This is what closes that gap."},
+    {h:"Detection and Response",s:"During a Breach · Reactive & Defensive",
+     b:"In cybersecurity, it is not a matter of if storms will strike, but when. Detection and Response is your crew in the heart of the tempest: eyes on every signal, hands on every control. It identifies threats as they unfold, contains the breach before it spreads, and responds with speed and precision. Essential, but never sufficient alone. The organizations that only know how to weather storms will spend their entire voyage waiting for the next one. The compass demands more."},
+    {h:"Cyber Resilience",s:"After a Breach · Recover & Improve · An Outcome",
+     b:"Cyber Resilience is not a phase you enter after an incident. It is the outcome of doing everything else right. When your north is set through proactive risk management, and your crew responds with precision during the storm, resilience is what you earn. It means restoring operations faster, learning from what failed, hardening what was exposed, and feeding that intelligence back into your compass. Organizations that achieve true cyber resilience do not just survive storms. They become harder to sink with every one they weather."}
+  ],
+  es:[
+    {h:"Gestión del Ciber Riesgo",s:"Antes de una Brecha · Proactivo y Predictivo",
+     b:"El norte verdadero de tu brújula de ciberseguridad. Sin él, las organizaciones derivan de crisis en crisis, reaccionando, recuperándose, sin reducir nunca el riesgo de forma real. La Gestión del Ciber Riesgo es la disciplina proactiva y predictiva que anticipa las amenazas antes de que se materialicen, prioriza lo que más importa, optimiza las inversiones en seguridad y da a los ejecutivos un lenguaje claro para tomar decisiones estratégicas. Los ciberdelincuentes no solo buscan vulnerabilidades técnicas. Buscan la incertidumbre y la indecisión que genera no tener un norte. Esto es lo que cierra esa brecha."},
+    {h:"Detección y Respuesta",s:"Durante una Brecha · Reactivo y Defensivo",
+     b:"En ciberseguridad, no es cuestión de si las tormentas llegarán, sino de cuándo. La Detección y Respuesta es tu tripulación en el corazón del temporal: ojos en cada señal, manos en cada control. Identifica las amenazas a medida que se desarrollan, contiene la brecha antes de que se propague y responde con velocidad y precisión. Esencial, pero nunca suficiente por sí sola. Las organizaciones que solo saben capear tormentas pasarán todo su viaje esperando la siguiente. La brújula exige más."},
+    {h:"Ciber Resiliencia",s:"Después de una Brecha · Recuperar y Mejorar · Un Resultado",
+     b:"La Ciber Resiliencia no es una fase en la que entras después de un incidente. Es el resultado de haber hecho todo lo demás bien. Cuando tu norte está definido mediante una gestión proactiva del riesgo y tu equipo responde con precisión durante la tormenta, la resiliencia es lo que obtienes. Significa restaurar operaciones más rápido, aprender de lo que falló, endurecer lo que quedó expuesto y retroalimentar esa inteligencia en tu brújula. Las organizaciones que logran una verdadera Ciber Resiliencia no solo sobreviven las tormentas. Se vuelven más difíciles de hundir con cada una que capean."}
+  ],
+  pt:[
+    {h:"Gestão de Ciber Riscos",s:"Antes de uma Brecha · Proativo e Preditivo",
+     b:"O norte verdadeiro da sua bússola de cibersegurança. Sem ele, as organizações derivam de crise em crise, reagindo, recuperando, sem jamais reduzir o risco de forma real. A Gestão de Ciber Riscos é a disciplina proativa e preditiva que antecipa as ameaças antes de se materializarem, prioriza o que mais importa, otimiza os investimentos em segurança e oferece aos executivos uma linguagem clara para tomar decisões estratégicas. Os cibercriminosos não buscam apenas vulnerabilidades técnicas. Buscam a incerteza e a indecisão que vêm de não ter um norte. É isso que fecha essa lacuna."},
+    {h:"Detecção e Resposta",s:"Durante uma Brecha · Reativo e Defensivo",
+     b:"Em cibersegurança, não é uma questão de se as tempestades vão chegar, mas de quando. A Detecção e Resposta é a sua tripulação no coração da tempestade: olhos em cada sinal, mãos em cada controle. Identifica as ameaças à medida que se desenvolvem, contém a brecha antes que se espalhe e responde com velocidade e precisão. Essencial, mas nunca suficiente sozinha. As organizações que só sabem enfrentar tempestades passarão toda a sua viagem esperando pela próxima. A bússola exige mais."},
+    {h:"Ciber Resiliência",s:"Após uma Brecha · Recuperar e Melhorar · Um Resultado",
+     b:"A Ciber Resiliência não é uma fase que você entra após um incidente. É o resultado de ter feito tudo o mais certo. Quando o seu norte está definido por uma gestão proativa de riscos e sua equipe responde com precisão durante a tempestade, a resiliência é o que você conquista. Significa restaurar operações mais rápido, aprender com o que falhou, fortalecer o que foi exposto e retroalimentar essa inteligência na sua bússola. As organizações que alcançam a verdadeira Ciber Resiliência não apenas sobrevivem às tempestades. Tornam-se mais difíceis de afundar a cada uma que enfrentam."}
+  ],
+  fr:[
+    {h:"Gestion du Cyber Risque",s:"Avant une Brèche · Proactif et Prédictif",
+     b:"Le nord véritable de votre boussole de cybersécurité. Sans lui, les organisations dérivent de crise en crise, réagissant, se rétablissant, sans jamais réellement réduire le risque. La Gestion du Cyber Risque est la discipline proactive et prédictive qui anticipe les menaces avant qu'elles ne se matérialisent, priorise ce qui compte vraiment, optimise les investissements en sécurité et donne aux dirigeants un langage clair pour prendre des décisions stratégiques. Les cybercriminels ne cherchent pas seulement des vulnérabilités techniques. Ils cherchent l'incertitude et l'indécision qui viennent de l'absence de nord. C'est cela qui comble cet écart."},
+    {h:"Détection et Réponse",s:"Pendant une Brèche · Réactif et Défensif",
+     b:"En cybersécurité, il ne s'agit pas de savoir si les tempêtes frapperont, mais quand. La Détection et Réponse est votre équipage au cœur de la tempête : les yeux sur chaque signal, les mains sur chaque commande. Elle identifie les menaces à mesure qu'elles se développent, contient la brèche avant qu'elle ne se propage, et répond avec rapidité et précision. Essentielle, mais jamais suffisante à elle seule. Les organisations qui ne savent que traverser les tempêtes passeront tout leur voyage à attendre la suivante. La boussole exige davantage."},
+    {h:"Cyber Résilience",s:"Après une Brèche · Récupérer et Améliorer · Un Résultat",
+     b:"La Cyber Résilience n'est pas une phase que l'on aborde après un incident. C'est le résultat d'avoir bien fait tout le reste. Lorsque votre nord est fixé par une gestion proactive du risque et que votre équipage répond avec précision pendant la tempête, la résilience est ce que vous gagnez. Cela signifie rétablir les opérations plus rapidement, apprendre de ce qui a échoué, renforcer ce qui a été exposé, et réinjecter cette intelligence dans votre boussole. Les organisations qui atteignent une véritable cyber résilience ne se contentent pas de survivre aux tempêtes. Elles deviennent plus difficiles à couler à chaque tempête qu'elles traversent."}
+  ],
+  ja:[
+    {h:"サイバーリスクマネジメント",s:"侵害前 · プロアクティブ&予測的",
+     b:"あなたのサイバーセキュリティ・コンパスの真北。それがなければ、組織は危機から危機へと漂流し、反応し、復旧するだけで、リスクを真に低減することは決してない。サイバーリスクマネジメントは、脅威が顕在化する前に予測し、最も重要なものを優先し、セキュリティ投資を最適化し、経営層が戦略的な意思決定を行うための明確な言語を与える、プロアクティブかつ予測的な規律である。サイバー犯罪者が狙っているのは技術的な脆弱性だけではない。北を持たないことから生まれる不確実性と優柔不断こそを狙っている。これがそのギャップを埋めるものだ。"},
+    {h:"検知と対応",s:"侵害中 · リアクティブ&防御的",
+     b:"サイバーセキュリティにおいて、嵐が来るかどうかではなく、いつ来るかが問題だ。検知と対応は、嵐の真っただ中にいるあなたの乗組員であり、あらゆる兆候に目を配り、あらゆる制御に手をかける。展開する脅威を特定し、拡大する前に侵害を封じ込め、迅速かつ的確に対応する。不可欠だが、それだけでは決して十分ではない。嵐をしのぐことしか知らない組織は、航海の全てを次の嵐を待つことに費やすことになる。コンパスはそれ以上のものを求めている。"},
+    {h:"サイバーレジリエンス",s:"侵害後 · 復旧と改善 · 成果",
+     b:"サイバーレジリエンスは、インシデントの後に入る段階ではない。それは他のすべてを正しく行った結果として得られる成果である。プロアクティブなリスクマネジメントによって北が定まり、乗組員が嵐の中で的確に対応するとき、レジリエンスは自ずと手に入る。それは、より速く業務を復旧させ、失敗から学び、露呈した弱点を強化し、そのインテリジェンスをコンパスへとフィードバックすることを意味する。真のサイバーレジリエンスを実現した組織は、嵐を生き延びるだけではない。乗り越えるたびに、沈みにくい組織へと変わっていく。"}
+  ],
+  ar:[
+    {h:"إدارة المخاطر السيبرانية",s:"قبل الاختراق · استباقي وتنبؤي",
+     b:"الشمال الحقيقي لبوصلة الأمن السيبراني الخاصة بك. بدونها، تنجرف المؤسسات من أزمة إلى أخرى، تتفاعل، تتعافى، دون أن تقلل المخاطر فعليًا أبدًا. إدارة المخاطر السيبرانية هي الانضباط الاستباقي والتنبؤي الذي يتوقع التهديدات قبل أن تتحقق، ويحدد أولويات ما يهم أكثر، ويحسّن الاستثمارات الأمنية، ويمنح المسؤولين التنفيذيين لغة واضحة لاتخاذ القرارات الاستراتيجية. مجرمو الإنترنت لا يبحثون فقط عن الثغرات التقنية. إنهم يبحثون عن عدم اليقين والتردد الناتجين عن غياب البوصلة. وهذا ما يسد تلك الفجوة."},
+    {h:"الكشف والاستجابة",s:"أثناء الاختراق · تفاعلي ودفاعي",
+     b:"في الأمن السيبراني، لا يتعلق الأمر بما إذا كانت العواصف ستضرب، بل بموعد حدوثها. الكشف والاستجابة هما طاقمك في قلب العاصفة: عيون على كل إشارة، وأيدٍ على كل ضابط تحكم. يحددان التهديدات أثناء تطورها، ويحتويان الاختراق قبل انتشاره، ويستجيبان بسرعة ودقة. ضروريان، لكنهما لا يكفيان وحدهما أبدًا. المؤسسات التي تعرف فقط كيفية الصمود أمام العواصف ستقضي رحلتها بأكملها في انتظار العاصفة التالية. البوصلة تتطلب أكثر من ذلك."},
+    {h:"المرونة السيبرانية",s:"بعد الاختراق · التعافي والتحسين · نتيجة",
+     b:"المرونة السيبرانية ليست مرحلة تدخلها بعد وقوع حادث. إنها نتيجة القيام بكل شيء آخر بشكل صحيح. عندما يتحدد شمالك من خلال إدارة استباقية للمخاطر، ويستجيب طاقمك بدقة أثناء العاصفة، فإن المرونة هي ما تكسبه. إنها تعني استعادة العمليات بشكل أسرع، والتعلم مما فشل، وتحصين ما تعرض للخطر، وإعادة تغذية تلك المعلومات إلى بوصلتك. المؤسسات التي تحقق مرونة سيبرانية حقيقية لا تنجو من العواصف فحسب. بل تصبح أصعب في الغرق مع كل عاصفة تجتازها."}
+  ]
+};
+
+const TTP={
+  en:[
+    {h:"People",s:"The Human Layer",
+     b:"Technology does not defend organizations. People do. The People dimension of the compass represents the human layer that makes every other investment meaningful: the security analysts who interpret signals, the executives who make risk decisions, the employees who are either the first line of defense or the first point of failure. And on the other side of every attack, there is also a person. Cybercriminals are not automated forces of nature. They are individuals with intentions, motivations, and strategies of their own. They study their targets, exploit indecision, and move with purpose. Defending against them requires the same human qualities they possess: awareness, judgment, and the will to act before they do. A compass without skilled, aware, and empowered people is an instrument no one knows how to read. Culture, training, accountability, and leadership are not soft factors. They are the hands on the wheel."},
+    {h:"Process",s:"The Operational Backbone",
+     b:"Process is the operational backbone that connects people to technology and strategy to execution. Without it, even the best tools produce noise, and even the best talent operates in silos. At the core of a mature process layer sit the CyberRiskOps discipline and its operational nerve center, the Cyber Risk Operations Center (CROC), where risk intelligence is continuously measured, prioritized, and acted upon. Security Operations (SecOps) bridges that risk intelligence with real-time action, while the Security Operations Center (SOC) executes detection, investigation, and response at speed. Together, they transform cybersecurity from a set of isolated reactions into a continuous, measurable, and improving operation. Process is what ensures the compass keeps moving."},
+    {h:"Technology",s:"The Force Multiplier",
+     b:"Technology is the force multiplier of your cybersecurity strategy, but only when it serves a clear purpose. Cyber Risk Quantification (CRQ) translates technical risk into financial language that executives can act on. Cyber Risk Exposure Management (CREM) continuously maps and prioritizes your attack surface before adversaries can exploit it. Extended Detection and Response (XDR) unifies visibility across endpoints, networks, cloud, and identity into a single, correlated picture. Threat Intelligence feeds your compass with adversary context, turning reactive alerts into proactive decisions. Automation eliminates the manual friction that slows response and allows your teams to operate at machine speed without burning out. A unified platform ties all of this together, replacing fragmented point solutions with integrated intelligence. Artificial Intelligence extends what human teams can do across every layer. Technology does not define your strategy. It executes it."}
+  ],
+  es:[
+    {h:"Personas",s:"La Capa Humana",
+     b:"La tecnología no defiende organizaciones. Las personas sí. La dimensión de Personas representa la capa humana que da sentido a cada otra inversión: los analistas que interpretan señales, los ejecutivos que toman decisiones de riesgo, los empleados que son la primera línea de defensa o el primer punto de falla. Y al otro lado de cada ataque también hay una persona. Los ciberdelincuentes no son fuerzas automatizadas de la naturaleza. Son individuos con intenciones, motivaciones y estrategias propias. Estudian sus objetivos, explotan la indecisión y actúan con propósito. Defenderse de ellos requiere las mismas cualidades humanas que ellos poseen: conciencia, juicio y voluntad de actuar antes que ellos. Una brújula sin personas capacitadas y empoderadas es un instrumento que nadie sabe leer. La cultura, la formación, la responsabilidad y el liderazgo no son factores blandos. Son las manos en el timón."},
+    {h:"Procesos",s:"La Columna Vertebral Operacional",
+     b:"El proceso es la columna vertebral operacional que conecta a las personas con la tecnología y la estrategia con la ejecución. Sin él, incluso las mejores herramientas generan ruido y el mejor talento opera en silos. En el núcleo de una capa de proceso madura se encuentran la disciplina CyberRiskOps y su centro neurálgico operacional, el Centro de Operaciones de Ciber Riesgo (CROC), donde la inteligencia de riesgo se mide, prioriza y actúa continuamente. Security Operations (SecOps) conecta esa inteligencia de riesgo con la acción en tiempo real, mientras que el Centro de Operaciones de Seguridad (SOC) ejecuta la detección, investigación y respuesta con velocidad. Juntos, transforman la ciberseguridad de un conjunto de reacciones aisladas en una operación continua, medible y en mejora constante. El proceso es lo que garantiza que la brújula siga en movimiento."},
+    {h:"Tecnología",s:"El Multiplicador de Fuerza",
+     b:"La tecnología es el multiplicador de fuerza de tu estrategia de ciberseguridad, pero solo cuando sirve a un propósito claro. La Cuantificación del Ciber Riesgo (CRQ) traduce el riesgo técnico a un lenguaje financiero que los ejecutivos pueden utilizar. La Gestión de Exposición al Ciber Riesgo (CREM) mapea y prioriza continuamente tu superficie de ataque antes de que los adversarios puedan explotarla. La Detección y Respuesta Extendida (XDR) unifica la visibilidad en endpoints, redes, nube e identidad en una imagen única y correlacionada. La Inteligencia de Amenazas alimenta tu brújula con contexto del adversario, convirtiendo alertas reactivas en decisiones proactivas. La automatización elimina la fricción manual que ralentiza la respuesta y permite a tus equipos operar a la velocidad de las máquinas. Una plataforma unificada integra todo esto, reemplazando soluciones puntuales fragmentadas con inteligencia integrada. La Inteligencia Artificial amplía lo que los equipos humanos pueden hacer en cada capa. La tecnología no define tu estrategia. La ejecuta."}
+  ],
+  pt:[
+    {h:"Pessoas",s:"A Camada Humana",
+     b:"A tecnologia não defende organizações. As pessoas sim. A dimensão de Pessoas representa a camada humana que dá sentido a cada outro investimento: os analistas que interpretam sinais, os executivos que tomam decisões de risco, os funcionários que são a primeira linha de defesa ou o primeiro ponto de falha. E do outro lado de cada ataque também há uma pessoa. Os cibercriminosos não são forças automatizadas da natureza. São indivíduos com intenções, motivações e estratégias próprias. Estudam seus alvos, exploram a indecisão e agem com propósito. Defendê-los exige as mesmas qualidades humanas que eles possuem: consciência, julgamento e vontade de agir antes deles. Uma bússola sem pessoas capacitadas e empoderadas é um instrumento que ninguém sabe ler. Cultura, treinamento, responsabilidade e liderança não são fatores suaves. São as mãos no leme."},
+    {h:"Processos",s:"A Espinha Dorsal Operacional",
+     b:"O processo é a espinha dorsal operacional que conecta pessoas à tecnologia e estratégia à execução. Sem ele, até as melhores ferramentas geram ruído e o melhor talento opera em silos. No núcleo de uma camada de processo madura estão a disciplina CyberRiskOps e seu centro operacional, o Centro de Operações de Ciber Risco (CROC), onde a inteligência de risco é continuamente medida, priorizada e executada. Security Operations (SecOps) conecta essa inteligência de risco com ação em tempo real, enquanto o Centro de Operações de Segurança (SOC) executa detecção, investigação e resposta com velocidade. Juntos, transformam a cibersegurança de um conjunto de reações isoladas em uma operação contínua, mensurável e em melhoria constante. O processo é o que garante que a bússola continue em movimento."},
+    {h:"Tecnologia",s:"O Multiplicador de Força",
+     b:"A tecnologia é o multiplicador de força da sua estratégia de cibersegurança, mas apenas quando serve a um propósito claro. A Quantificação do Ciber Risco (CRQ) traduz o risco técnico em linguagem financeira que os executivos podem utilizar. A Gestão de Exposição ao Ciber Risco (CREM) mapeia e prioriza continuamente sua superfície de ataque antes que os adversários possam explorá-la. A Detecção e Resposta Estendida (XDR) unifica a visibilidade em endpoints, redes, nuvem e identidade em uma imagem única e correlacionada. A Inteligência de Ameaças alimenta sua bússola com contexto do adversário, transformando alertas reativos em decisões proativas. A automação elimina o atrito manual que atrasa a resposta e permite que suas equipes operem na velocidade das máquinas. Uma plataforma unificada integra tudo isso, substituindo soluções pontuais fragmentadas por inteligência integrada. A Inteligência Artificial amplia o que as equipes humanas podem fazer em cada camada. A tecnologia não define sua estratégia. Ela a executa."}
+  ],
+  fr:[
+    {h:"Personnes",s:"La Couche Humaine",
+     b:"La technologie ne défend pas les organisations. Les personnes, si. La dimension Personnes de la boussole représente la couche humaine qui donne un sens à chaque autre investissement : les analystes de sécurité qui interprètent les signaux, les dirigeants qui prennent les décisions de risque, les employés qui constituent soit la première ligne de défense, soit le premier point de défaillance. Et de l'autre côté de chaque attaque, il y a aussi une personne. Les cybercriminels ne sont pas des forces automatisées de la nature. Ce sont des individus avec leurs propres intentions, motivations et stratégies. Ils étudient leurs cibles, exploitent l'indécision et agissent avec un objectif précis. Se défendre contre eux exige les mêmes qualités humaines qu'ils possèdent : la vigilance, le jugement et la volonté d'agir avant eux. Une boussole sans personnes compétentes, vigilantes et responsabilisées est un instrument que personne ne sait lire. La culture, la formation, la responsabilisation et le leadership ne sont pas des facteurs secondaires. Ce sont les mains sur le gouvernail."},
+    {h:"Processus",s:"L'Épine Dorsale Opérationnelle",
+     b:"Le processus est l'épine dorsale opérationnelle qui relie les personnes à la technologie et la stratégie à l'exécution. Sans lui, même les meilleurs outils produisent du bruit, et même les meilleurs talents opèrent en silos. Au cœur d'une couche de processus mature se trouvent la discipline CyberRiskOps et son centre névralgique opérationnel, le Centre des Opérations de Cyber Risque (CROC), où l'intelligence du risque est mesurée, priorisée et exploitée en continu. Security Operations (SecOps) relie cette intelligence du risque à l'action en temps réel, tandis que le Security Operations Center (SOC) exécute la détection, l'investigation et la réponse avec rapidité. Ensemble, ils transforment la cybersécurité d'un ensemble de réactions isolées en une opération continue, mesurable et en amélioration constante. Le processus est ce qui garantit que la boussole continue d'avancer."},
+    {h:"Technologie",s:"Le Multiplicateur de Force",
+     b:"La technologie est le multiplicateur de force de votre stratégie de cybersécurité, mais seulement lorsqu'elle sert un objectif clair. La Quantification du Cyber Risque (CRQ) traduit le risque technique en un langage financier que les dirigeants peuvent exploiter. La Gestion de l'Exposition au Cyber Risque (CREM) cartographie et priorise en continu votre surface d'attaque avant que les adversaires ne puissent l'exploiter. La Détection et Réponse Étendues (XDR) unifie la visibilité sur les terminaux, les réseaux, le cloud et l'identité en une image unique et corrélée. Le Renseignement sur les Menaces alimente votre boussole avec le contexte de l'adversaire, transformant les alertes réactives en décisions proactives. L'automatisation élimine la friction manuelle qui ralentit la réponse et permet à vos équipes d'opérer à la vitesse de la machine sans s'épuiser. Une plateforme unifiée relie tout cela, remplaçant les solutions ponctuelles fragmentées par une intelligence intégrée. L'Intelligence Artificielle étend ce que les équipes humaines peuvent accomplir à chaque niveau. La technologie ne définit pas votre stratégie. Elle l'exécute."}
+  ],
+  ja:[
+    {h:"人材",s:"人間という層",
+     b:"技術は組織を守らない。守るのは人だ。コンパスにおける人材の次元は、他のあらゆる投資を意味あるものにする人間という層を表す。シグナルを解釈するセキュリティアナリスト、リスクの意思決定を行う経営層、そして防御の最前線にも、失敗の最初の起点にもなり得る従業員たちだ。そして、あらゆる攻撃の向こう側にも人がいる。サイバー犯罪者は自然の自動化された力ではない。彼らは自らの意図、動機、戦略を持つ個人である。標的を研究し、優柔不断を突き、目的を持って動く。彼らに対抗するには、彼らが持つのと同じ人間的な資質、すなわち意識、判断力、そして彼らより先に行動する意志が求められる。熟練し、意識が高く、権限を与えられた人材のいないコンパスは、誰も読み方を知らない計器にすぎない。文化、教育、説明責任、リーダーシップはソフトな要素ではない。それらは舵を握る手そのものだ。"},
+    {h:"プロセス",s:"業務の背骨",
+     b:"プロセスは、人材とテクノロジーを結び、戦略と実行を結びつける業務上の背骨である。それがなければ、最高のツールでさえノイズを生み出し、最高の人材でさえサイロの中で孤立して動くことになる。成熟したプロセス層の中核には、CyberRiskOpsという規律と、その運用上の神経中枢であるサイバーリスクオペレーションセンター(CROC)がある。ここでリスクインテリジェンスは継続的に測定され、優先順位付けされ、行動へとつなげられる。セキュリティオペレーション(SecOps)はそのリスクインテリジェンスをリアルタイムの行動へと橋渡しし、セキュリティオペレーションセンター(SOC)は検知・調査・対応を迅速に実行する。両者が組み合わさることで、サイバーセキュリティは孤立した反応の寄せ集めから、継続的で測定可能、そして改善し続けるオペレーションへと変わる。プロセスこそが、コンパスを動かし続けるものだ。"},
+    {h:"テクノロジー",s:"力の増幅装置",
+     b:"テクノロジーはサイバーセキュリティ戦略の力の増幅装置だが、それは明確な目的に資するときに限られる。サイバーリスク定量化(CRQ)は、技術的リスクを経営層が行動に移せる財務言語へと変換する。サイバーリスクエクスポージャーマネジメント(CREM)は、攻撃者に悪用される前に攻撃対象領域を継続的にマッピングし、優先順位付けする。拡張検知対応(XDR)は、エンドポイント、ネットワーク、クラウド、IDにまたがる可視性を一つの相関的な全体像へと統合する。脅威インテリジェンスは、敵対者の文脈をコンパスに供給し、反応的なアラートをプロアクティブな意思決定へと変える。自動化は対応を遅らせる手作業の摩擦を取り除き、チームが燃え尽きることなく機械の速度で稼働できるようにする。統合プラットフォームはこれらすべてを結びつけ、断片化した個別ソリューションを統合されたインテリジェンスに置き換える。人工知能は、人間のチームができることをあらゆる層で拡張する。テクノロジーはあなたの戦略を定義しない。それを実行するのだ。"}
+  ],
+  ar:[
+    {h:"الأشخاص",s:"الطبقة البشرية",
+     b:"التكنولوجيا لا تدافع عن المؤسسات. الأشخاص هم من يفعلون ذلك. يمثل بُعد الأشخاص في البوصلة الطبقة البشرية التي تجعل كل استثمار آخر ذا معنى: محللو الأمن الذين يفسرون الإشارات، والمسؤولون التنفيذيون الذين يتخذون قرارات المخاطر، والموظفون الذين يمثلون إما خط الدفاع الأول أو نقطة الفشل الأولى. وعلى الجانب الآخر من كل هجوم، يوجد أيضًا شخص. مجرمو الإنترنت ليسوا قوى طبيعية آلية. إنهم أفراد لديهم نوايا ودوافع واستراتيجيات خاصة بهم. يدرسون أهدافهم، ويستغلون التردد، ويتحركون بهدف واضح. الدفاع ضدهم يتطلب نفس الصفات البشرية التي يمتلكونها: الوعي، والحكم السليم، والإرادة على التصرف قبلهم. بوصلة بدون أشخاص ماهرين وواعين ومُمكَّنين هي أداة لا يعرف أحد كيف يقرأها. الثقافة، والتدريب، والمساءلة، والقيادة ليست عوامل ثانوية. إنها الأيدي التي تمسك بالمقود."},
+    {h:"العملية",s:"العمود الفقري التشغيلي",
+     b:"العملية هي العمود الفقري التشغيلي الذي يربط الأشخاص بالتكنولوجيا، والاستراتيجية بالتنفيذ. بدونها، حتى أفضل الأدوات تنتج ضوضاء، وحتى أفضل المواهب تعمل في عزلة. في صميم طبقة عملية ناضجة يكمن انضباط CyberRiskOps ومركزه العصبي التشغيلي، مركز عمليات المخاطر السيبرانية (CROC)، حيث يتم قياس ذكاء المخاطر وتحديد أولوياته والتصرف بناءً عليه باستمرار. تربط عمليات الأمن (SecOps) ذكاء المخاطر هذا بالعمل في الوقت الفعلي، بينما ينفذ مركز عمليات الأمن (SOC) الكشف والتحقيق والاستجابة بسرعة. معًا، يحوّلان الأمن السيبراني من مجموعة من ردود الفعل المعزولة إلى عملية مستمرة وقابلة للقياس ومتطورة باستمرار. العملية هي ما يضمن استمرار حركة البوصلة."},
+    {h:"التقنية",s:"مضاعف القوة",
+     b:"التكنولوجيا هي مضاعف القوة في استراتيجية الأمن السيبراني الخاصة بك، لكن فقط عندما تخدم هدفًا واضحًا. تحويل المخاطر السيبرانية إلى أرقام (CRQ) يترجم المخاطر التقنية إلى لغة مالية يمكن للمسؤولين التنفيذيين التصرف بناءً عليها. إدارة التعرض للمخاطر السيبرانية (CREM) ترسم وتحدد أولويات سطح الهجوم الخاص بك باستمرار قبل أن يتمكن الخصوم من استغلاله. الكشف والاستجابة الموسعة (XDR) توحد الرؤية عبر نقاط النهاية والشبكات والسحابة والهوية في صورة واحدة مترابطة. استخبارات التهديدات تغذي بوصلتك بسياق الخصم، محوّلة التنبيهات التفاعلية إلى قرارات استباقية. الأتمتة تزيل الاحتكاك اليدوي الذي يبطئ الاستجابة وتسمح لفرقك بالعمل بسرعة الآلة دون إرهاق. منصة موحدة تربط كل هذا معًا، لتحل محل الحلول المجزأة بذكاء متكامل. الذكاء الاصطناعي يوسّع ما يمكن للفرق البشرية القيام به عبر كل طبقة. التكنولوجيا لا تحدد استراتيجيتك. إنها تنفذها."}
+  ]
+};
+
+const IDS={crm:'t-crm',pap:'t-pap',bab:'t-bab',dar:'t-dar',rad:'t-rad',dub:'t-dub',cr:'t-cr',rai:'t-rai',aab:'t-aab',ppl:'t-ppl',prc:'t-prc',tch:'t-tch'};
+
+let lang=(()=>{const n=(navigator.language||'en').slice(0,2).toLowerCase();return T[n]?n:'en';})();
+
+function applyLang(l){
+  lang=l;
+  const t=T[l];
+  Object.entries(IDS).forEach(([k,id])=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=t[k];
+    else console.warn('Missing element:',id);
+  });
+  document.getElementById('compass-title').textContent=t.title;
+  document.getElementById('credit').innerHTML=t.credit+'<br><a href="https://www.linkedin.com/in/jpcastro/" target="_blank" style="color:rgba(255,255,255,.5);text-decoration:none;">Juan Pablo Castro Vilaró</a>';
+  // Line1 stays on its own line; line2 follows on same line if space allows,
+  // otherwise breaks cleanly below line1 (never mid-word)
+  document.getElementById('pub-link').innerHTML=
+    '<a href="'+t.pubUrl+'" target="_blank" style="color:rgba(255,255,255,.45);text-decoration:none;display:block;margin-bottom:3px;">'+
+      '<span style="display:inline;white-space:nowrap;">'+t.pubLine1+'</span> '+
+      '<span style="display:inline;white-space:nowrap;">'+t.pubLine2+'</span>'+
+    '</a>'+
+    '<a href="'+t.pubDoiUrl+'" target="_blank" style="color:rgba(255,255,255,.28);text-decoration:none;">DOI: '+t.pubDoi+'</a>';
+  ['en','es','pt','fr','ja','ar'].forEach(c=>{
+    const b=document.getElementById('btn-'+c);
+    b.style.background=c===l?'#E01C24':'rgba(255,255,255,0.1)';
+    b.style.color=c===l?'#fff':'#888';
+  });
+}
+
+function setLang(l){applyLang(l);}
+
+// Tooltip
+const tt=document.getElementById('tt');
+const tth=document.getElementById('tt-h');
+const tts=document.getElementById('tt-s');
+const ttb=document.getElementById('tt-b');
+const stage=document.getElementById('stage');
+
+function posTT(cx,cy){
+  const W=285,H=tt.offsetHeight||220;
+  const sw=stage.offsetWidth,sh=stage.offsetHeight;
+  let x=cx+14,y=cy+14;
+  if(x+W>sw) x=cx-W-14;
+  if(y+H>sh) y=cy-H-14;
+  if(x<6) x=6;
+  if(y<6) y=6;
+  tt.style.left=x+'px';
+  tt.style.top=y+'px';
+}
+
+// Unified mouse handler - single source of truth
+// All tooltip logic driven from one mousemove on the stage overlay
+let puzzleAngle=0;
+let lastCX=0, lastCY=0;
+let hoverState=-1; // -1=none, 0/1/2=sector, 3/4/5=puzzle piece
+
+const CX=540, CY=540;
+const PUZZLE_OUTER=200, PUZZLE_INNER=122;
+const SECTOR_OUTER=432, SECTOR_INNER=210;
+
+function getZone(svgX, svgY){
+  const dx=svgX-CX, dy=svgY-CY;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  // Angle 0=top, clockwise
+  const angle=(Math.atan2(dx,-dy)*180/Math.PI+360)%360;
+
+  // Puzzle ring
+  if(dist>=PUZZLE_INNER && dist<=PUZZLE_OUTER){
+    // At rotation=0: People=300°-60°, Process=60°-180°, Technology=180°-300°
+    // Subtract puzzleAngle to get piece-local angle, then offset by 300° so People starts at 0
+    const local=((angle-puzzleAngle)%360+360)%360;
+    const adjusted=(local-300+360)%360;
+    return 3+Math.floor(adjusted/120); // 3=People,4=Process,5=Technology
+  }
+
+  // Outer sector ring
+  if(dist>=SECTOR_INNER && dist<=SECTOR_OUTER){
+    // Boundaries at 15°, 135°, 255° (from SVG path endpoints)
+    // Sector 0 (CRM):         15°-135°  (top-right)
+    // Sector 1 (D&R):        135°-255°  (bottom)
+    // Sector 2 (Resilience): 255°-360° and 0°-15° (top-left, wraps)
+    if(angle>=15  && angle<135) return 0;
+    if(angle>=135 && angle<255) return 1;
+    return 2;
+  }
+  return -1;
+}
+
+function showTT(zone, cx, cy){
+  const d = zone<3 ? TT[lang][zone] : TTP[lang][zone-3];
+  tth.textContent=d.h; tts.textContent=d.s; ttb.textContent=d.b;
+  tt.classList.add('on');
+  posTT(cx, cy);
+}
+
+// Single mousemove listener on the hits SVG (sits above everything)
+const hitsSvg=document.getElementById('hits');
+hitsSvg.style.pointerEvents='all';
+// Remove individual hit path pointer events - we handle everything here
+[0,1,2].forEach(i=>{
+  const el=document.getElementById('hit'+i);
+  if(el) el.style.pointerEvents='none';
+});
+
+hitsSvg.addEventListener('mousemove', function(e){
+  const r=stage.getBoundingClientRect();
+  const cx=e.clientX-r.left, cy=e.clientY-r.top;
+  lastCX=cx; lastCY=cy;
+  const scale=1080/r.width;
+  const zone=getZone(cx*scale, cy*scale);
+  // If in puzzle ring, mark as -2 so tick loop keeps refreshing even when not moving
+  hoverState=(zone>=3)?-2:zone;
+  if(zone===-1){ tt.classList.remove('on'); hitsSvg.style.cursor='default'; }
+  else { showTT(zone, cx, cy); hoverState=zone; hitsSvg.style.cursor='pointer'; }
+});
+
+hitsSvg.addEventListener('mouseleave', function(){
+  tt.classList.remove('on');
+  hoverState=-1;
+  hitsSvg.style.cursor='default';
+});
+
+// Animation
+const A={T:31.8,t:0,spin:0,needle:0,lastActive:75,centers:[75,195,315],cd:6.0,pc:[1.0,3.0,5.0],W:1.3,last:0};
+function easeOut(x){return 1-Math.pow(1-x,3);}
+function pulse(cp,c){let d=Math.abs(cp-c);d=Math.min(d,A.cd-d);return d>A.W?0:0.5*(1+Math.cos(Math.PI*d/A.W));}
+function lerp(a,b,p){return a+(b-a)*p;}
+
+function tick(now){
+  const dt=Math.min(0.05,(now-A.last)/1000);
+  A.last=now; A.t+=dt; if(A.t>=A.T)A.t-=A.T; A.spin+=dt;
+
+  const root=document.getElementById('compassRoot');
+  const needleEl=document.getElementById('needle');
+  const grps=[document.getElementById('grp0'),document.getElementById('grp1'),document.getElementById('grp2')];
+  const glows=[document.getElementById('glow0'),document.getElementById('glow1'),document.getElementById('glow2')];
+  const puzzle=document.getElementById('puzzle');
+
+  const id=1.8,p=Math.max(0,Math.min(1,A.t/id)),e=easeOut(p);
+  if(root){
+    root.setAttribute('transform','translate(540,540) rotate('+lerp(-150,0,e).toFixed(2)+') scale('+lerp(0.80,1,e).toFixed(3)+') translate(-540,-540)');
+    root.setAttribute('opacity',Math.max(0,Math.min(1,p*1.7)).toFixed(3));
+  }
+
+  const tc=A.t-id,cp=tc<0?-99:((tc%A.cd+A.cd)%A.cd);
+  const ps=[0,1,2].map(i=>tc<0?0:pulse(cp,A.pc[i]));
+  const sum=ps.reduce((a,b)=>a+b,0);
+
+  grps.forEach((g,i)=>{if(g)g.setAttribute('opacity',lerp(0.40,1.0,Math.min(1,0.50+(0.50)*ps[i])).toFixed(3));});
+  glows.forEach((g,i)=>{if(g){const gw=Math.max(0,Math.min(1,(Math.min(1,0.50+(0.50)*ps[i])-0.55)/0.45));g.setAttribute('opacity',(gw*0.20).toFixed(3));}});
+
+  let target=A.lastActive;
+  if(sum>0.04){
+    let sx=0,sy=0;
+    ps.forEach((v,i)=>{const a=A.centers[i]*Math.PI/180;sx+=v*Math.sin(a);sy+=v*Math.cos(a);});
+    target=Math.atan2(sx,sy)*180/Math.PI;
+    let mi=0;ps.forEach((v,i)=>{if(v>ps[mi])mi=i;});A.lastActive=A.centers[mi];
+  }
+  let diff=((target-A.needle+540)%360)-180;
+  A.needle+=diff*0.10;
+  const sway=(sum<0.15?4:1.2)*Math.sin(A.t*2.0);
+  if(needleEl)needleEl.setAttribute('transform','rotate('+((A.needle+sway).toFixed(2))+' 540 540)');
+  const pAngle=(A.spin*13)%360;
+  puzzleAngle=pAngle;
+  if(puzzle)puzzle.setAttribute('transform','rotate('+pAngle.toFixed(2)+' 540 540)');
+  // Refresh tooltip live every frame when cursor is over puzzle ring
+  if(hoverState>=3 || hoverState===-2){
+    const scale=1080/stage.offsetWidth;
+    const zone=getZone(lastCX*scale, lastCY*scale);
+    if(zone!==hoverState){
+      hoverState=zone;
+      if(zone===-1){ tt.classList.remove('on'); hitsSvg.style.cursor='default'; }
+      else { showTT(zone, lastCX, lastCY); hitsSvg.style.cursor='pointer'; }
+    }
+  }
+
+  requestAnimationFrame(tick);
+}
+
+// Init
+applyLang(lang);
+A.last=performance.now();
+requestAnimationFrame(tick);
+
+// --- injected: receive language from parent ---
+window.addEventListener('message', function(e){
+  if (e && e.data && e.data.type === 'setLang' && e.data.lang) {
+    try { setLang(e.data.lang); } catch (err) {}
+  }
+});
+<\/script>
+
+</body></html>`;
+
+const ccModal = document.getElementById('cc-modal');
+const ccIframe = document.getElementById('cc-iframe');
+const ccBackdrop = document.getElementById('cc-backdrop');
+const ccClose = document.getElementById('cc-close');
+
+function getCurrentLang() {
+  const active = document.querySelector('.lang-bar button.active');
+  return active ? active.dataset.lang : 'en';
+}
+
+function openCompass() {
+  const lang = getCurrentLang();
+  // Set srcdoc fresh each open so the animation starts clean
+  ccIframe.srcdoc = COMPASS_HTML;
+  ccModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // Sync language as soon as the iframe is ready
+  ccIframe.onload = function () {
+    try {
+      ccIframe.contentWindow.postMessage({ type: 'setLang', lang: lang }, '*');
+    } catch (e) {}
+  };
+}
+
+function closeCompass() {
+  ccModal.classList.remove('open');
+  document.body.style.overflow = '';
+  // Stop the inner requestAnimationFrame loop by tearing down the document
+  setTimeout(function () { ccIframe.srcdoc = ''; }, 240);
+}
+
+ccClose.addEventListener('click', closeCompass);
+ccBackdrop.addEventListener('click', closeCompass);
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && ccModal.classList.contains('open')) closeCompass();
+});
+
+// Expose for the SVG's onclick
+window.openCompass = openCompass;
+</script>
+
+
+<div id="page-credit"><span id="t-credit">Created and Designed by:</span><br><a href="https://www.linkedin.com/in/jpcastro/" target="_blank" rel="noopener">Juan Pablo Castro Vilaró</a></div>
+
+<div id="pub-link"><a id="t-pub-title" href="https://www.researchgate.net/publication/407425831" target="_blank" rel="noopener">The Future of SOC Is ∞</a><div class="pub-doi">DOI: <a href="https://doi.org/10.13140/RG.2.2.28744.69123" target="_blank" rel="noopener">10.13140/RG.2.2.28744.69123</a></div></div>
+
+
+
+
+<script>
+// JS-driven needle animation. Replaces SMIL because SMIL chaining/value
+// mutation is unreliable across browsers. We keep the original stepped
+// motion (10 keyTimes) and alternate direction CW -> CCW -> CW -> ... at
+// every 16-second cycle boundary.
+(function () {
+  const needle = document.getElementById('needle');
+  if (!needle) return;
+  const TIMES   = [0, 0.19, 0.205, 0.42, 0.435, 0.65, 0.665, 0.88, 0.895, 1];
+  const CW      = [0, 430, 430, 920, 920, 1390, 1390, 1940, 1940, 2160];
+  const CCW     = CW.map(function (a) { return -a; });
+  // Per-segment easing: SMIL had spline curves for moves and linear for
+  // pauses. Approximate with ease-out for moves, identity for pauses.
+  // Each entry is [x1, y1, x2, y2] for cubic-bezier(x1,y1,x2,y2).
+  const SPL = [
+    [0.25, 0.10, 0.18, 1.00], // move
+    [0.00, 0.00, 1.00, 1.00], // pause (linear, no movement anyway)
+    [0.30, 0.10, 0.20, 1.00],
+    [0.00, 0.00, 1.00, 1.00],
+    [0.22, 0.10, 0.18, 1.00],
+    [0.00, 0.00, 1.00, 1.00],
+    [0.30, 0.10, 0.20, 1.00],
+    [0.00, 0.00, 1.00, 1.00],
+    [0.25, 0.10, 0.20, 1.00]
+  ];
+  const CYCLE_MS = 16000;
+
+  // Solve y on a cubic-bezier curve given x (Newton's method).
+  function bezier(t, x1, y1, x2, y2) {
+    let u = t;
+    for (let i = 0; i < 8; i++) {
+      const cx = 3*(1-u)*(1-u)*u*x1 + 3*(1-u)*u*u*x2 + u*u*u;
+      const dx = 3*(1-u)*(1-u)*x1 - 6*u*(1-u)*x1
+               + 6*(1-u)*u*x2 - 3*u*u*x2 + 3*u*u;
+      if (Math.abs(dx) < 1e-6) break;
+      u -= (cx - t) / dx;
+      if (u < 0) u = 0; else if (u > 1) u = 1;
+    }
+    return 3*(1-u)*(1-u)*u*y1 + 3*(1-u)*u*u*y2 + u*u*u;
+  }
+
+  const startTime = performance.now();
+
+  function frame(now) {
+    const elapsed     = now - startTime;
+    const cycleIndex  = Math.floor(elapsed / CYCLE_MS);   // 0, 1, 2, 3, ...
+    const t           = (elapsed % CYCLE_MS) / CYCLE_MS;  // 0..1 within current cycle
+    // Alternate every cycle. Even cycle = CW, odd cycle = CCW.
+    const useCW       = cycleIndex % 2 === 0;
+    const angles = useCW ? CW : CCW;
+    // Locate current segment
+    let i = 0;
+    while (i < TIMES.length - 1 && TIMES[i+1] <= t) i++;
+    if (i >= TIMES.length - 1) i = TIMES.length - 2;
+    const segStart = TIMES[i];
+    const segEnd   = TIMES[i+1];
+    const segT     = (t - segStart) / (segEnd - segStart);
+    const eased    = bezier(segT, SPL[i][0], SPL[i][1], SPL[i][2], SPL[i][3]);
+    const angle    = angles[i] + (angles[i+1] - angles[i]) * eased;
+    needle.setAttribute('transform', 'rotate(' + angle.toFixed(2) + ' 800 470)');
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

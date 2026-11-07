@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Cybersecurity Compass</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:#000;height:100%;}
+@keyframes waveDrift{from{background-position:0 0,0 0;}to{background-position:1200px 0,-900px 0;}}
+@keyframes hazeFloat{0%{transform:translate3d(-2%,0,0) scale(1.05);}50%{transform:translate3d(2%,-1%,0) scale(1.09);}100%{transform:translate3d(-2%,0,0) scale(1.05);}}
+#wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#000;}
+#stage{position:relative;width:min(96vw,96vh);aspect-ratio:1/1;overflow:hidden;background:#000;border-radius:6px;box-shadow:0 30px 80px rgba(0,0,0,.6);}
+.bg1{display:none;}
+.bg2{display:none;}
+.bg3{display:none;}
+.bg4{display:none;}
+.bg5{display:none;}
+#compass-svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
+/* UI overlays */
+#lang-bar{position:absolute;top:10px;right:10px;z-index:100;}
+#lang-toggle{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.15);cursor:pointer;font-weight:600;font-size:11px;font-family:Inter,system-ui,sans-serif;letter-spacing:.04em;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);color:#fff;transition:all .2s;}
+#lang-toggle:hover{background:rgba(0,0,0,.65);}
+.lang-caret{font-size:9px;opacity:.7;transition:transform .18s;}
+#lang-toggle[aria-expanded="true"] .lang-caret{transform:rotate(180deg);}
+#lang-menu{position:absolute;top:calc(100% + 6px);right:0;display:none;flex-direction:column;gap:2px;background:rgba(15,15,18,.95);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:5px;min-width:64px;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+#lang-menu.open{display:flex;}
+#lang-menu button{padding:5px 9px;border-radius:5px;border:none;cursor:pointer;font-weight:600;font-size:10px;font-family:Inter,system-ui,sans-serif;letter-spacing:.04em;text-align:left;background:rgba(255,255,255,.06);color:#888;transition:all .15s;}
+#lang-menu button:hover{background:rgba(255,255,255,.14);color:#ddd;}
+#compass-title{position:absolute;top:12px;left:14px;z-index:100;font-family:Inter,Arial,sans-serif;font-size:clamp(16px,3.2vmin,35px);font-weight:600;color:#fff;letter-spacing:.2px;pointer-events:none;}
+#credit{position:absolute;bottom:10px;left:12px;z-index:100;font-family:Inter,Arial,sans-serif;font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.04em;line-height:1.6;pointer-events:auto;}
+#pub-link{position:absolute;bottom:10px;right:12px;z-index:100;font-family:Inter,Arial,sans-serif;font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.03em;line-height:1.6;text-align:right;max-width:52%;pointer-events:auto;}
+/* Tooltip */
+#tt{position:absolute;pointer-events:none;z-index:300;opacity:0;transition:opacity .2s ease;width:285px;background:rgba(8,10,12,.94);border:1px solid rgba(255,255,255,.13);border-radius:10px;padding:14px 16px;backdrop-filter:blur(12px);}
+#tt.on{opacity:1;}
+#tt-h{font-family:Inter,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#E01C24;margin-bottom:4px;}
+#tt-s{font-family:Inter,Arial,sans-serif;font-size:9px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:10px;}
+#tt-b{font-family:Inter,Arial,sans-serif;font-size:11px;line-height:1.7;color:rgba(255,255,255,.78);}
+/* Hit areas */
+#hits{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:50;cursor:default;}
+#hits path{pointer-events:all;cursor:pointer;fill:transparent;}
+</style>
+</head>
+<body>
+<div id="wrap">
+<div id="stage">
+  <div class="bg1"></div><div class="bg2"></div><div class="bg3"></div><div class="bg4"></div><div class="bg5"></div>
+
+  <svg id="compass-svg" viewBox="0 0 1080 1080" style="position:absolute;inset:0;width:100%;height:100%;display:block;">
+<defs><linearGradient id="bg0" gradientUnits="userSpaceOnUse" x1="885.8" y1="447.34" x2="742.84" y2="485.65"><stop offset="0" stop-color="#42454b"></stop><stop offset="1" stop-color="#0c0d10"></stop></linearGradient><linearGradient id="ag0" gradientUnits="userSpaceOnUse" x1="644.82" y1="148.8" x2="826.38" y2="826.38"><stop offset="0" stop-color="#4a1014"></stop><stop offset="1" stop-color="#E01C24"></stop></linearGradient><linearGradient id="bg1" gradientUnits="userSpaceOnUse" x1="447.34" y1="885.8" x2="485.65" y2="742.84"><stop offset="0" stop-color="#93989c"></stop><stop offset="1" stop-color="#494c50"></stop></linearGradient><linearGradient id="ag1" gradientUnits="userSpaceOnUse" x1="826.38" y1="826.38" x2="148.8" y2="644.82"><stop offset="0" stop-color="#4a1014"></stop><stop offset="1" stop-color="#E01C24"></stop></linearGradient><linearGradient id="bg2" gradientUnits="userSpaceOnUse" x1="286.86" y1="286.86" x2="391.51" y2="391.51"><stop offset="0" stop-color="#5a5e63"></stop><stop offset="1" stop-color="#2a2c30"></stop></linearGradient><linearGradient id="ag2" gradientUnits="userSpaceOnUse" x1="148.8" y1="644.82" x2="644.82" y2="148.8"><stop offset="0" stop-color="#4a1014"></stop><stop offset="1" stop-color="#E01C24"></stop></linearGradient><path id="pl0" d="M 679.63 288.11 A 288 288 0 0 1 786.86 688.33" fill="none"></path><path id="sl0" d="M 659.49 341.14 A 232 232 0 0 1 742.91 652.48" fill="none"></path><path id="ol0" d="M 723.87 179.14 A 405 405 0 0 1 879.66 760.58" fill="none"></path><path id="pl1" d="M 288.11 679.63 A 288 288 0 0 0 688.33 786.86" fill="none"></path><path id="sl1" d="M 341.14 659.49 A 232 232 0 0 0 652.48 742.91" fill="none"></path><path id="ol1" d="M 179.14 723.87 A 405 405 0 0 0 760.58 879.66" fill="none"></path><path id="pl2" d="M 252.04 545.03 A 288 288 0 0 1 545.03 252.04" fill="none"></path><path id="sl2" d="M 308.04 535.95 A 232 232 0 0 1 535.95 308.04" fill="none"></path><path id="ol2" d="M 135.56 561.2 A 405 405 0 0 1 561.2 135.56" fill="none"></path><path id="pz0" d="M 449.41 405.7 A 162 162 0 0 1 630.59 405.7" fill="none"></path><path id="pz1" d="M 611.02 685.6 A 162 162 0 0 0 701.61 528.7" fill="none"></path><path id="pz2" d="M 378.39 528.7 A 162 162 0 0 0 468.98 685.6" fill="none"></path></defs><g id="compassRoot"><g class="grp" id="grp0"><path d="M 651.81 122.72 A 432 432 0 0 1 845.47 845.47 L 772.3 871.76 L 807.29 807.29 A 378 378 0 0 0 637.83 174.88 L 711.16 172.95 Z" fill="url(#ag0)"></path><path d="M 632.66 194.2 A 358 358 0 0 1 793.14 793.14 L 698.81 775.45 L 688.49 688.49 A 210 210 0 0 0 594.35 337.16 L 664.5 284.74 Z" fill="url(#bg0)"></path><path id="glow0" d="M 632.66 194.2 A 358 358 0 0 1 793.14 793.14 L 698.81 775.45 L 688.49 688.49 A 210 210 0 0 0 594.35 337.16 L 664.5 284.74 Z" fill="#ffffff" opacity="0"></path><text font-family="Inter,Arial" font-weight="600" font-size="35" fill="#ffffff" letter-spacing="0.2"><textPath href="#pl0" startOffset="50%" text-anchor="middle" id="t-crm">Cyber Risk Management</textPath></text><text font-family="Inter,Arial" font-weight="500" font-size="17" fill="#d6d8da" letter-spacing="0.2"><textPath href="#sl0" startOffset="50%" text-anchor="middle" id="t-pap">Proactive and Predictive</textPath></text><text font-family="Inter,Arial" font-weight="600" font-size="25" fill="#ffffff" letter-spacing="0.2" dominant-baseline="central"><textPath href="#ol0" startOffset="50%" text-anchor="middle" id="t-bab">Before a Breach</textPath></text></g><g class="grp" id="grp1"><path d="M 845.47 845.47 A 432 432 0 0 1 122.72 651.81 L 136.54 575.3 L 174.88 637.83 A 378 378 0 0 0 807.29 807.29 L 772.3 871.76 Z" fill="url(#ag1)"></path><path d="M 793.14 793.14 A 358 358 0 0 1 194.2 632.66 L 256.69 559.81 L 337.16 594.35 A 210 210 0 0 0 688.49 688.49 L 698.81 775.45 Z" fill="url(#bg1)"></path><path id="glow1" d="M 793.14 793.14 A 358 358 0 0 1 194.2 632.66 L 256.69 559.81 L 337.16 594.35 A 210 210 0 0 0 688.49 688.49 L 698.81 775.45 Z" fill="#ffffff" opacity="0"></path><text font-family="Inter,Arial" font-weight="600" font-size="35" fill="#ffffff" letter-spacing="0.2"><textPath href="#pl1" startOffset="50%" text-anchor="middle" id="t-dar">Detection and Response</textPath></text><text font-family="Inter,Arial" font-weight="500" font-size="17" fill="#d6d8da" letter-spacing="0.2"><textPath href="#sl1" startOffset="50%" text-anchor="middle" id="t-rad">Reactive and Defensive</textPath></text><text font-family="Inter,Arial" font-weight="600" font-size="25" fill="#ffffff" letter-spacing="0.2" dominant-baseline="central"><textPath href="#ol1" startOffset="50%" text-anchor="middle" id="t-dub">During a Breach</textPath></text></g><g class="grp" id="grp2"><path d="M 122.72 651.81 A 432 432 0 0 1 651.81 122.72 L 711.16 172.95 L 637.83 174.88 A 378 378 0 0 0 174.88 637.83 L 136.54 575.3 Z" fill="url(#ag2)"></path><path d="M 194.2 632.66 A 358 358 0 0 1 632.66 194.2 L 664.5 284.74 L 594.35 337.16 A 210 210 0 0 0 337.16 594.35 L 256.69 559.81 Z" fill="url(#bg2)"></path><path id="glow2" d="M 194.2 632.66 A 358 358 0 0 1 632.66 194.2 L 664.5 284.74 L 594.35 337.16 A 210 210 0 0 0 337.16 594.35 L 256.69 559.81 Z" fill="#ffffff" opacity="0"></path><text font-family="Inter,Arial" font-weight="600" font-size="35" fill="#ffffff" letter-spacing="0.2"><textPath href="#pl2" startOffset="50%" text-anchor="middle" id="t-cr">Cyber Resilience</textPath></text><text font-family="Inter,Arial" font-weight="500" font-size="17" fill="#d6d8da" letter-spacing="0.2"><textPath href="#sl2" startOffset="50%" text-anchor="middle" id="t-rai">Recover and Improve</textPath></text><text font-family="Inter,Arial" font-weight="600" font-size="25" fill="#ffffff" letter-spacing="0.2" dominant-baseline="central"><textPath href="#ol2" startOffset="50%" text-anchor="middle" id="t-aab">After a Breach</textPath></text></g><circle cx="540" cy="540" r="372" fill="none" stroke="#ffffff" stroke-width="5"></circle><circle cx="540" cy="540" r="205" fill="none" stroke="#ffffff" stroke-width="5"></circle><g opacity="0.9"><line x1="540" y1="188" x2="540" y2="180" stroke="#ffffff" stroke-width="2"></line><line x1="564.55" y1="188.86" x2="565.11" y2="180.88" stroke="#ffffff" stroke-width="2"></line><line x1="588.99" y1="191.43" x2="590.1" y2="183.5" stroke="#ffffff" stroke-width="2"></line><line x1="613.18" y1="195.69" x2="614.85" y2="187.87" stroke="#ffffff" stroke-width="2"></line><line x1="637.02" y1="201.64" x2="639.23" y2="193.95" stroke="#ffffff" stroke-width="2"></line><line x1="660.39" y1="209.23" x2="663.13" y2="201.71" stroke="#ffffff" stroke-width="2"></line><line x1="683.17" y1="218.43" x2="686.43" y2="211.12" stroke="#ffffff" stroke-width="2"></line><line x1="705.25" y1="229.2" x2="709.01" y2="222.14" stroke="#ffffff" stroke-width="2"></line><line x1="726.53" y1="241.49" x2="730.77" y2="234.7" stroke="#ffffff" stroke-width="2"></line><line x1="746.9" y1="255.23" x2="751.6" y2="248.75" stroke="#ffffff" stroke-width="2"></line><line x1="766.26" y1="270.35" x2="771.4" y2="264.22" stroke="#ffffff" stroke-width="2"></line><line x1="784.52" y1="286.79" x2="790.08" y2="281.04" stroke="#ffffff" stroke-width="2"></line><line x1="801.59" y1="304.47" x2="807.53" y2="299.11" stroke="#ffffff" stroke-width="2"></line><line x1="817.38" y1="323.29" x2="823.68" y2="318.36" stroke="#ffffff" stroke-width="2"></line><line x1="831.82" y1="343.16" x2="838.45" y2="338.69" stroke="#ffffff" stroke-width="2"></line><line x1="844.84" y1="364" x2="851.77" y2="360" stroke="#ffffff" stroke-width="2"></line><line x1="856.38" y1="385.69" x2="863.57" y2="382.19" stroke="#ffffff" stroke-width="2"></line><line x1="866.37" y1="408.14" x2="873.79" y2="405.14" stroke="#ffffff" stroke-width="2"></line><line x1="874.77" y1="431.23" x2="882.38" y2="428.75" stroke="#ffffff" stroke-width="2"></line><line x1="881.54" y1="454.84" x2="889.31" y2="452.91" stroke="#ffffff" stroke-width="2"></line><line x1="886.65" y1="478.88" x2="894.53" y2="477.49" stroke="#ffffff" stroke-width="2"></line><line x1="890.07" y1="503.21" x2="898.03" y2="502.37" stroke="#ffffff" stroke-width="2"></line><line x1="891.79" y1="527.72" x2="899.78" y2="527.44" stroke="#ffffff" stroke-width="2"></line><line x1="891.79" y1="552.28" x2="899.78" y2="552.56" stroke="#ffffff" stroke-width="2"></line><line x1="890.07" y1="576.79" x2="898.03" y2="577.63" stroke="#ffffff" stroke-width="2"></line><line x1="886.65" y1="601.12" x2="894.53" y2="602.51" stroke="#ffffff" stroke-width="2"></line><line x1="881.54" y1="625.16" x2="889.31" y2="627.09" stroke="#ffffff" stroke-width="2"></line><line x1="874.77" y1="648.77" x2="882.38" y2="651.25" stroke="#ffffff" stroke-width="2"></line><line x1="866.37" y1="671.86" x2="873.79" y2="674.86" stroke="#ffffff" stroke-width="2"></line><line x1="856.38" y1="694.31" x2="863.57" y2="697.81" stroke="#ffffff" stroke-width="2"></line><line x1="844.84" y1="716" x2="851.77" y2="720" stroke="#ffffff" stroke-width="2"></line><line x1="831.82" y1="736.84" x2="838.45" y2="741.31" stroke="#ffffff" stroke-width="2"></line><line x1="817.38" y1="756.71" x2="823.68" y2="761.64" stroke="#ffffff" stroke-width="2"></line><line x1="801.59" y1="775.53" x2="807.53" y2="780.89" stroke="#ffffff" stroke-width="2"></line><line x1="784.52" y1="793.21" x2="790.08" y2="798.96" stroke="#ffffff" stroke-width="2"></line><line x1="766.26" y1="809.65" x2="771.4" y2="815.78" stroke="#ffffff" stroke-width="2"></line><line x1="746.9" y1="824.77" x2="751.6" y2="831.25" stroke="#ffffff" stroke-width="2"></line><line x1="726.53" y1="838.51" x2="730.77" y2="845.3" stroke="#ffffff" stroke-width="2"></line><line x1="705.25" y1="850.8" x2="709.01" y2="857.86" stroke="#ffffff" stroke-width="2"></line><line x1="683.17" y1="861.57" x2="686.43" y2="868.88" stroke="#ffffff" stroke-width="2"></line><line x1="660.39" y1="870.77" x2="663.13" y2="878.29" stroke="#ffffff" stroke-width="2"></line><line x1="637.02" y1="878.36" x2="639.23" y2="886.05" stroke="#ffffff" stroke-width="2"></line><line x1="613.18" y1="884.31" x2="614.85" y2="892.13" stroke="#ffffff" stroke-width="2"></line><line x1="588.99" y1="888.57" x2="590.1" y2="896.5" stroke="#ffffff" stroke-width="2"></line><line x1="564.55" y1="891.14" x2="565.11" y2="899.12" stroke="#ffffff" stroke-width="2"></line><line x1="540" y1="892" x2="540" y2="900" stroke="#ffffff" stroke-width="2"></line><line x1="515.45" y1="891.14" x2="514.89" y2="899.12" stroke="#ffffff" stroke-width="2"></line><line x1="491.01" y1="888.57" x2="489.9" y2="896.5" stroke="#ffffff" stroke-width="2"></line><line x1="466.82" y1="884.31" x2="465.15" y2="892.13" stroke="#ffffff" stroke-width="2"></line><line x1="442.98" y1="878.36" x2="440.77" y2="886.05" stroke="#ffffff" stroke-width="2"></line><line x1="419.61" y1="870.77" x2="416.87" y2="878.29" stroke="#ffffff" stroke-width="2"></line><line x1="396.83" y1="861.57" x2="393.57" y2="868.88" stroke="#ffffff" stroke-width="2"></line><line x1="374.75" y1="850.8" x2="370.99" y2="857.86" stroke="#ffffff" stroke-width="2"></line><line x1="353.47" y1="838.51" x2="349.23" y2="845.3" stroke="#ffffff" stroke-width="2"></line><line x1="333.1" y1="824.77" x2="328.4" y2="831.25" stroke="#ffffff" stroke-width="2"></line><line x1="313.74" y1="809.65" x2="308.6" y2="815.78" stroke="#ffffff" stroke-width="2"></line><line x1="295.48" y1="793.21" x2="289.92" y2="798.96" stroke="#ffffff" stroke-width="2"></line><line x1="278.41" y1="775.53" x2="272.47" y2="780.89" stroke="#ffffff" stroke-width="2"></line><line x1="262.62" y1="756.71" x2="256.32" y2="761.64" stroke="#ffffff" stroke-width="2"></line><line x1="248.18" y1="736.84" x2="241.55" y2="741.31" stroke="#ffffff" stroke-width="2"></line><line x1="235.16" y1="716" x2="228.23" y2="720" stroke="#ffffff" stroke-width="2"></line><line x1="223.62" y1="694.31" x2="216.43" y2="697.81" stroke="#ffffff" stroke-width="2"></line><line x1="213.63" y1="671.86" x2="206.21" y2="674.86" stroke="#ffffff" stroke-width="2"></line><line x1="205.23" y1="648.77" x2="197.62" y2="651.25" stroke="#ffffff" stroke-width="2"></line><line x1="198.46" y1="625.16" x2="190.69" y2="627.09" stroke="#ffffff" stroke-width="2"></line><line x1="193.35" y1="601.12" x2="185.47" y2="602.51" stroke="#ffffff" stroke-width="2"></line><line x1="189.93" y1="576.79" x2="181.97" y2="577.63" stroke="#ffffff" stroke-width="2"></line><line x1="188.21" y1="552.28" x2="180.22" y2="552.56" stroke="#ffffff" stroke-width="2"></line><line x1="188.21" y1="527.72" x2="180.22" y2="527.44" stroke="#ffffff" stroke-width="2"></line><line x1="189.93" y1="503.21" x2="181.97" y2="502.37" stroke="#ffffff" stroke-width="2"></line><line x1="193.35" y1="478.88" x2="185.47" y2="477.49" stroke="#ffffff" stroke-width="2"></line><line x1="198.46" y1="454.84" x2="190.69" y2="452.91" stroke="#ffffff" stroke-width="2"></line><line x1="205.23" y1="431.23" x2="197.62" y2="428.75" stroke="#ffffff" stroke-width="2"></line><line x1="213.63" y1="408.14" x2="206.21" y2="405.14" stroke="#ffffff" stroke-width="2"></line><line x1="223.62" y1="385.69" x2="216.43" y2="382.19" stroke="#ffffff" stroke-width="2"></line><line x1="235.16" y1="364" x2="228.23" y2="360" stroke="#ffffff" stroke-width="2"></line><line x1="248.18" y1="343.16" x2="241.55" y2="338.69" stroke="#ffffff" stroke-width="2"></line><line x1="262.62" y1="323.29" x2="256.32" y2="318.36" stroke="#ffffff" stroke-width="2"></line><line x1="278.41" y1="304.47" x2="272.47" y2="299.11" stroke="#ffffff" stroke-width="2"></line><line x1="295.48" y1="286.79" x2="289.92" y2="281.04" stroke="#ffffff" stroke-width="2"></line><line x1="313.74" y1="270.35" x2="308.6" y2="264.22" stroke="#ffffff" stroke-width="2"></line><line x1="333.1" y1="255.23" x2="328.4" y2="248.75" stroke="#ffffff" stroke-width="2"></line><line x1="353.47" y1="241.49" x2="349.23" y2="234.7" stroke="#ffffff" stroke-width="2"></line><line x1="374.75" y1="229.2" x2="370.99" y2="222.14" stroke="#ffffff" stroke-width="2"></line><line x1="396.83" y1="218.43" x2="393.57" y2="211.12" stroke="#ffffff" stroke-width="2"></line><line x1="419.61" y1="209.23" x2="416.87" y2="201.71" stroke="#ffffff" stroke-width="2"></line><line x1="442.98" y1="201.64" x2="440.77" y2="193.95" stroke="#ffffff" stroke-width="2"></line><line x1="466.82" y1="195.69" x2="465.15" y2="187.87" stroke="#ffffff" stroke-width="2"></line><line x1="491.01" y1="191.43" x2="489.9" y2="183.5" stroke="#ffffff" stroke-width="2"></line><line x1="515.45" y1="188.86" x2="514.89" y2="180.88" stroke="#ffffff" stroke-width="2"></line></g><polyline points="632.66 194.2 L 664.5 284.74 L 594.35 337.16" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"></polyline><polyline points="793.14 793.14 L 698.81 775.45 L 688.49 688.49" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"></polyline><polyline points="194.2 632.66 L 256.69 559.81 L 337.16 594.35" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"></polyline><g id="puzzle"><path d="M 366.79 440 A 200 200 0 0 1 713.21 440 L 687.66 454.75 A 15 15 0 1 1 672.07 463.75 L 646.52 478.5 A 123 123 0 0 0 433.48 478.5 L 407.93 463.75 A 15 15 0 1 0 392.34 454.75 L 366.79 440 Z" fill="#a4a8ac"></path><path d="M 713.21 440 A 200 200 0 0 1 540 740 L 540 710.5 A 15 15 0 1 1 540 692.5 L 540 663 A 123 123 0 0 0 646.52 478.5 L 672.07 463.75 A 15 15 0 1 0 687.66 454.75 L 713.21 440 Z" fill="#6a6e72"></path><path d="M 540 740 A 200 200 0 0 1 366.79 440 L 392.34 454.75 A 15 15 0 1 1 407.93 463.75 L 433.48 478.5 A 123 123 0 0 0 540 663 L 540 692.5 A 15 15 0 1 0 540 710.5 L 540 740 Z" fill="#878b8f"></path><text font-family="Inter,Arial" font-weight="600" font-size="29" fill="#ffffff" letter-spacing="0.2" dominant-baseline="central"><textPath href="#pz0" startOffset="50%" text-anchor="middle" id="t-ppl">People</textPath></text><text font-family="Inter,Arial" font-weight="600" font-size="29" fill="#ffffff" letter-spacing="0.2" dominant-baseline="central"><textPath href="#pz1" startOffset="50%" text-anchor="middle" id="t-prc">Process</textPath></text><text font-family="Inter,Arial" font-weight="600" font-size="29" fill="#ffffff" letter-spacing="0.2" dominant-baseline="central"><textPath href="#pz2" startOffset="50%" text-anchor="middle" id="t-tch">Technology</textPath></text></g><circle cx="540" cy="540" r="122" fill="#f4f4f3"></circle><g opacity="0.5"><line x1="540" y1="434" x2="540" y2="427" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="551.08" y1="434.58" x2="551.81" y2="427.62" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="562.04" y1="436.32" x2="563.49" y2="429.47" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="572.76" y1="439.19" x2="574.92" y2="432.53" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="583.11" y1="443.16" x2="585.96" y2="436.77" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="593" y1="448.2" x2="596.5" y2="442.14" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="602.31" y1="454.24" x2="606.42" y2="448.58" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="610.93" y1="461.23" x2="615.61" y2="456.02" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="618.77" y1="469.07" x2="623.98" y2="464.39" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="625.76" y1="477.69" x2="631.42" y2="473.58" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="631.8" y1="487" x2="637.86" y2="483.5" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="636.84" y1="496.89" x2="643.23" y2="494.04" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="640.81" y1="507.24" x2="647.47" y2="505.08" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="643.68" y1="517.96" x2="650.53" y2="516.51" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="645.42" y1="528.92" x2="652.38" y2="528.19" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="646" y1="540" x2="653" y2="540" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="645.42" y1="551.08" x2="652.38" y2="551.81" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="643.68" y1="562.04" x2="650.53" y2="563.49" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="640.81" y1="572.76" x2="647.47" y2="574.92" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="636.84" y1="583.11" x2="643.23" y2="585.96" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="631.8" y1="593" x2="637.86" y2="596.5" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="625.76" y1="602.31" x2="631.42" y2="606.42" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="618.77" y1="610.93" x2="623.98" y2="615.61" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="610.93" y1="618.77" x2="615.61" y2="623.98" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="602.31" y1="625.76" x2="606.42" y2="631.42" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="593" y1="631.8" x2="596.5" y2="637.86" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="583.11" y1="636.84" x2="585.96" y2="643.23" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="572.76" y1="640.81" x2="574.92" y2="647.47" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="562.04" y1="643.68" x2="563.49" y2="650.53" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="551.08" y1="645.42" x2="551.81" y2="652.38" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="540" y1="646" x2="540" y2="653" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="528.92" y1="645.42" x2="528.19" y2="652.38" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="517.96" y1="643.68" x2="516.51" y2="650.53" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="507.24" y1="640.81" x2="505.08" y2="647.47" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="496.89" y1="636.84" x2="494.04" y2="643.23" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="487" y1="631.8" x2="483.5" y2="637.86" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="477.69" y1="625.76" x2="473.58" y2="631.42" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="469.07" y1="618.77" x2="464.39" y2="623.98" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="461.23" y1="610.93" x2="456.02" y2="615.61" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="454.24" y1="602.31" x2="448.58" y2="606.42" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="448.2" y1="593" x2="442.14" y2="596.5" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="443.16" y1="583.11" x2="436.77" y2="585.96" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="439.19" y1="572.76" x2="432.53" y2="574.92" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="436.32" y1="562.04" x2="429.47" y2="563.49" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="434.58" y1="551.08" x2="427.62" y2="551.81" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="434" y1="540" x2="427" y2="540" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="434.58" y1="528.92" x2="427.62" y2="528.19" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="436.32" y1="517.96" x2="429.47" y2="516.51" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="439.19" y1="507.24" x2="432.53" y2="505.08" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="443.16" y1="496.89" x2="436.77" y2="494.04" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="448.2" y1="487" x2="442.14" y2="483.5" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="454.24" y1="477.69" x2="448.58" y2="473.58" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="461.23" y1="469.07" x2="456.02" y2="464.39" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="469.07" y1="461.23" x2="464.39" y2="456.02" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="477.69" y1="454.24" x2="473.58" y2="448.58" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="487" y1="448.2" x2="483.5" y2="442.14" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="496.89" y1="443.16" x2="494.04" y2="436.77" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="507.24" y1="439.19" x2="505.08" y2="432.53" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="517.96" y1="436.32" x2="516.51" y2="429.47" stroke="#9a9ea2" stroke-width="1.6"></line><line x1="528.92" y1="434.58" x2="528.19" y2="427.62" stroke="#9a9ea2" stroke-width="1.6"></line></g><g id="rose"><path d="M 540 448 L 538.44 530.12 L 540 540 Z" fill="#dcdee0"></path><path d="M 540 448 L 541.56 530.12 L 540 540 Z" fill="#b9bcbf"></path><path d="M 605.05 474.95 L 545.88 531.91 L 540 540 Z" fill="#dcdee0"></path><path d="M 605.05 474.95 L 548.09 534.12 L 540 540 Z" fill="#b9bcbf"></path><path d="M 632 540 L 549.88 538.44 L 540 540 Z" fill="#dcdee0"></path><path d="M 632 540 L 549.88 541.56 L 540 540 Z" fill="#b9bcbf"></path><path d="M 605.05 605.05 L 548.09 545.88 L 540 540 Z" fill="#dcdee0"></path><path d="M 605.05 605.05 L 545.88 548.09 L 540 540 Z" fill="#b9bcbf"></path><path d="M 540 632 L 541.56 549.88 L 540 540 Z" fill="#dcdee0"></path><path d="M 540 632 L 538.44 549.88 L 540 540 Z" fill="#b9bcbf"></path><path d="M 474.95 605.05 L 534.12 548.09 L 540 540 Z" fill="#dcdee0"></path><path d="M 474.95 605.05 L 531.91 545.88 L 540 540 Z" fill="#b9bcbf"></path><path d="M 448 540 L 530.12 541.56 L 540 540 Z" fill="#dcdee0"></path><path d="M 448 540 L 530.12 538.44 L 540 540 Z" fill="#b9bcbf"></path><path d="M 474.95 474.95 L 531.91 534.12 L 540 540 Z" fill="#dcdee0"></path><path d="M 474.95 474.95 L 534.12 531.91 L 540 540 Z" fill="#b9bcbf"></path><path d="M 557.6 497.5 L 541.63 533.19 L 540 540 Z" fill="#e3e5e7"></path><path d="M 557.6 497.5 L 543.66 534.03 L 540 540 Z" fill="#cbced1"></path><path d="M 582.5 522.4 L 545.97 536.34 L 540 540 Z" fill="#e3e5e7"></path><path d="M 582.5 522.4 L 546.81 538.37 L 540 540 Z" fill="#cbced1"></path><path d="M 582.5 557.6 L 546.81 541.63 L 540 540 Z" fill="#e3e5e7"></path><path d="M 582.5 557.6 L 545.97 543.66 L 540 540 Z" fill="#cbced1"></path><path d="M 557.6 582.5 L 543.66 545.97 L 540 540 Z" fill="#e3e5e7"></path><path d="M 557.6 582.5 L 541.63 546.81 L 540 540 Z" fill="#cbced1"></path><path d="M 522.4 582.5 L 538.37 546.81 L 540 540 Z" fill="#e3e5e7"></path><path d="M 522.4 582.5 L 536.34 545.97 L 540 540 Z" fill="#cbced1"></path><path d="M 497.5 557.6 L 534.03 543.66 L 540 540 Z" fill="#e3e5e7"></path><path d="M 497.5 557.6 L 533.19 541.63 L 540 540 Z" fill="#cbced1"></path><path d="M 497.5 522.4 L 533.19 538.37 L 540 540 Z" fill="#e3e5e7"></path><path d="M 497.5 522.4 L 534.03 536.34 L 540 540 Z" fill="#cbced1"></path><path d="M 522.4 497.5 L 536.34 534.03 L 540 540 Z" fill="#e3e5e7"></path><path d="M 522.4 497.5 L 538.37 533.19 L 540 540 Z" fill="#cbced1"></path></g><g id="needle">
+  <!-- South: dark -->
+  <path d="M 540 540 L 526 540 L 540 632 L 554 540 Z" fill="#1a1c1f"></path>
+  <!-- North: red -->
+  <path d="M 540 540 L 526 540 L 540 448 L 554 540 Z" fill="#E01C24"></path>
+  <!-- Center diamond cap -->
+  <path d="M 540 526 L 554 540 L 540 554 L 526 540 Z" fill="#1a1c1f"></path>
+  <path d="M 540 531 L 549 540 L 540 549 L 531 540 Z" fill="#E01C24"></path>
+  <circle cx="540" cy="540" r="4" fill="#fff"></circle>
+</g></g>
+    </svg>
+
+  <svg id="hits" viewBox="0 0 1080 1080">
+    <path id="hit0" d="M 651.81 122.72 A 432 432 0 0 1 845.47 845.47 L 688.49 688.49 A 210 210 0 0 0 594.35 337.16 Z"/>
+    <path id="hit1" d="M 845.47 845.47 A 432 432 0 0 1 122.72 651.81 L 337.16 594.35 A 210 210 0 0 0 688.49 688.49 Z"/>
+    <path id="hit2" d="M 122.72 651.81 A 432 432 0 0 1 651.81 122.72 L 594.35 337.16 A 210 210 0 0 0 337.16 594.35 Z"/>
+
+  </svg>
+
+  <div id="lang-bar">
+    <button id="lang-toggle" onclick="toggleLangMenu()" aria-haspopup="listbox" aria-expanded="false">
+      <span id="lang-toggle-label">EN</span><span class="lang-caret">▾</span>
+    </button>
+    <div id="lang-menu" role="listbox">
+      <button id="btn-en" onclick="setLang('en')">EN</button>
+      <button id="btn-es" onclick="setLang('es')">ES</button>
+      <button id="btn-pt" onclick="setLang('pt')">PT</button>
+      <button id="btn-fr" onclick="setLang('fr')">FR</button>
+      <button id="btn-de" onclick="setLang('de')">DE</button>
+      <button id="btn-ja" onclick="setLang('ja')">JA</button>
+      <button id="btn-ar" onclick="setLang('ar')">AR</button>
+      <button id="btn-zh" onclick="setLang('zh')">ZH</button>
+      <button id="btn-ko" onclick="setLang('ko')">KO</button>
+      <button id="btn-hi" onclick="setLang('hi')">HI</button>
+      <button id="btn-it" onclick="setLang('it')">IT</button>
+      <button id="btn-nl" onclick="setLang('nl')">NL</button>
+    </div>
+  </div>
+
+  <div id="compass-title">The Cybersecurity Compass</div>
+  <div id="credit"></div>
+  <div id="pub-link"></div>
+  <div id="tt"><div id="tt-h"></div><div id="tt-s"></div><div id="tt-b"></div></div>
+</div>
+</div>
+
+<script>
+const T={
+  en:{
+    crm:"Cyber Risk Management",pap:"Proactive and Predictive",bab:"Before a Breach",
+    dar:"Detection and Response",rad:"Reactive and Defensive",dub:"During a Breach",
+    cr:"Cyber Resilience",rai:"Recover and Improve",aab:"After a Breach",
+    ppl:"People",prc:"Process",tch:"Technology",
+    title:"The Cybersecurity Compass",credit:"Created and Designed by:",
+    pubLine1:"The Cybersecurity Compass:",pubLine2:"Strategically Navigating the Stormy Digital Ocean",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  },
+  es:{
+    crm:"Gestión del Ciber Riesgo",pap:"Proactivo y Predictivo",bab:"Antes de una Brecha",
+    dar:"Detección y Respuesta",rad:"Reactivo y Defensivo",dub:"Durante una Brecha",
+    cr:"Ciber Resiliencia",rai:"Recuperar y Mejorar",aab:"Después de una Brecha",
+    ppl:"Personas",prc:"Procesos",tch:"Tecnología",
+    title:"La Brújula de Ciberseguridad",credit:"Creado y Diseñado por:",
+    pubLine1:"La Brújula de la Ciberseguridad:",pubLine2:"Navegando Estratégicamente el Tormentoso Océano Digital",
+    pubUrl:"https://www.researchgate.net/publication/389631500",
+    pubDoi:"10.13140/RG.2.2.20733.68322",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.20733.68322"
+  },
+  pt:{
+    crm:"Gestão de Ciber Riscos",pap:"Proativo e Preditivo",bab:"Antes de uma Brecha",
+    dar:"Detecção e Resposta",rad:"Reativo e Defensivo",dub:"Durante uma Brecha",
+    cr:"Ciber Resiliência",rai:"Recuperar e Melhorar",aab:"Após uma Brecha",
+    ppl:"Pessoas",prc:"Processos",tch:"Tecnologia",
+    title:"A Bússola da Cibersegurança",credit:"Criado e Projetado por:",
+    pubLine1:"A Bússola da Cibersegurança:",pubLine2:"Navegando Estrategicamente pelo Tempestuoso Oceano Digital",
+    pubUrl:"https://www.researchgate.net/publication/389631493",
+    pubDoi:"10.13140/RG.2.2.14022.79687",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.14022.79687"
+  },
+  fr:{
+    crm:"Gestion du Cyber Risque",pap:"Proactif et Prédictif",bab:"Avant une Brèche",
+    dar:"Détection et Réponse",rad:"Réactif et Défensif",dub:"Pendant une Brèche",
+    cr:"Cyber Résilience",rai:"Récupérer et Améliorer",aab:"Après une Brèche",
+    ppl:"Personnes",prc:"Processus",tch:"Technologie",
+    title:"La Boussole de Cybersécurité",credit:"Créé et Conçu par :",
+    pubLine1:"La Boussole de Cybersécurité :",pubLine2:"Naviguer Stratégiquement dans l'Océan Numérique Tumultueux",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  },
+  de:{
+    crm:"Cyber-Risikomanagement",pap:"Proaktiv und Vorausschauend",bab:"Vor einem Sicherheitsvorfall",
+    dar:"Erkennung und Reaktion",rad:"Reaktiv und Defensiv",dub:"Während eines Sicherheitsvorfalls",
+    cr:"Cyber-Resilienz",rai:"Wiederherstellen und Verbessern",aab:"Nach einem Sicherheitsvorfall",
+    ppl:"Menschen",prc:"Prozess",tch:"Technologie",
+    title:"Der Cybersicherheits-Kompass",credit:"Erstellt und Gestaltet von:",
+    pubLine1:"Der Cybersicherheits-Kompass:",pubLine2:"Strategische Navigation durch den stürmischen digitalen Ozean",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  },
+  ja:{
+    crm:"サイバーリスクマネジメント",pap:"プロアクティブかつ予測的",bab:"侵害前",
+    dar:"検知と対応",rad:"リアクティブかつ防御的",dub:"侵害中",
+    cr:"サイバーレジリエンス",rai:"復旧と改善",aab:"侵害後",
+    ppl:"人材",prc:"プロセス",tch:"テクノロジー",
+    title:"サイバーセキュリティ・コンパス",credit:"企画・デザイン：",
+    pubLine1:"サイバーセキュリティ・コンパス：",pubLine2:"荒れ狂うデジタルの海を戦略的に航海する",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  },
+  ar:{
+    crm:"إدارة المخاطر السيبرانية",pap:"استباقي واستشرافي",bab:"قبل الاختراق",
+    dar:"الكشف والاستجابة",rad:"تفاعلي ودفاعي",dub:"خلال الاختراق",
+    cr:"المرونة السيبرانية",rai:"التعافي والتحسين",aab:"بعد الاختراق",
+    ppl:"العنصر البشري",prc:"العمليات",tch:"التقنية",
+    title:"بوصلة الأمن السيبراني",credit:"إعداد وتصميم:",
+    pubLine1:"بوصلة الأمن السيبراني:",pubLine2:"التنقل الاستراتيجي عبر المحيط الرقمي العاصف",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  },
+  zh:{
+    crm:"网络风险管理",pap:"主动预测",bab:"入侵前",
+    dar:"检测与响应",rad:"被动防御",dub:"入侵中",
+    cr:"网络韧性",rai:"恢复与改进",aab:"入侵后",
+    ppl:"人员",prc:"流程",tch:"技术",
+    title:"网络安全指南针",credit:"创作与设计：",
+    pubLine1:"网络安全指南针：",pubLine2:"在风暴笼罩的数字海洋中战略航行",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  },
+  ko:{
+    crm:"사이버 리스크 관리",pap:"선제적이고 예측적인",bab:"침해 이전",
+    dar:"탐지 및 대응",rad:"반응적이고 방어적인",dub:"침해 도중",
+    cr:"사이버 레질리언스",rai:"복구와 개선",aab:"침해 이후",
+    ppl:"인력",prc:"프로세스",tch:"기술",
+    title:"사이버보안 나침반",credit:"기획 및 디자인:",
+    pubLine1:"사이버보안 나침반:",pubLine2:"폭풍 속 디지털 바다를 전략적으로 항해하다",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  },
+  hi:{
+    crm:"साइबर जोखिम प्रबंधन",pap:"सक्रिय और पूर्वानुमानी",bab:"उल्लंघन से पहले",
+    dar:"पहचान और प्रतिक्रिया",rad:"प्रतिक्रियात्मक और सुरक्षात्मक",dub:"उल्लंघन के दौरान",
+    cr:"साइबर रेज़िलिएंस",rai:"रिकवरी और सुधार",aab:"उल्लंघन के बाद",
+    ppl:"मानव तत्व",prc:"प्रक्रिया",tch:"टेक्नोलॉजी",
+    title:"साइबर सुरक्षा कम्पास",credit:"निर्माण और डिज़ाइन:",
+    pubLine1:"साइबर सुरक्षा कम्पास:",pubLine2:"तूफ़ानी डिजिटल महासागर में रणनीतिक रूप से नेविगेट करना",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  },
+  it:{
+    crm:"Gestione del Rischio Cyber",pap:"Proattivo e Predittivo",bab:"Prima di una Violazione",
+    dar:"Rilevamento e Risposta",rad:"Reattivo e Difensivo",dub:"Durante una Violazione",
+    cr:"Cyber Resilienza",rai:"Recupero e Miglioramento",aab:"Dopo una Violazione",
+    ppl:"Persone",prc:"Processo",tch:"Tecnologia",
+    title:"La Bussola della Cybersicurezza",credit:"Creato e Progettato da:",
+    pubLine1:"La Bussola della Cybersicurezza:",pubLine2:"Navigare Strategicamente nell'Oceano Digitale in Tempesta",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  },
+  nl:{
+    crm:"Cyberrisicobeheer",pap:"Proactief en Voorspellend",bab:"Voor een Inbreuk",
+    dar:"Detectie en Respons",rad:"Reactief en Defensief",dub:"Tijdens een Inbreuk",
+    cr:"Cyberweerbaarheid",rai:"Herstellen en Verbeteren",aab:"Na een Inbreuk",
+    ppl:"Mensen",prc:"Proces",tch:"Technologie",
+    title:"Het Cyberveiligheidskompas",credit:"Gemaakt en Ontworpen door:",
+    pubLine1:"Het Cyberveiligheidskompas:",pubLine2:"Strategisch Navigeren door de Stormachtige Digitale Oceaan",
+    pubUrl:"https://www.researchgate.net/publication/389628862",
+    pubDoi:"10.13140/RG.2.2.15582.55366",pubDoiUrl:"https://doi.org/10.13140/RG.2.2.15582.55366"
+  }
+};
+
+const TT={
+  en:[
+    {h:"Cyber Risk Management",s:"Before a Breach · Proactive & Predictive",
+     b:"The true north of your cybersecurity compass. Without it, organizations drift from crisis to crisis, reacting, recovering, never truly reducing risk. Cyber Risk Management is the proactive and predictive discipline that anticipates threats before they materialize, prioritizes what matters most, optimizes security investments, and gives executives a clear language to make strategic decisions. Cybercriminals are not only searching for technical vulnerabilities. They are looking for the uncertainty and indecision that comes from having no north. This is what closes that gap."},
+    {h:"Detection and Response",s:"During a Breach · Reactive & Defensive",
+     b:"In cybersecurity, it is not a matter of if storms will strike, but when. Detection and Response is your crew in the heart of the tempest: eyes on every signal, hands on every control. It identifies threats as they unfold, contains the breach before it spreads, and responds with speed and precision. Essential, but never sufficient alone. The organizations that only know how to weather storms will spend their entire voyage waiting for the next one. The compass demands more."},
+    {h:"Cyber Resilience",s:"After a Breach · Recover & Improve · An Outcome",
+     b:"Cyber Resilience is not a phase you enter after an incident. It is the outcome of doing everything else right. When your north is set through proactive risk management, and your crew responds with precision during the storm, resilience is what you earn. It means restoring operations faster, learning from what failed, hardening what was exposed, and feeding that intelligence back into your compass. Organizations that achieve true cyber resilience do not just survive storms. They become harder to sink with every one they weather."}
+  ],
+  es:[
+    {h:"Gestión del Ciber Riesgo",s:"Antes de una Brecha · Proactivo y Predictivo",
+     b:"El norte verdadero de tu brújula de ciberseguridad. Sin él, las organizaciones derivan de crisis en crisis, reaccionando, recuperándose, sin reducir nunca el riesgo de forma real. La Gestión del Ciber Riesgo es la disciplina proactiva y predictiva que anticipa las amenazas antes de que se materialicen, prioriza lo que más importa, optimiza las inversiones en seguridad y da a los ejecutivos un lenguaje claro para tomar decisiones estratégicas. Los ciberdelincuentes no solo buscan vulnerabilidades técnicas. Buscan la incertidumbre y la indecisión que genera no tener un norte. Esto es lo que cierra esa brecha."},
+    {h:"Detección y Respuesta",s:"Durante una Brecha · Reactivo y Defensivo",
+     b:"En ciberseguridad, no es cuestión de si las tormentas llegarán, sino de cuándo. La Detección y Respuesta es tu tripulación en el corazón del temporal: ojos en cada señal, manos en cada control. Identifica las amenazas a medida que se desarrollan, contiene la brecha antes de que se propague y responde con velocidad y precisión. Esencial, pero nunca suficiente por sí sola. Las organizaciones que solo saben capear tormentas pasarán todo su viaje esperando la siguiente. La brújula exige más."},
+    {h:"Ciber Resiliencia",s:"Después de una Brecha · Recuperar y Mejorar · Un Resultado",
+     b:"La Ciber Resiliencia no es una fase en la que entras después de un incidente. Es el resultado de haber hecho todo lo demás bien. Cuando tu norte está definido mediante una gestión proactiva del riesgo y tu equipo responde con precisión durante la tormenta, la resiliencia es lo que obtienes. Significa restaurar operaciones más rápido, aprender de lo que falló, endurecer lo que quedó expuesto y retroalimentar esa inteligencia en tu brújula. Las organizaciones que logran una verdadera Ciber Resiliencia no solo sobreviven las tormentas. Se vuelven más difíciles de hundir con cada una que capean."}
+  ],
+  pt:[
+    {h:"Gestão de Ciber Riscos",s:"Antes de uma Brecha · Proativo e Preditivo",
+     b:"O norte verdadeiro da sua bússola de cibersegurança. Sem ele, as organizações derivam de crise em crise, reagindo, recuperando, sem jamais reduzir o risco de forma real. A Gestão de Ciber Riscos é a disciplina proativa e preditiva que antecipa as ameaças antes de se materializarem, prioriza o que mais importa, otimiza os investimentos em segurança e oferece aos executivos uma linguagem clara para tomar decisões estratégicas. Os cibercriminosos não buscam apenas vulnerabilidades técnicas. Buscam a incerteza e a indecisão que vêm de não ter um norte. É isso que fecha essa lacuna."},
+    {h:"Detecção e Resposta",s:"Durante uma Brecha · Reativo e Defensivo",
+     b:"Em cibersegurança, não é uma questão de se as tempestades vão chegar, mas de quando. A Detecção e Resposta é a sua tripulação no coração da tempestade: olhos em cada sinal, mãos em cada controle. Identifica as ameaças à medida que se desenvolvem, contém a brecha antes que se espalhe e responde com velocidade e precisão. Essencial, mas nunca suficiente sozinha. As organizações que só sabem enfrentar tempestades passarão toda a sua viagem esperando pela próxima. A bússola exige mais."},
+    {h:"Ciber Resiliência",s:"Após uma Brecha · Recuperar e Melhorar · Um Resultado",
+     b:"A Ciber Resiliência não é uma fase que você entra após um incidente. É o resultado de ter feito tudo o mais certo. Quando o seu norte está definido por uma gestão proativa de riscos e sua equipe responde com precisão durante a tempestade, a resiliência é o que você conquista. Significa restaurar operações mais rápido, aprender com o que falhou, fortalecer o que foi exposto e retroalimentar essa inteligência na sua bússola. As organizações que alcançam a verdadeira Ciber Resiliência não apenas sobrevivem às tempestades. Tornam-se mais difíceis de afundar a cada uma que enfrentam."}
+  ],
+  fr:[
+    {h:"Gestion du Cyber Risque",s:"Avant une Brèche · Proactif et Prédictif",
+     b:"Le nord véritable de votre boussole de cybersécurité. Sans lui, les organisations dérivent de crise en crise, réagissant, se rétablissant, sans jamais réellement réduire le risque. La Gestion du Cyber Risque est la discipline proactive et prédictive qui anticipe les menaces avant qu'elles ne se matérialisent, priorise ce qui compte vraiment, optimise les investissements en sécurité et donne aux dirigeants un langage clair pour prendre des décisions stratégiques. Les cybercriminels ne cherchent pas seulement des vulnérabilités techniques. Ils cherchent l'incertitude et l'indécision qui viennent de l'absence de nord. C'est cela qui comble cet écart."},
+    {h:"Détection et Réponse",s:"Pendant une Brèche · Réactif et Défensif",
+     b:"En cybersécurité, il ne s'agit pas de savoir si les tempêtes frapperont, mais quand. La Détection et Réponse est votre équipage au cœur de la tempête : les yeux sur chaque signal, les mains sur chaque commande. Elle identifie les menaces à mesure qu'elles se développent, contient la brèche avant qu'elle ne se propage, et répond avec rapidité et précision. Essentielle, mais jamais suffisante à elle seule. Les organisations qui ne savent que traverser les tempêtes passeront tout leur voyage à attendre la suivante. La boussole exige davantage."},
+    {h:"Cyber Résilience",s:"Après une Brèche · Récupérer et Améliorer · Un Résultat",
+     b:"La Cyber Résilience n'est pas une phase que l'on aborde après un incident. C'est le résultat d'avoir bien fait tout le reste. Lorsque votre nord est fixé par une gestion proactive du risque et que votre équipage répond avec précision pendant la tempête, la résilience est ce que vous gagnez. Cela signifie rétablir les opérations plus rapidement, apprendre de ce qui a échoué, renforcer ce qui a été exposé, et réinjecter cette intelligence dans votre boussole. Les organisations qui atteignent une véritable cyber résilience ne se contentent pas de survivre aux tempêtes. Elles deviennent plus difficiles à couler à chaque tempête qu'elles traversent."}
+  ],
+  de:[
+    {h:"Cyber-Risikomanagement",s:"Vor einem Sicherheitsvorfall · Proaktiv und Vorausschauend",
+     b:"Der wahre Norden Ihres Cybersicherheits-Kompasses. Ohne ihn treiben Organisationen von Krise zu Krise, reagieren, erholen sich, ohne das Risiko jemals wirklich zu senken. Cyber-Risikomanagement ist die proaktive und vorausschauende Disziplin, die Bedrohungen erkennt, bevor sie eintreten, das Wichtigste priorisiert, Sicherheitsinvestitionen optimiert und Führungskräften eine klare Sprache für strategische Entscheidungen gibt. Cyberkriminelle suchen nicht nur nach technischen Schwachstellen. Sie suchen die Unsicherheit und Unentschlossenheit, die entsteht, wenn kein Norden vorhanden ist. Genau das schließt diese Lücke."},
+    {h:"Erkennung und Reaktion",s:"Während eines Sicherheitsvorfalls · Reaktiv und Defensiv",
+     b:"In der Cybersicherheit ist es keine Frage, ob Stürme aufziehen, sondern wann. Erkennung und Reaktion ist Ihre Mannschaft im Herzen des Sturms: Augen auf jedem Signal, Hände an jedem Steuer. Sie erkennt Bedrohungen, während sie sich entwickeln, dämmt den Vorfall ein, bevor er sich ausbreitet, und reagiert mit Geschwindigkeit und Präzision. Unerlässlich, aber allein niemals ausreichend. Organisationen, die nur wissen, wie man Stürme überlebt, verbringen ihre gesamte Reise damit, auf den nächsten zu warten. Der Kompass fordert mehr."},
+    {h:"Cyber-Resilienz",s:"Nach einem Sicherheitsvorfall · Wiederherstellen und Verbessern · Ein Ergebnis",
+     b:"Cyber-Resilienz ist keine Phase, in die man nach einem Vorfall eintritt. Sie ist das Ergebnis, alles andere richtig gemacht zu haben. Wenn Ihr Norden durch proaktives Risikomanagement festgelegt ist und Ihre Mannschaft im Sturm präzise reagiert, ist Resilienz das, was Sie sich verdienen. Das bedeutet, den Betrieb schneller wiederherzustellen, aus Fehlern zu lernen, das Exponierte zu härten und diese Erkenntnisse in Ihren Kompass zurückzuspeisen. Organisationen, die echte Cyber-Resilienz erreichen, überleben Stürme nicht nur. Sie werden mit jedem überstandenen Sturm schwerer zu versenken."}
+  ],
+  ja:[
+    {h:"サイバーリスクマネジメント",s:"侵害前・プロアクティブかつ予測的",
+     b:"サイバーセキュリティ・コンパスの真北。これがなければ、組織は危機から危機へと漂流し、対応と復旧を繰り返すだけで、リスクを本質的に減らすことは決してない。サイバーリスクマネジメントは、脅威が現実化する前に予測し、最も重要な事項を優先し、セキュリティ投資を最適化し、経営層が戦略的な意思決定を行うための明確な言語を提供する、プロアクティブかつ予測的な規律だ。サイバー犯罪者が狙っているのは技術的な脆弱性だけではない。真北を持たないことから生まれる不確実性と迷いこそが、彼らの標的だ。これを埋めるのがこの規律である。"},
+    {h:"検知と対応",s:"侵害中・リアクティブかつ防御的",
+     b:"サイバーセキュリティにおいて、問題は嵐が来るかどうかではなく、いつ来るかだ。検知と対応は、嵐の真っ只中にいるクルーそのものであり、すべての信号に目を配り、すべての制御に手をかける。脅威が展開する瞬間を捉え、侵害が広がる前に封じ込め、迅速かつ的確に対応する。不可欠だが、それだけでは決して十分ではない。嵐をやり過ごすことしか知らない組織は、航海のすべての時間を次の嵐を待つことに費やすだけだ。コンパスはそれ以上を要求する。"},
+    {h:"サイバーレジリエンス",s:"侵害後・復旧と改善・一つの成果",
+     b:"サイバーレジリエンスは、インシデントの後に入るフェーズではない。それは、他のすべてを正しく行った結果として得られる成果だ。プロアクティブなリスクマネジメントによって真北が定まり、クルーが嵐の中で的確に対応すれば、レジリエンスはその先に手に入る。運用をより速く復旧させ、失敗から学び、露出した部分を強化し、その知見をコンパスへ還元することを意味する。真のサイバーレジリエンスを実現した組織は、単に嵐を生き延びるだけではない。乗り越えた嵐の数だけ、沈みにくくなっていくのだ。"}
+  ],
+  ar:[
+    {h:"إدارة المخاطر السيبرانية",s:"قبل الاختراق · استباقي واستشرافي",
+     b:"الشمال الحقيقي لبوصلة الأمن السيبراني في مؤسستك. بدونها، تنجرف المؤسسات من أزمة إلى أزمة، فتتفاعل وتتعافى، دون أن تُخفّض المخاطر فعليًا في أي وقت. إدارة المخاطر السيبرانية هي المنهجية الاستباقية والاستشرافية التي تستشرف التهديدات قبل أن تتجسّد، وتُرتّب الأولويات بحسب الأهمية الحقيقية، وتُحسّن استثمارات الأمن، وتمنح القيادات التنفيذية لغة واضحة لاتخاذ القرارات الاستراتيجية. المجرمون السيبرانيون لا يبحثون فقط عن الثغرات التقنية. بل يبحثون عن حالة عدم اليقين والتردد الناتجة عن غياب هذا الشمال. وهذا بالضبط ما يُغلق تلك الفجوة."},
+    {h:"الكشف والاستجابة",s:"خلال الاختراق · تفاعلي ودفاعي",
+     b:"في الأمن السيبراني، لا يتعلق الأمر بما إذا كانت العاصفة ستضرب، بل بمتى ستضرب. الكشف والاستجابة هو طاقمك في قلب العاصفة: أعين مركّزة على كل إشارة، وأيدٍ على كل عنصر تحكم. فهو يحدد التهديدات لحظة ظهورها، ويحتوي الاختراق قبل أن ينتشر، ويستجيب بسرعة ودقة. أساسي، لكنه لا يكفي وحده أبدًا. المؤسسات التي لا تعرف سوى مواجهة العواصف ستقضي رحلتها كاملة في انتظار العاصفة التالية. البوصلة تتطلب أكثر من ذلك."},
+    {h:"المرونة السيبرانية",s:"بعد الاختراق · التعافي والتحسين · نتيجة واحدة",
+     b:"المرونة السيبرانية ليست مرحلة تدخلها المؤسسة بعد وقوع حادثة. بل هي النتيجة الطبيعية لفعل كل شيء آخر بالشكل الصحيح. فحين يتحدد شمالك من خلال إدارة استباقية للمخاطر، ويستجيب طاقمك بدقة خلال العاصفة، تكون المرونة هي ما تكسبه. وهذا يعني استعادة العمليات بشكل أسرع، والتعلّم من نقاط الفشل، وتحصين ما تعرّض للخطر، وإعادة تغذية تلك المعرفة إلى بوصلتك. المؤسسات التي تحقق مرونة سيبرانية حقيقية لا تنجو من العواصف فقط. بل تصبح أصعب على الغرق مع كل عاصفة تجتازها."}
+  ],
+  zh:[
+    {h:"网络风险管理",s:"入侵前 · 主动预测",
+     b:"这是你的网络安全指南针真正指向的方向。没有它，组织只能在一次次危机中挣扎，不断应对、不断恢复，却始终无法真正降低风险。网络风险管理是一种主动且预测性的方法论，它在威胁尚未成形之前就提前识别，把资源优先投向真正重要的地方，优化安全投入，并为管理层提供清晰的语言来做出战略决策。网络犯罪分子寻找的不仅是技术上的漏洞，他们更在寻找因缺乏方向而产生的不确定和犹豫。而这正是网络风险管理要填补的缺口。"},
+    {h:"检测与响应",s:"入侵中 · 被动防御",
+     b:"在网络安全领域，问题从来不是风暴会不会来，而是什么时候来。检测与响应就是你在风暴中心的团队：眼睛盯住每一个信号，双手随时准备操作每一个控制点。它能在威胁刚刚显现时就识别出来，在入侵扩散之前将其遏制，并以速度和精准做出响应。它至关重要，但从来不足以单独依靠。那些只懂得硬扛风暴的组织，会把整段航程都耗在等待下一场风暴上。指南针要求的，远不止于此。"},
+    {h:"网络韧性",s:"入侵后 · 恢复与改进 · 一种结果",
+     b:"网络韧性不是发生事件之后才进入的一个阶段，而是把其他所有环节都做对之后自然产生的结果。当你的方向由主动的风险管理确定，你的团队又能在风暴中精准应对，韧性就是你所获得的回报。它意味着更快恢复运营，从失败中学习，加固已经暴露的部分，并把这些经验重新反馈进你的指南针。真正实现网络韧性的组织，不只是在风暴中存活下来，而是每经历一次风暴，就变得更难被击沉。"}
+  ],
+  ko:[
+    {h:"사이버 리스크 관리",s:"침해 이전 · 선제적이고 예측적인",
+     b:"당신의 사이버보안 나침반이 가리키는 진짜 북쪽이다. 이것이 없으면 조직은 위기에서 위기로 표류하며, 대응하고 복구하기만 반복할 뿐 리스크를 실제로 줄이지는 못한다. 사이버 리스크 관리는 위협이 현실화되기 전에 이를 예측하고, 가장 중요한 것에 우선순위를 두고, 보안 투자를 최적화하며, 경영진에게 전략적 의사결정을 위한 명확한 언어를 제공하는 선제적이고 예측적인 규율이다. 사이버 범죄자들이 노리는 것은 기술적 취약점만이 아니다. 그들이 진짜로 노리는 것은 북쪽이 없을 때 생기는 불확실성과 망설임이다. 이 간극을 메우는 것이 바로 사이버 리스크 관리다."},
+    {h:"탐지 및 대응",s:"침해 도중 · 반응적이고 방어적인",
+     b:"사이버보안에서 문제는 폭풍이 올지 여부가 아니라 언제 오느냐다. 탐지 및 대응은 폭풍의 한가운데에 있는 당신의 팀이다. 모든 신호에 눈을 두고, 모든 제어 장치에 손을 올려 놓는다. 위협이 전개되는 순간을 포착하고, 침해가 확산되기 전에 억제하며, 신속하고 정확하게 대응한다. 반드시 필요하지만, 그것만으로는 결코 충분하지 않다. 폭풍을 견디는 법만 아는 조직은 항해 전체를 다음 폭풍을 기다리는 데 써버릴 뿐이다. 나침반은 그 이상을 요구한다."},
+    {h:"사이버 레질리언스",s:"침해 이후 · 복구와 개선 · 하나의 결과",
+     b:"사이버 레질리언스는 사고 이후에 들어서는 단계가 아니다. 그것은 다른 모든 것을 제대로 해냈을 때 얻어지는 결과다. 선제적인 리스크 관리로 진짜 북쪽이 정해지고, 팀이 폭풍 속에서 정확하게 대응할 때, 레질리언스는 그 대가로 얻어진다. 이는 더 빠르게 운영을 복구하고, 실패에서 배우고, 노출된 부분을 강화하고, 그 지식을 다시 나침반에 반영하는 것을 의미한다. 진정한 사이버 레질리언스를 이룬 조직은 단순히 폭풍에서 살아남는 것이 아니다. 폭풍을 겪을수록 더 침몰시키기 어려운 조직이 되어간다."}
+  ],
+  hi:[
+    {h:"साइबर जोखिम प्रबंधन",s:"उल्लंघन से पहले · सक्रिय और पूर्वानुमानी",
+     b:"यही वह सच्ची उत्तर दिशा है जिसकी ओर आपका साइबर सुरक्षा कम्पास इशारा करता है। इसके बिना, संगठन एक संकट से दूसरे संकट की ओर बहते रहते हैं, प्रतिक्रिया देते हैं, उबरते हैं, लेकिन जोखिम को वास्तव में कभी कम नहीं कर पाते। साइबर जोखिम प्रबंधन वह सक्रिय और पूर्वानुमानी अनुशासन है जो खतरों के साकार होने से पहले ही उनका अनुमान लगाता है, सबसे महत्वपूर्ण चीज़ों को प्राथमिकता देता है, सुरक्षा निवेश को अनुकूलित करता है, और नेतृत्व को रणनीतिक फ़ैसले लेने के लिए एक स्पष्ट भाषा देता है। साइबर अपराधी सिर्फ़ तकनीकी कमज़ोरियाँ नहीं खोजते। वे उस अनिश्चितता और अनिर्णय को खोजते हैं जो दिशा न होने से पैदा होती है। यही वह अंतर है जिसे यह अनुशासन भरता है।"},
+    {h:"पहचान और प्रतिक्रिया",s:"उल्लंघन के दौरान · प्रतिक्रियात्मक और सुरक्षात्मक",
+     b:"साइबर सुरक्षा में सवाल यह नहीं है कि तूफ़ान आएगा या नहीं, बल्कि यह है कि कब आएगा। पहचान और प्रतिक्रिया तूफ़ान के केंद्र में मौजूद आपकी टीम है: हर संकेत पर नज़र, हर नियंत्रण पर हाथ। यह उभरते ही खतरों की पहचान करती है, फैलने से पहले उल्लंघन को रोकती है, और तेज़ी और सटीकता से प्रतिक्रिया देती है। यह अनिवार्य है, लेकिन अकेले कभी पर्याप्त नहीं। जो संगठन सिर्फ़ तूफ़ान झेलना जानते हैं, वे अपनी पूरी यात्रा अगले तूफ़ान का इंतज़ार करने में बिता देंगे। कम्पास इससे कहीं अधिक की मांग करता है।"},
+    {h:"साइबर रेज़िलिएंस",s:"उल्लंघन के बाद · रिकवरी और सुधार · एक परिणाम",
+     b:"साइबर रेज़िलिएंस कोई ऐसा चरण नहीं है जिसमें कोई घटना होने के बाद प्रवेश किया जाता है। यह बाकी सब कुछ सही ढंग से करने का परिणाम है। जब आपकी दिशा सक्रिय जोखिम प्रबंधन से तय होती है, और आपकी टीम तूफ़ान के बीच सटीक प्रतिक्रिया देती है, तो रेज़िलिएंस वही है जो आप कमाते हैं। इसका मतलब है संचालन को तेज़ी से बहाल करना, असफलताओं से सीखना, कमज़ोर हिस्सों को मज़बूत बनाना, और उस जानकारी को अपने कम्पास में वापस भेजना। जो संगठन सच्ची साइबर रेज़िलिएंस हासिल करते हैं, वे सिर्फ़ तूफ़ानों में बचे नहीं रहते। वे हर झेले गए तूफ़ान के साथ डूबना और मुश्किल बनते जाते हैं।"}
+  ],
+  it:[
+    {h:"Gestione del Rischio Cyber",s:"Prima di una Violazione · Proattivo e Predittivo",
+     b:"Il vero nord della tua bussola della cybersicurezza. Senza di essa, le organizzazioni vanno alla deriva da una crisi all'altra, reagendo, recuperando, senza mai ridurre realmente il rischio. La Gestione del Rischio Cyber è la disciplina proattiva e predittiva che anticipa le minacce prima che si materializzino, dà priorità a ciò che conta davvero, ottimizza gli investimenti in sicurezza e offre ai dirigenti un linguaggio chiaro per prendere decisioni strategiche. I criminali informatici non cercano solo vulnerabilità tecniche. Cercano l'incertezza e l'indecisione che nascono dall'assenza di un nord. È esattamente questo che colma il vuoto."},
+    {h:"Rilevamento e Risposta",s:"Durante una Violazione · Reattivo e Difensivo",
+     b:"Nella cybersicurezza, la domanda non è se le tempeste arriveranno, ma quando. Rilevamento e Risposta è il tuo equipaggio nel cuore della tempesta: occhi su ogni segnale, mani su ogni comando. Identifica le minacce mentre si sviluppano, contiene la violazione prima che si diffonda e risponde con rapidità e precisione. Essenziale, ma mai sufficiente da solo. Le organizzazioni che sanno solo affrontare le tempeste passeranno tutto il viaggio ad aspettare la prossima. La bussola richiede di più."},
+    {h:"Cyber Resilienza",s:"Dopo una Violazione · Recupero e Miglioramento · Un Risultato",
+     b:"La Cyber Resilienza non è una fase in cui si entra dopo un incidente. È il risultato di aver fatto bene tutto il resto. Quando il tuo nord è fissato da una gestione proattiva del rischio e il tuo equipaggio risponde con precisione durante la tempesta, la resilienza è ciò che guadagni. Significa ripristinare le operazioni più rapidamente, imparare da ciò che ha fallito, rafforzare ciò che è stato esposto e reimmettere quella conoscenza nella tua bussola. Le organizzazioni che raggiungono una vera Cyber Resilienza non si limitano a sopravvivere alle tempeste. Diventano più difficili da affondare a ogni tempesta che attraversano."}
+  ],
+  nl:[
+    {h:"Cyberrisicobeheer",s:"Voor een Inbreuk · Proactief en Voorspellend",
+     b:"Het echte noorden van je cyberveiligheidskompas. Zonder dit drijven organisaties van crisis naar crisis, reagerend, herstellend, zonder het risico ooit werkelijk te verminderen. Cyberrisicobeheer is de proactieve en voorspellende discipline die dreigingen anticipeert voordat ze zich voordoen, prioriteit geeft aan wat er echt toe doet, beveiligingsinvesteringen optimaliseert en leidinggevenden een duidelijke taal geeft om strategische beslissingen te nemen. Cybercriminelen zoeken niet alleen naar technische kwetsbaarheden. Ze zoeken de onzekerheid en aarzeling die ontstaan door het ontbreken van een noorden. Dat is precies wat dit gat dicht."},
+    {h:"Detectie en Respons",s:"Tijdens een Inbreuk · Reactief en Defensief",
+     b:"In cyberveiligheid gaat het er niet om of stormen zullen toeslaan, maar wanneer. Detectie en Respons is jouw team in het hart van de storm: ogen op elk signaal, handen op elke bediening. Het identificeert dreigingen zodra ze zich ontvouwen, damt de inbreuk in voordat die zich verspreidt, en reageert met snelheid en precisie. Essentieel, maar alleen nooit voldoende. Organisaties die alleen weten hoe ze stormen moeten doorstaan, brengen hun hele reis door met wachten op de volgende. Het kompas vraagt meer."},
+    {h:"Cyberweerbaarheid",s:"Na een Inbreuk · Herstellen en Verbeteren · Een Resultaat",
+     b:"Cyberweerbaarheid is geen fase waarin je terechtkomt na een incident. Het is het resultaat van alles andere goed doen. Wanneer je noorden is vastgesteld door proactief risicobeheer, en je team reageert met precisie tijdens de storm, is weerbaarheid wat je verdient. Het betekent operaties sneller herstellen, leren van wat faalde, wat blootgesteld was verstevigen, en die kennis terugvoeren naar je kompas. Organisaties die echte cyberweerbaarheid bereiken, overleven stormen niet alleen. Ze worden met elke doorstane storm moeilijker te laten zinken."}
+  ]
+};
+
+const TTP={
+  en:[
+    {h:"People",s:"The Human Layer",
+     b:"Technology does not defend organizations. People do. The People dimension of the compass represents the human layer that makes every other investment meaningful: the security analysts who interpret signals, the executives who make risk decisions, the employees who are either the first line of defense or the first point of failure. And on the other side of every attack, there is also a person. Cybercriminals are not automated forces of nature. They are individuals with intentions, motivations, and strategies of their own. They study their targets, exploit indecision, and move with purpose. Defending against them requires the same human qualities they possess: awareness, judgment, and the will to act before they do. A compass without skilled, aware, and empowered people is an instrument no one knows how to read. Culture, training, accountability, and leadership are not soft factors. They are the hands on the wheel."},
+    {h:"Process",s:"The Operational Backbone",
+     b:"Process is the operational backbone that connects people to technology and strategy to execution. Without it, even the best tools produce noise, and even the best talent operates in silos. At the core of a mature process layer sit the CyberRiskOps discipline and its operational nerve center, the Cyber Risk Operations Center (CROC), where risk intelligence is continuously measured, prioritized, and acted upon. Security Operations (SecOps) bridges that risk intelligence with real-time action, while the Security Operations Center (SOC) executes detection, investigation, and response at speed. Together, they transform cybersecurity from a set of isolated reactions into a continuous, measurable, and improving operation. Process is what ensures the compass keeps moving."},
+    {h:"Technology",s:"The Force Multiplier",
+     b:"Technology is the force multiplier of your cybersecurity strategy, but only when it serves a clear purpose. Cyber Risk Quantification (CRQ) translates technical risk into financial language that executives can act on. Cyber Risk Exposure Management (CREM) continuously maps and prioritizes your attack surface before adversaries can exploit it. Extended Detection and Response (XDR) unifies visibility across endpoints, networks, cloud, and identity into a single, correlated picture. Threat Intelligence feeds your compass with adversary context, turning reactive alerts into proactive decisions. Automation eliminates the manual friction that slows response and allows your teams to operate at machine speed without burning out. A unified platform ties all of this together, replacing fragmented point solutions with integrated intelligence. Artificial Intelligence extends what human teams can do across every layer. Technology does not define your strategy. It executes it."}
+  ],
+  es:[
+    {h:"Personas",s:"La Capa Humana",
+     b:"La tecnología no defiende organizaciones. Las personas sí. La dimensión de Personas representa la capa humana que da sentido a cada otra inversión: los analistas que interpretan señales, los ejecutivos que toman decisiones de riesgo, los empleados que son la primera línea de defensa o el primer punto de falla. Y al otro lado de cada ataque también hay una persona. Los ciberdelincuentes no son fuerzas automatizadas de la naturaleza. Son individuos con intenciones, motivaciones y estrategias propias. Estudian sus objetivos, explotan la indecisión y actúan con propósito. Defenderse de ellos requiere las mismas cualidades humanas que ellos poseen: conciencia, juicio y voluntad de actuar antes que ellos. Una brújula sin personas capacitadas y empoderadas es un instrumento que nadie sabe leer. La cultura, la formación, la responsabilidad y el liderazgo no son factores blandos. Son las manos en el timón."},
+    {h:"Procesos",s:"La Columna Vertebral Operacional",
+     b:"El proceso es la columna vertebral operacional que conecta a las personas con la tecnología y la estrategia con la ejecución. Sin él, incluso las mejores herramientas generan ruido y el mejor talento opera en silos. En el núcleo de una capa de proceso madura se encuentran la disciplina CyberRiskOps y su centro neurálgico operacional, el Centro de Operaciones de Ciber Riesgo (CROC), donde la inteligencia de riesgo se mide, prioriza y actúa continuamente. Security Operations (SecOps) conecta esa inteligencia de riesgo con la acción en tiempo real, mientras que el Centro de Operaciones de Seguridad (SOC) ejecuta la detección, investigación y respuesta con velocidad. Juntos, transforman la ciberseguridad de un conjunto de reacciones aisladas en una operación continua, medible y en mejora constante. El proceso es lo que garantiza que la brújula siga en movimiento."},
+    {h:"Tecnología",s:"El Multiplicador de Fuerza",
+     b:"La tecnología es el multiplicador de fuerza de tu estrategia de ciberseguridad, pero solo cuando sirve a un propósito claro. La Cuantificación del Ciber Riesgo (CRQ) traduce el riesgo técnico a un lenguaje financiero que los ejecutivos pueden utilizar. La Gestión de Exposición al Ciber Riesgo (CREM) mapea y prioriza continuamente tu superficie de ataque antes de que los adversarios puedan explotarla. La Detección y Respuesta Extendida (XDR) unifica la visibilidad en endpoints, redes, nube e identidad en una imagen única y correlacionada. La Inteligencia de Amenazas alimenta tu brújula con contexto del adversario, convirtiendo alertas reactivas en decisiones proactivas. La automatización elimina la fricción manual que ralentiza la respuesta y permite a tus equipos operar a la velocidad de las máquinas. Una plataforma unificada integra todo esto, reemplazando soluciones puntuales fragmentadas con inteligencia integrada. La Inteligencia Artificial amplía lo que los equipos humanos pueden hacer en cada capa. La tecnología no define tu estrategia. La ejecuta."}
+  ],
+  pt:[
+    {h:"Pessoas",s:"A Camada Humana",
+     b:"A tecnologia não defende organizações. As pessoas sim. A dimensão de Pessoas representa a camada humana que dá sentido a cada outro investimento: os analistas que interpretam sinais, os executivos que tomam decisões de risco, os funcionários que são a primeira linha de defesa ou o primeiro ponto de falha. E do outro lado de cada ataque também há uma pessoa. Os cibercriminosos não são forças automatizadas da natureza. São indivíduos com intenções, motivações e estratégias próprias. Estudam seus alvos, exploram a indecisão e agem com propósito. Defendê-los exige as mesmas qualidades humanas que eles possuem: consciência, julgamento e vontade de agir antes deles. Uma bússola sem pessoas capacitadas e empoderadas é um instrumento que ninguém sabe ler. Cultura, treinamento, responsabilidade e liderança não são fatores suaves. São as mãos no leme."},
+    {h:"Processos",s:"A Espinha Dorsal Operacional",
+     b:"O processo é a espinha dorsal operacional que conecta pessoas à tecnologia e estratégia à execução. Sem ele, até as melhores ferramentas geram ruído e o melhor talento opera em silos. No núcleo de uma camada de processo madura estão a disciplina CyberRiskOps e seu centro operacional, o Centro de Operações de Ciber Risco (CROC), onde a inteligência de risco é continuamente medida, priorizada e executada. Security Operations (SecOps) conecta essa inteligência de risco com ação em tempo real, enquanto o Centro de Operações de Segurança (SOC) executa detecção, investigação e resposta com velocidade. Juntos, transformam a cibersegurança de um conjunto de reações isoladas em uma operação contínua, mensurável e em melhoria constante. O processo é o que garante que a bússola continue em movimento."},
+    {h:"Tecnologia",s:"O Multiplicador de Força",
+     b:"A tecnologia é o multiplicador de força da sua estratégia de cibersegurança, mas apenas quando serve a um propósito claro. A Quantificação do Ciber Risco (CRQ) traduz o risco técnico em linguagem financeira que os executivos podem utilizar. A Gestão de Exposição ao Ciber Risco (CREM) mapeia e prioriza continuamente sua superfície de ataque antes que os adversários possam explorá-la. A Detecção e Resposta Estendida (XDR) unifica a visibilidade em endpoints, redes, nuvem e identidade em uma imagem única e correlacionada. A Inteligência de Ameaças alimenta sua bússola com contexto do adversário, transformando alertas reativos em decisões proativas. A automação elimina o atrito manual que atrasa a resposta e permite que suas equipes operem na velocidade das máquinas. Uma plataforma unificada integra tudo isso, substituindo soluções pontuais fragmentadas por inteligência integrada. A Inteligência Artificial amplia o que as equipes humanas podem fazer em cada camada. A tecnologia não define sua estratégia. Ela a executa."}
+  ],
+  fr:[
+    {h:"Personnes",s:"La Couche Humaine",
+     b:"La technologie ne défend pas les organisations. Les personnes, si. La dimension Personnes de la boussole représente la couche humaine qui donne un sens à chaque autre investissement : les analystes de sécurité qui interprètent les signaux, les dirigeants qui prennent les décisions de risque, les employés qui constituent soit la première ligne de défense, soit le premier point de défaillance. Et de l'autre côté de chaque attaque, il y a aussi une personne. Les cybercriminels ne sont pas des forces automatisées de la nature. Ce sont des individus avec leurs propres intentions, motivations et stratégies. Ils étudient leurs cibles, exploitent l'indécision et agissent avec un objectif précis. Se défendre contre eux exige les mêmes qualités humaines qu'ils possèdent : la vigilance, le jugement et la volonté d'agir avant eux. Une boussole sans personnes compétentes, vigilantes et responsabilisées est un instrument que personne ne sait lire. La culture, la formation, la responsabilisation et le leadership ne sont pas des facteurs secondaires. Ce sont les mains sur le gouvernail."},
+    {h:"Processus",s:"L'Épine Dorsale Opérationnelle",
+     b:"Le processus est l'épine dorsale opérationnelle qui relie les personnes à la technologie et la stratégie à l'exécution. Sans lui, même les meilleurs outils produisent du bruit, et même les meilleurs talents opèrent en silos. Au cœur d'une couche de processus mature se trouvent la discipline CyberRiskOps et son centre névralgique opérationnel, le Centre des Opérations de Cyber Risque (CROC), où l'intelligence du risque est mesurée, priorisée et exploitée en continu. Security Operations (SecOps) relie cette intelligence du risque à l'action en temps réel, tandis que le Security Operations Center (SOC) exécute la détection, l'investigation et la réponse avec rapidité. Ensemble, ils transforment la cybersécurité d'un ensemble de réactions isolées en une opération continue, mesurable et en amélioration constante. Le processus est ce qui garantit que la boussole continue d'avancer."},
+    {h:"Technologie",s:"Le Multiplicateur de Force",
+     b:"La technologie est le multiplicateur de force de votre stratégie de cybersécurité, mais seulement lorsqu'elle sert un objectif clair. La Quantification du Cyber Risque (CRQ) traduit le risque technique en un langage financier que les dirigeants peuvent exploiter. La Gestion de l'Exposition au Cyber Risque (CREM) cartographie et priorise en continu votre surface d'attaque avant que les adversaires ne puissent l'exploiter. La Détection et Réponse Étendues (XDR) unifie la visibilité sur les terminaux, les réseaux, le cloud et l'identité en une image unique et corrélée. Le Renseignement sur les Menaces alimente votre boussole avec le contexte de l'adversaire, transformant les alertes réactives en décisions proactives. L'automatisation élimine la friction manuelle qui ralentit la réponse et permet à vos équipes d'opérer à la vitesse de la machine sans s'épuiser. Une plateforme unifiée relie tout cela, remplaçant les solutions ponctuelles fragmentées par une intelligence intégrée. L'Intelligence Artificielle étend ce que les équipes humaines peuvent accomplir à chaque niveau. La technologie ne définit pas votre stratégie. Elle l'exécute."}
+  ],
+  de:[
+    {h:"Menschen",s:"Die menschliche Ebene",
+     b:"Technologie verteidigt keine Organisationen. Menschen tun das. Die Dimension Menschen des Kompasses steht für die menschliche Ebene, die jede andere Investition sinnvoll macht: die Sicherheitsanalysten, die Signale interpretieren, die Führungskräfte, die Risikoentscheidungen treffen, die Mitarbeiter, die entweder die erste Verteidigungslinie oder der erste Schwachpunkt sind. Und auf der anderen Seite jedes Angriffs steht ebenfalls ein Mensch. Cyberkriminelle sind keine automatisierten Naturkräfte. Es sind Individuen mit eigenen Absichten, Motivationen und Strategien. Sie studieren ihre Ziele, nutzen Unentschlossenheit aus und handeln mit Zielstrebigkeit. Sich gegen sie zu verteidigen erfordert dieselben menschlichen Qualitäten, die sie besitzen: Wachsamkeit, Urteilsvermögen und den Willen, vor ihnen zu handeln. Ein Kompass ohne kompetente, wachsame und befähigte Menschen ist ein Instrument, das niemand zu lesen weiß. Kultur, Training, Verantwortlichkeit und Führung sind keine weichen Faktoren. Sie sind die Hände am Steuer."},
+    {h:"Prozess",s:"Das operative Rückgrat",
+     b:"Prozess ist das operative Rückgrat, das Menschen mit Technologie und Strategie mit Umsetzung verbindet. Ohne ihn erzeugen selbst die besten Werkzeuge nur Lärm, und selbst die besten Talente arbeiten in Silos. Im Kern einer ausgereiften Prozessebene stehen die CyberRiskOps-Disziplin und ihr operatives Nervenzentrum, das Cyber-Risiko-Operationszentrum (CROC), in dem Risikoerkenntnisse kontinuierlich gemessen, priorisiert und umgesetzt werden. Security Operations (SecOps) verbindet diese Risikoerkenntnisse mit Echtzeit-Handeln, während das Security Operations Center (SOC) Erkennung, Untersuchung und Reaktion mit Geschwindigkeit ausführt. Gemeinsam verwandeln sie Cybersicherheit von einer Reihe isolierter Reaktionen in einen kontinuierlichen, messbaren und sich stetig verbessernden Betrieb. Prozess ist das, was sicherstellt, dass der Kompass sich weiterbewegt."},
+    {h:"Technologie",s:"Der Kraftmultiplikator",
+     b:"Technologie ist der Kraftmultiplikator Ihrer Cybersicherheitsstrategie, aber nur, wenn sie einem klaren Zweck dient. Cyber-Risikoquantifizierung (CRQ) übersetzt technisches Risiko in eine finanzielle Sprache, mit der Führungskräfte handeln können. Cyber-Risiko-Expositionsmanagement (CREM) kartiert und priorisiert kontinuierlich Ihre Angriffsfläche, bevor Angreifer sie ausnutzen können. Erweiterte Erkennung und Reaktion (XDR) vereint die Sichtbarkeit über Endpunkte, Netzwerke, Cloud und Identität in einem einzigen, korrelierten Bild. Threat Intelligence versorgt Ihren Kompass mit Kontext über den Angreifer und verwandelt reaktive Warnungen in proaktive Entscheidungen. Automatisierung eliminiert die manuelle Reibung, die die Reaktion verlangsamt, und ermöglicht Ihren Teams, mit Maschinengeschwindigkeit zu arbeiten, ohne auszubrennen. Eine einheitliche Plattform verbindet all dies und ersetzt fragmentierte Einzellösungen durch integrierte Intelligenz. Künstliche Intelligenz erweitert, was menschliche Teams auf jeder Ebene leisten können. Technologie definiert nicht Ihre Strategie. Sie setzt sie um."}
+  ],
+  ja:[
+    {h:"人材",s:"ヒューマンレイヤー",
+     b:"テクノロジーは組織を守らない。守るのは人材だ。コンパスにおける人材の次元は、他のすべての投資を意味あるものにするヒューマンレイヤーを表す。信号を解釈するセキュリティアナリスト、リスクの意思決定を行う経営層、防御の最前線にも最初の破綻点にもなり得る従業員たちだ。そして、あらゆる攻撃の反対側にも、やはり人がいる。サイバー犯罪者は自動化された自然の力ではない。彼ら自身の意図、動機、戦略を持つ個人だ。彼らはターゲットを研究し、迷いを突き、目的を持って動く。彼らに対抗するには、彼らが持つのと同じ人間的な資質、すなわち警戒心、判断力、そして彼らより先に行動する意志が求められる。スキルと意識と権限を備えた人材のいないコンパスは、誰も読み方を知らない計器にすぎない。文化、トレーニング、アカウンタビリティ、そしてリーダーシップは、ソフトな要素ではない。それらは舵を握る手そのものだ。"},
+    {h:"プロセス",s:"運用のバックボーン",
+     b:"プロセスは、人材とテクノロジーをつなぎ、戦略と実行をつなぐ運用のバックボーンだ。これがなければ、最高のツールもノイズしか生まず、最高の人材もサイロの中で孤立して動くことになる。成熟したプロセスレイヤーの中核には、CyberRiskOpsという規律と、その運用上の神経中枢であるサイバーリスクオペレーションセンター(CROC)がある。ここでリスクインテリジェンスが継続的に測定され、優先順位付けされ、実行に移される。SecOpsはそのリスクインテリジェンスをリアルタイムのアクションへとつなぎ、SOC(セキュリティオペレーションセンター)は検知・調査・対応を高速に実行する。両者が連携することで、サイバーセキュリティは孤立した反応の集合体から、継続的で測定可能、そして常に改善され続ける運用へと変わる。プロセスこそが、コンパスを動かし続ける原動力だ。"},
+    {h:"テクノロジー",s:"フォースマルチプライヤー",
+     b:"テクノロジーは、サイバーセキュリティ戦略のフォースマルチプライヤーだ。ただし、明確な目的に応える場合に限る。CRQ(サイバーリスク定量化)は、技術的リスクを経営層が判断できる財務言語へと翻訳する。CREM(サイバーリスクエクスポージャーマネジメント)は、攻撃者に悪用される前に、攻撃対象領域を継続的にマッピングし、優先順位付けする。XDR(拡張検知・対応)は、エンドポイント、ネットワーク、クラウド、IDにわたる可視性を、単一の相関的なビューへと統合する。脅威インテリジェンスは、攻撃者のコンテキストをコンパスに供給し、リアクティブなアラートをプロアクティブな意思決定へと変える。オートメーションは対応を遅らせる手作業の摩擦を排除し、チームがバーンアウトすることなく、マシンスピードで動けるようにする。統合プラットフォームはこれらすべてをつなぎ、断片化したポイントソリューションを統合されたインテリジェンスへと置き換える。AI(人工知能)は、人間のチームができることを、あらゆる層で拡張する。テクノロジーは戦略を定義しない。それを実行するのだ。"}
+  ],
+  ar:[
+    {h:"العنصر البشري",s:"الطبقة البشرية",
+     b:"التقنية لا تحمي المؤسسات. الأفراد يفعلون ذلك. يمثّل بُعد العنصر البشري في البوصلة الطبقة البشرية التي تجعل كل استثمار آخر ذا معنى: محللو الأمن الذين يفسّرون الإشارات، والقيادات التنفيذية التي تتخذ قرارات المخاطر، والموظفون الذين يمثلون خط الدفاع الأول أو نقطة الفشل الأولى. وعلى الطرف الآخر من كل هجوم، يوجد أيضًا شخص. المجرمون السيبرانيون ليسوا قوى طبيعية آلية. بل هم أفراد يحملون نواياهم ودوافعهم واستراتيجياتهم الخاصة. يدرسون أهدافهم، ويستغلون التردد، ويتحركون بهدف واضح. والدفاع ضدهم يتطلب نفس الصفات البشرية التي يمتلكونها: الوعي، وسلامة الحكم، والإرادة على التحرك قبلهم. البوصلة بلا أفراد مؤهلين وواعين ومُخوَّلين هي أداة لا يعرف أحد كيف يقرأها. الثقافة والتدريب والمساءلة والقيادة ليست عوامل ثانوية. بل هي الأيدي التي تقبض على المقود."},
+    {h:"العمليات",s:"العمود الفقري التشغيلي",
+     b:"العمليات هي العمود الفقري التشغيلي الذي يربط الأفراد بالتقنية، والاستراتيجية بالتنفيذ. وبدونها، تُصدر حتى أفضل الأدوات ضجيجًا بلا فائدة، ويعمل أفضل الكفاءات في عزلة تامة. وفي جوهر طبقة العمليات الناضجة تقع منهجية CyberRiskOps ومركزها العصبي التشغيلي، وهو مركز عمليات المخاطر السيبرانية (CROC)، حيث تُقاس معلومات المخاطر وتُرتّب أولوياتها ويُتّخذ بشأنها إجراء بشكل مستمر. وتربط عمليات الأمن (SecOps) تلك المعلومات بالفعل اللحظي، بينما يُنفّذ مركز عمليات الأمن (SOC) الكشف والتحقيق والاستجابة بسرعة عالية. ومعًا، يُحوّلان الأمن السيبراني من مجموعة ردود فعل منعزلة إلى عملية مستمرة وقابلة للقياس وفي تحسّن دائم. العمليات هي ما يضمن استمرار حركة البوصلة."},
+    {h:"التقنية",s:"مُضاعِف القوة",
+     b:"التقنية هي مُضاعِف القوة لاستراتيجية الأمن السيبراني في مؤسستك، ولكن فقط حين تخدم غرضًا واضحًا. يُترجم التقييم الكمي للمخاطر السيبرانية (CRQ) المخاطر التقنية إلى لغة مالية يمكن للقيادات التنفيذية التصرف بناءً عليها. وتقوم إدارة التعرض للمخاطر السيبرانية (CREM) برسم سطح الهجوم وترتيب أولوياته باستمرار قبل أن يتمكن الخصوم من استغلاله. ويوحّد الكشف والاستجابة الموسّعة (XDR) الرؤية عبر نقاط النهاية والشبكات والسحابة والهوية في صورة واحدة مترابطة. وتُغذّي استخبارات التهديدات بوصلتك بسياق الخصم، فتحوّل التنبيهات التفاعلية إلى قرارات استباقية. وتُزيل الأتمتة الاحتكاك اليدوي الذي يُبطّئ الاستجابة، وتتيح لفرقك العمل بسرعة الآلة دون الاحتراق الوظيفي. وتربط منصة موحّدة كل ذلك معًا، فتستبدل الحلول المجزّأة بذكاء متكامل. ويُوسّع الذكاء الاصطناعي ما يمكن للفرق البشرية تحقيقه على كل مستوى. التقنية لا تُحدّد استراتيجيتك. بل تُنفّذها."}
+  ],
+  zh:[
+    {h:"人员",s:"人的层面",
+     b:"技术不会保护组织，人才会。指南针中的人员维度，代表着让其他一切投入都变得有意义的人的层面：解读信号的安全分析师、做出风险决策的管理层，以及那些既可能是第一道防线，也可能是第一个失败点的员工。而在每一次攻击的另一端，同样站着一个人。网络犯罪分子不是自动运行的自然力量，而是拥有自己的意图、动机和策略的个体。他们研究目标、利用犹豫、带着明确的目的行动。要对抗他们，需要具备他们所拥有的同样的人的素质：警觉性、判断力，以及先于对手行动的意志。一个没有具备能力、保持警觉、被充分赋权的人员的指南针，只是一件没人知道该怎么读的仪器。文化、培训、问责和领导力，都不是可有可无的软性因素，而是真正握住方向盘的那双手。"},
+    {h:"流程",s:"运营的支柱",
+     b:"流程是连接人员与技术、连接战略与执行的运营支柱。没有它，再好的工具也只会产生噪音，再优秀的人才也只能在各自的信息孤岛中运转。在成熟的流程体系核心，是CyberRiskOps这一方法论，以及它的运营神经中枢——网络风险运营中心（CROC），在这里，风险情报被持续测量、排序并转化为行动。SecOps将这些风险情报与实时行动连接起来，而安全运营中心（SOC）则以高速执行检测、调查和响应。二者协同，把网络安全从一系列孤立的反应，转变为一个持续、可衡量、并不断改进的运营体系。流程，正是让指南针持续运转的力量。"},
+    {h:"技术",s:"力量倍增器",
+     b:"技术是你网络安全战略的力量倍增器，但前提是它要服务于一个明确的目标。网络风险量化（CRQ）把技术性风险，转化为管理层能够据此行动的财务语言。网络风险暴露面管理（CREM）持续绘制并排序你的攻击面，抢在对手利用它之前采取行动。扩展检测与响应（XDR）把终端、网络、云和身份的可见性，统一成一个单一、关联的视图。威胁情报为你的指南针提供对手的上下文，把被动的警报，转化为主动的决策。自动化消除了拖慢响应速度的人工摩擦，让团队能够以机器的速度运转，而不至于精力耗尽。统一平台把这一切连接在一起，用集成的情报取代碎片化的单点解决方案。人工智能则在每一个层面，放大人类团队所能做到的一切。技术不定义你的战略，它执行你的战略。"}
+  ],
+  ko:[
+    {h:"인력",s:"인간 레이어",
+     b:"기술은 조직을 지키지 않는다. 지키는 것은 사람이다. 나침반에서 인력이라는 차원은 다른 모든 투자를 의미 있게 만드는 인간 레이어를 나타낸다. 신호를 해석하는 보안 분석가, 리스크 의사결정을 내리는 경영진, 방어의 최전선이 될 수도 있고 첫 번째 실패 지점이 될 수도 있는 직원들이다. 그리고 모든 공격의 반대편에도 역시 사람이 있다. 사이버 범죄자는 자동화된 자연의 힘이 아니다. 그들은 자신만의 의도와 동기와 전략을 가진 개인이다. 그들은 목표를 연구하고, 망설임을 파고들며, 목적을 가지고 움직인다. 그들에 대항하려면 그들이 가진 것과 같은 인간적 자질, 즉 경계심과 판단력, 그리고 그들보다 먼저 움직이려는 의지가 필요하다. 숙련되고 깨어 있으며 권한을 부여받은 인력이 없는 나침반은 아무도 읽는 법을 모르는 계기에 불과하다. 문화, 훈련, 책임감, 그리고 리더십은 부드러운 요소가 아니다. 그것은 방향키를 잡고 있는 손 그 자체다."},
+    {h:"프로세스",s:"운영의 중추",
+     b:"프로세스는 인력과 기술을, 전략과 실행을 연결하는 운영의 중추다. 이것이 없으면 최고의 도구조차 잡음만 만들어내고, 최고의 인재조차 각자의 사일로 안에서 고립된 채 움직인다. 성숙한 프로세스 계층의 핵심에는 CyberRiskOps라는 규율과, 그 운영상의 신경 중추인 사이버 리스크 운영 센터(CROC)가 있다. 이곳에서 리스크 인텔리전스는 지속적으로 측정되고, 우선순위가 정해지고, 실행으로 이어진다. SecOps는 그 리스크 인텔리전스를 실시간 행동으로 연결하고, SOC(보안 운영 센터)는 탐지, 조사, 대응을 빠른 속도로 실행한다. 이 둘이 함께 작동하면 사이버보안은 고립된 반응들의 집합에서, 지속적이고 측정 가능하며 끊임없이 개선되는 운영으로 바뀐다. 프로세스는 나침반을 계속 움직이게 하는 힘이다."},
+    {h:"기술",s:"역량 증폭기",
+     b:"기술은 사이버보안 전략의 역량 증폭기다. 다만 그것이 명확한 목적에 부합할 때에만 그렇다. CRQ(사이버 리스크 정량화)는 기술적 리스크를 경영진이 행동으로 옮길 수 있는 재무 언어로 번역한다. CREM(사이버 리스크 노출 관리)은 공격자가 이를 악용하기 전에 공격 표면을 지속적으로 매핑하고 우선순위를 정한다. XDR(확장 탐지 및 대응)은 엔드포인트, 네트워크, 클라우드, ID 전반의 가시성을 하나의 연관된 화면으로 통합한다. 위협 인텔리전스는 공격자의 맥락을 나침반에 공급하여, 반응적인 경보를 선제적인 의사결정으로 바꾸어 놓는다. 자동화는 대응을 늦추는 수작업의 마찰을 제거하고, 팀이 소진되지 않으면서도 기계의 속도로 움직일 수 있게 한다. 통합 플랫폼은 이 모든 것을 하나로 묶어, 조각난 개별 솔루션들을 통합된 인텔리전스로 대체한다. AI(인공지능)는 인간 팀이 할 수 있는 일을 모든 계층에서 확장시킨다. 기술은 전략을 정의하지 않는다. 그것을 실행할 뿐이다."}
+  ],
+  hi:[
+    {h:"मानव तत्व",s:"मानव परत",
+     b:"टेक्नोलॉजी संगठनों की रक्षा नहीं करती। लोग करते हैं। कम्पास में मानव तत्व का आयाम उस मानव परत को दर्शाता है जो हर दूसरे निवेश को सार्थक बनाती है: सिग्नल्स की व्याख्या करने वाले सुरक्षा विश्लेषक, जोखिम संबंधी फ़ैसले लेने वाला नेतृत्व, और वे कर्मचारी जो या तो रक्षा की पहली पंक्ति होते हैं या असफलता का पहला बिंदु। और हर हमले के दूसरी तरफ़ भी एक इंसान होता है। साइबर अपराधी स्वचालित प्राकृतिक शक्तियाँ नहीं हैं। वे अपने इरादों, प्रेरणाओं और रणनीतियों वाले व्यक्ति हैं। वे अपने लक्ष्यों का अध्ययन करते हैं, अनिर्णय का फ़ायदा उठाते हैं, और स्पष्ट उद्देश्य के साथ आगे बढ़ते हैं। उनके ख़िलाफ़ बचाव के लिए वही मानवीय गुण चाहिए जो उनके पास हैं: सतर्कता, सही निर्णय क्षमता, और उनसे पहले कार्रवाई करने की इच्छाशक्ति। कुशल, सतर्क और सशक्त मानव तत्व के बिना कम्पास एक ऐसा उपकरण है जिसे पढ़ना कोई नहीं जानता। संस्कृति, प्रशिक्षण, ज़िम्मेदारी और नेतृत्व कोई सॉफ़्ट फ़ैक्टर नहीं हैं। वे वही हाथ हैं जो पतवार पकड़े हुए हैं।"},
+    {h:"प्रक्रिया",s:"संचालन की रीढ़",
+     b:"प्रक्रिया वह संचालन की रीढ़ है जो लोगों को टेक्नोलॉजी से और रणनीति को क्रियान्वयन से जोड़ती है। इसके बिना, सबसे अच्छे टूल्स भी सिर्फ़ शोर पैदा करते हैं, और सबसे बेहतरीन टैलेंट भी अलग-अलग सायलो में काम करता है। एक परिपक्व प्रक्रिया परत के केंद्र में CyberRiskOps अनुशासन और उसका संचालनात्मक नर्व सेंटर, साइबर जोखिम संचालन केंद्र (CROC), मौजूद होता है, जहाँ जोखिम इंटेलिजेंस को निरंतर मापा जाता है, प्राथमिकता दी जाती है, और उस पर कार्रवाई की जाती है। SecOps उस जोखिम इंटेलिजेंस को रीयल-टाइम कार्रवाई से जोड़ता है, जबकि SOC (सुरक्षा संचालन केंद्र) पहचान, जाँच और प्रतिक्रिया को तेज़ी से क्रियान्वित करता है। साथ मिलकर, ये साइबर सुरक्षा को अलग-थलग प्रतिक्रियाओं के समूह से एक निरंतर, मापने योग्य, और लगातार बेहतर होते संचालन में बदल देते हैं। प्रक्रिया वही है जो कम्पास को गतिमान बनाए रखती है।"},
+    {h:"टेक्नोलॉजी",s:"क्षमता गुणक",
+     b:"टेक्नोलॉजी आपकी साइबर सुरक्षा रणनीति का क्षमता गुणक है, लेकिन केवल तभी जब वह किसी स्पष्ट उद्देश्य की पूर्ति करती है। CRQ (साइबर जोखिम मात्रीकरण) तकनीकी जोखिम को उस वित्तीय भाषा में बदलता है जिस पर नेतृत्व कार्रवाई कर सके। CREM (साइबर जोखिम एक्सपोज़र प्रबंधन) हमलावरों के इसका फ़ायदा उठाने से पहले ही आपकी अटैक सरफ़ेस को निरंतर मैप और प्राथमिकता देता है। XDR (विस्तारित पहचान और प्रतिक्रिया) एंडपॉइंट्स, नेटवर्क, क्लाउड और आइडेंटिटी में दृश्यता को एक ही, सुसंगत दृश्य में एकीकृत करता है। थ्रेट इंटेलिजेंस आपके कम्पास को हमलावर के संदर्भ से जोड़ती है, और प्रतिक्रियात्मक अलर्ट्स को सक्रिय फ़ैसलों में बदल देती है। ऑटोमेशन उस मैनुअल घर्षण को हटाता है जो प्रतिक्रिया को धीमा करता है, और आपकी टीमों को बर्नआउट के बिना मशीन की गति से काम करने देता है। एक एकीकृत प्लेटफ़ॉर्म इन सबको आपस में जोड़ता है, और खंडित पॉइंट सॉल्यूशंस को एकीकृत इंटेलिजेंस से बदल देता है। AI (आर्टिफ़िशियल इंटेलिजेंस) हर स्तर पर मानव टीमों की क्षमता का विस्तार करता है। टेक्नोलॉजी आपकी रणनीति तय नहीं करती। वह उसे क्रियान्वित करती है।"}
+  ],
+  it:[
+    {h:"Persone",s:"Il Livello Umano",
+     b:"La tecnologia non difende le organizzazioni. Le persone sì. La dimensione Persone della bussola rappresenta il livello umano che rende significativo ogni altro investimento: gli analisti di sicurezza che interpretano i segnali, i dirigenti che prendono decisioni sul rischio, i dipendenti che rappresentano la prima linea di difesa oppure il primo punto di rottura. E dall'altra parte di ogni attacco, c'è anche una persona. I criminali informatici non sono forze automatizzate della natura. Sono individui con proprie intenzioni, motivazioni e strategie. Studiano i loro obiettivi, sfruttano l'indecisione e si muovono con uno scopo preciso. Difendersi da loro richiede le stesse qualità umane che possiedono: consapevolezza, capacità di giudizio e la volontà di agire prima di loro. Una bussola senza persone competenti, consapevoli e responsabilizzate è uno strumento che nessuno sa leggere. Cultura, formazione, responsabilità e leadership non sono fattori secondari. Sono le mani sul timone."},
+    {h:"Processo",s:"La Spina Dorsale Operativa",
+     b:"Il processo è la spina dorsale operativa che collega le persone alla tecnologia e la strategia all'esecuzione. Senza di esso, anche i migliori strumenti producono solo rumore, e anche i migliori talenti operano in compartimenti stagni. Al centro di uno strato di processo maturo si trovano la disciplina CyberRiskOps e il suo centro nervoso operativo, il Centro Operativo per il Rischio Cyber (CROC), dove l'intelligence sul rischio viene continuamente misurata, prioritizzata e trasformata in azione. Il SecOps collega quell'intelligence sul rischio all'azione in tempo reale, mentre il Centro Operazioni di Sicurezza (SOC) esegue rilevamento, investigazione e risposta a grande velocità. Insieme, trasformano la cybersicurezza da un insieme di reazioni isolate a un'operazione continua, misurabile e in costante miglioramento. Il processo è ciò che garantisce che la bussola continui a muoversi."},
+    {h:"Tecnologia",s:"Il Moltiplicatore di Forza",
+     b:"La tecnologia è il moltiplicatore di forza della tua strategia di cybersicurezza, ma solo quando serve a uno scopo chiaro. La Quantificazione del Rischio Cyber (CRQ) traduce il rischio tecnico in un linguaggio finanziario su cui i dirigenti possono agire. La Gestione dell'Esposizione al Rischio Cyber (CREM) mappa e prioritizza continuamente la tua superficie d'attacco prima che gli avversari possano sfruttarla. Il Rilevamento e Risposta Estesi (XDR) unifica la visibilità su endpoint, reti, cloud e identità in un'unica immagine correlata. Il Threat Intelligence alimenta la tua bussola con il contesto dell'avversario, trasformando gli avvisi reattivi in decisioni proattive. L'automazione elimina l'attrito manuale che rallenta la risposta e permette ai tuoi team di operare alla velocità della macchina senza esaurirsi. Una piattaforma unificata collega tutto questo, sostituendo soluzioni puntuali frammentate con un'intelligence integrata. L'Intelligenza Artificiale estende ciò che i team umani possono fare a ogni livello. La tecnologia non definisce la tua strategia. La esegue."}
+  ],
+  nl:[
+    {h:"Mensen",s:"De Menselijke Laag",
+     b:"Technologie verdedigt geen organisaties. Mensen doen dat. De dimensie Mensen van het kompas vertegenwoordigt de menselijke laag die elke andere investering betekenisvol maakt: de beveiligingsanalisten die signalen interpreteren, de leidinggevenden die risicobeslissingen nemen, de medewerkers die ofwel de eerste verdedigingslinie zijn, ofwel het eerste faalpunt. En aan de andere kant van elke aanval staat ook een mens. Cybercriminelen zijn geen geautomatiseerde natuurkrachten. Het zijn individuen met hun eigen intenties, motivaties en strategieën. Ze bestuderen hun doelwitten, benutten aarzeling en handelen doelgericht. Verdedigen tegen hen vereist dezelfde menselijke kwaliteiten die zij bezitten: bewustzijn, beoordelingsvermogen en de wil om vóór hen te handelen. Een kompas zonder vakkundige, bewuste en bevoegde mensen is een instrument dat niemand kan lezen. Cultuur, training, verantwoording en leiderschap zijn geen zachte factoren. Het zijn de handen aan het roer."},
+    {h:"Proces",s:"De Operationele Ruggengraat",
+     b:"Proces is de operationele ruggengraat die mensen verbindt met technologie en strategie met uitvoering. Zonder dit produceren zelfs de beste tools alleen ruis, en werkt zelfs het beste talent in silo's. In de kern van een volwassen procesniveau staan de CyberRiskOps-discipline en haar operationele zenuwcentrum, het Cyberrisico-operatiecentrum (CROC), waar risico-informatie continu wordt gemeten, geprioriteerd en omgezet in actie. SecOps verbindt die risico-informatie met realtime actie, terwijl het Security Operations Center (SOC) detectie, onderzoek en respons met snelheid uitvoert. Samen transformeren ze cyberveiligheid van een verzameling geïsoleerde reacties naar een continue, meetbare en steeds verbeterende operatie. Proces is wat ervoor zorgt dat het kompas blijft bewegen."},
+    {h:"Technologie",s:"De Krachtvermenigvuldiger",
+     b:"Technologie is de krachtvermenigvuldiger van je cyberveiligheidsstrategie, maar alleen wanneer het een duidelijk doel dient. Cyberrisicokwantificering (CRQ) vertaalt technisch risico naar een financiële taal waarop leidinggevenden kunnen handelen. Beheer van cyberrisicoblootstelling (CREM) brengt je aanvalsoppervlak continu in kaart en prioriteert het voordat tegenstanders het kunnen misbruiken. Uitgebreide Detectie en Respons (XDR) verenigt zichtbaarheid over endpoints, netwerken, cloud en identiteit in één enkel, gecorreleerd beeld. Threat Intelligence voedt je kompas met context over de tegenstander, en verandert reactieve waarschuwingen in proactieve beslissingen. Automatisering elimineert de handmatige wrijving die de respons vertraagt, en stelt je teams in staat om op machinesnelheid te werken zonder op te branden. Een uniform platform verbindt dit allemaal, en vervangt gefragmenteerde puntoplossingen door geïntegreerde intelligence. Kunstmatige Intelligentie breidt uit wat menselijke teams op elk niveau kunnen doen. Technologie definieert je strategie niet. Het voert die uit."}
+  ]
+};
+
+const IDS={crm:'t-crm',pap:'t-pap',bab:'t-bab',dar:'t-dar',rad:'t-rad',dub:'t-dub',cr:'t-cr',rai:'t-rai',aab:'t-aab',ppl:'t-ppl',prc:'t-prc',tch:'t-tch'};
+
+let lang=(()=>{const n=(navigator.language||'en').slice(0,2).toLowerCase();return T[n]?n:'en';})();
+
+function applyLang(l){
+  lang=l;
+  const t=T[l];
+  Object.entries(IDS).forEach(([k,id])=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=t[k];
+    else console.warn('Missing element:',id);
+  });
+  document.getElementById('compass-title').textContent=t.title;
+  document.getElementById('credit').innerHTML=t.credit+'<br><a href="https://www.linkedin.com/in/jpcastro/" target="_blank" style="color:rgba(255,255,255,.5);text-decoration:none;">Juan Pablo Castro Vilaró</a>';
+  // Line1 stays on its own line; line2 follows on same line if space allows,
+  // otherwise breaks cleanly below line1 (never mid-word)
+  document.getElementById('pub-link').innerHTML=
+    '<a href="'+t.pubUrl+'" target="_blank" style="color:rgba(255,255,255,.45);text-decoration:none;display:block;margin-bottom:3px;">'+
+      '<span style="display:inline;white-space:nowrap;">'+t.pubLine1+'</span> '+
+      '<span style="display:inline;white-space:nowrap;">'+t.pubLine2+'</span>'+
+    '</a>'+
+    '<a href="'+t.pubDoiUrl+'" target="_blank" style="color:rgba(255,255,255,.28);text-decoration:none;">DOI: '+t.pubDoi+'</a>';
+  ['en','es','pt','fr','de','ja','ar','zh','ko','hi','it','nl'].forEach(c=>{
+    const b=document.getElementById('btn-'+c);
+    b.style.background=c===l?'#E01C24':'rgba(255,255,255,0.1)';
+    b.style.color=c===l?'#fff':'#888';
+  });
+  document.getElementById('lang-toggle-label').textContent = l.toUpperCase();
+  closeLangMenu();
+  // Arabic is RTL. Flip direction and alignment on the text containers
+  // only (not the whole layout) and drop letter-spacing, which breaks
+  // Arabic's cursive letter-joining if left on.
+  const isRTL = (l === 'ar');
+  ['tt-h','tt-s','tt-b','compass-title','credit','pub-link'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.dir = isRTL ? 'rtl' : 'ltr';
+    el.style.textAlign = isRTL ? 'right' : '';
+    el.style.letterSpacing = isRTL ? 'normal' : '';
+  });
+}
+
+function setLang(l){applyLang(l);}
+
+function toggleLangMenu(){
+  const menu = document.getElementById('lang-menu');
+  const toggle = document.getElementById('lang-toggle');
+  const isOpen = menu.classList.toggle('open');
+  toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+function closeLangMenu(){
+  document.getElementById('lang-menu').classList.remove('open');
+  document.getElementById('lang-toggle').setAttribute('aria-expanded','false');
+}
+document.addEventListener('click', function(e){
+  const bar = document.getElementById('lang-bar');
+  if (bar && !bar.contains(e.target)) closeLangMenu();
+});
+
+// Tooltip
+const tt=document.getElementById('tt');
+const tth=document.getElementById('tt-h');
+const tts=document.getElementById('tt-s');
+const ttb=document.getElementById('tt-b');
+const stage=document.getElementById('stage');
+
+function posTT(cx,cy){
+  const W=285,H=tt.offsetHeight||220;
+  const sw=stage.offsetWidth,sh=stage.offsetHeight;
+  let x=cx+14,y=cy+14;
+  if(x+W>sw) x=cx-W-14;
+  if(y+H>sh) y=cy-H-14;
+  if(x<6) x=6;
+  if(y<6) y=6;
+  tt.style.left=x+'px';
+  tt.style.top=y+'px';
+}
+
+// Unified mouse handler - single source of truth
+// All tooltip logic driven from one mousemove on the stage overlay
+let puzzleAngle=0;
+let lastCX=0, lastCY=0;
+let hoverState=-1; // -1=none, 0/1/2=sector, 3/4/5=puzzle piece
+
+const CX=540, CY=540;
+const PUZZLE_OUTER=200, PUZZLE_INNER=122;
+const SECTOR_OUTER=432, SECTOR_INNER=210;
+
+function getZone(svgX, svgY){
+  const dx=svgX-CX, dy=svgY-CY;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  // Angle 0=top, clockwise
+  const angle=(Math.atan2(dx,-dy)*180/Math.PI+360)%360;
+
+  // Puzzle ring
+  if(dist>=PUZZLE_INNER && dist<=PUZZLE_OUTER){
+    // At rotation=0: People=300°-60°, Process=60°-180°, Technology=180°-300°
+    // Subtract puzzleAngle to get piece-local angle, then offset by 300° so People starts at 0
+    const local=((angle-puzzleAngle)%360+360)%360;
+    const adjusted=(local-300+360)%360;
+    return 3+Math.floor(adjusted/120); // 3=People,4=Process,5=Technology
+  }
+
+  // Outer sector ring
+  if(dist>=SECTOR_INNER && dist<=SECTOR_OUTER){
+    // Boundaries at 15°, 135°, 255° (from SVG path endpoints)
+    // Sector 0 (CRM):         15°-135°  (top-right)
+    // Sector 1 (D&R):        135°-255°  (bottom)
+    // Sector 2 (Resilience): 255°-360° and 0°-15° (top-left, wraps)
+    if(angle>=15  && angle<135) return 0;
+    if(angle>=135 && angle<255) return 1;
+    return 2;
+  }
+  return -1;
+}
+
+function showTT(zone, cx, cy){
+  const d = zone<3 ? TT[lang][zone] : TTP[lang][zone-3];
+  tth.textContent=d.h; tts.textContent=d.s; ttb.textContent=d.b;
+  tt.classList.add('on');
+  posTT(cx, cy);
+}
+
+// Single mousemove listener on the hits SVG (sits above everything)
+const hitsSvg=document.getElementById('hits');
+hitsSvg.style.pointerEvents='all';
+// Remove individual hit path pointer events - we handle everything here
+[0,1,2].forEach(i=>{
+  const el=document.getElementById('hit'+i);
+  if(el) el.style.pointerEvents='none';
+});
+
+hitsSvg.addEventListener('mousemove', function(e){
+  const r=stage.getBoundingClientRect();
+  const cx=e.clientX-r.left, cy=e.clientY-r.top;
+  lastCX=cx; lastCY=cy;
+  const scale=1080/r.width;
+  const zone=getZone(cx*scale, cy*scale);
+  // If in puzzle ring, mark as -2 so tick loop keeps refreshing even when not moving
+  hoverState=(zone>=3)?-2:zone;
+  if(zone===-1){ tt.classList.remove('on'); hitsSvg.style.cursor='default'; }
+  else { showTT(zone, cx, cy); hoverState=zone; hitsSvg.style.cursor='pointer'; }
+});
+
+hitsSvg.addEventListener('mouseleave', function(){
+  tt.classList.remove('on');
+  hoverState=-1;
+  hitsSvg.style.cursor='default';
+});
+
+// Animation
+const A={T:31.8,t:0,spin:0,needle:0,needleVel:0,lastActive:75,centers:[75,195,315],cd:6.0,pc:[1.0,3.0,5.0],W:1.3,last:0};
+function easeOut(x){return 1-Math.pow(1-x,3);}
+function pulse(cp,c){let d=Math.abs(cp-c);d=Math.min(d,A.cd-d);return d>A.W?0:0.5*(1+Math.cos(Math.PI*d/A.W));}
+function lerp(a,b,p){return a+(b-a)*p;}
+
+function tick(now){
+  const dt=Math.min(0.05,(now-A.last)/1000);
+  A.last=now; A.t+=dt; if(A.t>=A.T)A.t-=A.T; A.spin+=dt;
+
+  const root=document.getElementById('compassRoot');
+  const needleEl=document.getElementById('needle');
+  const grps=[document.getElementById('grp0'),document.getElementById('grp1'),document.getElementById('grp2')];
+  const glows=[document.getElementById('glow0'),document.getElementById('glow1'),document.getElementById('glow2')];
+  const puzzle=document.getElementById('puzzle');
+
+  const id=1.8,p=Math.max(0,Math.min(1,A.t/id)),e=easeOut(p);
+  if(root){
+    root.setAttribute('transform','translate(540,540) rotate('+lerp(-150,0,e).toFixed(2)+') scale('+lerp(0.80,1,e).toFixed(3)+') translate(-540,-540)');
+    root.setAttribute('opacity',Math.max(0,Math.min(1,p*1.7)).toFixed(3));
+  }
+
+  const tc=A.t-id,cp=tc<0?-99:((tc%A.cd+A.cd)%A.cd);
+  const ps=[0,1,2].map(i=>tc<0?0:pulse(cp,A.pc[i]));
+  const sum=ps.reduce((a,b)=>a+b,0);
+
+  grps.forEach((g,i)=>{if(g)g.setAttribute('opacity',lerp(0.40,1.0,Math.min(1,0.50+(0.50)*ps[i])).toFixed(3));});
+  glows.forEach((g,i)=>{if(g){const gw=Math.max(0,Math.min(1,(Math.min(1,0.50+(0.50)*ps[i])-0.55)/0.45));g.setAttribute('opacity',(gw*0.20).toFixed(3));}});
+
+  let target=A.lastActive;
+  if(sum>0.04){
+    let sx=0,sy=0;
+    ps.forEach((v,i)=>{const a=A.centers[i]*Math.PI/180;sx+=v*Math.sin(a);sy+=v*Math.cos(a);});
+    target=Math.atan2(sx,sy)*180/Math.PI;
+    let mi=0;ps.forEach((v,i)=>{if(v>ps[mi])mi=i;});A.lastActive=A.centers[mi];
+  }
+  let diff=((target-A.needle+540)%360)-180;
+  // Spring-damper physics instead of an instant "move 10% of the gap" snap - a real
+  // compass needle has weight and settles into place rather than jumping straight at
+  // its target, so we accelerate it toward the target and let damping slow it down.
+  const stiffness=10, damping=5.6;
+  const accel=diff*stiffness - A.needleVel*damping;
+  A.needleVel+=accel*dt;
+  A.needle+=A.needleVel*dt;
+  const sway=(sum<0.15?4:1.2)*Math.sin(A.t*2.0);
+  if(needleEl)needleEl.setAttribute('transform','rotate('+((A.needle+sway).toFixed(2))+' 540 540)');
+  const pAngle=(A.spin*13)%360;
+  puzzleAngle=pAngle;
+  if(puzzle)puzzle.setAttribute('transform','rotate('+pAngle.toFixed(2)+' 540 540)');
+  // Refresh tooltip live every frame when cursor is over puzzle ring
+  if(hoverState>=3 || hoverState===-2){
+    const scale=1080/stage.offsetWidth;
+    const zone=getZone(lastCX*scale, lastCY*scale);
+    if(zone!==hoverState){
+      hoverState=zone;
+      if(zone===-1){ tt.classList.remove('on'); hitsSvg.style.cursor='default'; }
+      else { showTT(zone, lastCX, lastCY); hitsSvg.style.cursor='pointer'; }
+    }
+  }
+
+  requestAnimationFrame(tick);
+}
+
+// Init
+applyLang(lang);
+A.last=performance.now();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

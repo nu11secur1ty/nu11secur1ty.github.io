@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cyber Risk Operational Model (CROM)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=IBM+Plex+Sans:wght@400;500&family=Inter:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0d12;
+  --grid:#1c2531;
+  --axis:#2a3644;
+  --text:#e7ecf1;
+  --muted:#8793a2;
+  --exp:#ff6a4d;
+  --ops:#3fe0a4;
+  --amber:#f0b861;
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans","Hiragino Sans","Yu Gothic","Noto Sans JP",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{
+  margin:0;min-height:100vh;color:var(--text);background:var(--bg);font-family:var(--sans);
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
+}
+.wrap{position:relative;max-width:1180px;margin:0 auto;padding:56px 28px 64px}
+header{max-width:720px;margin-bottom:20px}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(28px,4.2vw,46px);line-height:1.1;letter-spacing:-.01em;margin:0 0 14px}
+:lang(ja) h1{font-family:var(--sans);font-weight:500;letter-spacing:0}
+.lede{margin:0;color:var(--muted);font-size:16px;line-height:1.6}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:44px;align-items:center}
+
+.toolbar{display:flex;justify-content:flex-start;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+.legend{display:flex;flex-direction:column;gap:8px;font-size:14px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:10px}
+
+
+.swatch{display:inline-block;width:34px;border-top:3px solid}
+.swatch.exp{border-color:var(--exp);border-top-style:dashed}
+.swatch.ops{border-color:var(--ops)}
+.corner{position:fixed;bottom:10px;z-index:100;font-family:Inter,Arial,sans-serif;font-size:9px;letter-spacing:.04em;line-height:1.6;color:rgba(255,255,255,.35)}
+.corner-left{left:12px}
+.corner-right{right:12px;text-align:right;font-size:8px;max-width:52%}
+.corner a{color:rgba(255,255,255,.5);text-decoration:none}
+.corner-right .pub{display:block;margin-bottom:3px;color:rgba(255,255,255,.45)}
+.corner-right .doi{color:rgba(255,255,255,.28)}
+
+button,select{font-family:var(--sans)}
+button:focus-visible,select:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+
+.top-controls{position:absolute;top:28px;right:28px;display:flex;align-items:center;gap:10px}
+select{
+  font-family:Inter,system-ui,sans-serif;font-size:11px;font-weight:600;letter-spacing:.04em;color:#fff;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:5px 10px;cursor:pointer;
+}
+.replay{
+  font-family:Inter,system-ui,sans-serif;font-size:11px;font-weight:600;letter-spacing:.04em;color:#fff;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:5px 10px;cursor:pointer;
+  transition:all .2s;
+}
+.replay:hover{border-color:rgba(255,255,255,.35);background:rgba(0,0,0,.6)}
+.replay-icon{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0}
+.lang-wrap{position:relative}
+.top-links{position:absolute;top:28px;left:28px;display:flex;gap:8px;z-index:10}
+.tag-btn{display:inline-flex;align-items:center;font-family:Inter,system-ui,sans-serif;font-size:10px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#c8453a;background:#000;border:1px solid #6b2620;border-radius:4px;padding:6px 12px;text-decoration:none;transition:border-color .2s ease,background .2s ease}
+.tag-btn:hover{border-color:#c8453a;background:#140807}
+.tag-btn:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+@media (max-width:900px){.top-links{position:static;margin-bottom:16px}}
+.lang-btn{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;font-family:Inter,system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:.02em;color:#fff;background:#000;border:1px solid #2c2c2e;border-radius:8px;padding:5px 9px;cursor:pointer}
+.lang-btn .caret{font-size:9px;display:inline-block;transition:transform .2s}
+.lang-btn[aria-expanded="true"] .caret{transform:rotate(180deg)}
+.lang-menu{display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;flex-direction:column;gap:4px;padding:4px;background:#0c0c0e;border:1px solid #2c2c2e;border-radius:10px;z-index:50}
+.lang-menu.open{display:flex}
+.lang-item{font-family:Inter,system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:.03em;text-align:left;color:#8e8e93;background:#2a2a2d;border:0;border-radius:8px;padding:5px 9px;cursor:pointer}
+.lang-item:hover{color:#fff}
+.lang-item.selected{background:#d93a33;color:#fff}
+
+.chart{overflow-x:auto}
+.chart-inner{width:100%}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.grid{stroke:var(--grid);stroke-width:1;stroke-dasharray:3 6}
+.axis{stroke:var(--axis);stroke-width:1.25}
+.ytick{font:500 17px var(--sans);fill:var(--text)}
+.xtick{font:400 17px var(--sans);fill:var(--muted);cursor:pointer;transition:fill .4s ease}
+.xtick.passed{fill:#b4bfcb}
+.xtick.active{fill:var(--text);font-weight:500}
+.xlabel{font:400 15px var(--sans);fill:var(--muted)}
+.band-label{font:500 14px var(--sans)}
+.curve-exp{fill:none;stroke:var(--exp);stroke-width:3;stroke-dasharray:10 8;stroke-linecap:round}
+.curve-ops{fill:none;stroke:var(--ops);stroke-width:3.5;stroke-linecap:round}
+.curve-glow{fill:none;stroke:var(--ops);stroke-width:14;opacity:.12;stroke-linecap:round}
+.node{transition:opacity .3s ease}
+.scan{stroke:var(--muted);stroke-opacity:.4;stroke-dasharray:2 5}
+
+.stages{list-style:none;margin:0;padding:0;border-left:1px solid var(--grid)}
+.stages li{margin:0}
+.stage{
+  --c:var(--ops);
+  position:relative;display:block;width:100%;text-align:left;background:none;border:0;
+  color:inherit;font:inherit;padding:16px 0 16px 22px;cursor:pointer;opacity:.35;
+  transition:opacity .5s ease;
+}
+.stage::before{
+  content:"";position:absolute;left:-5px;top:23px;width:9px;height:9px;border-radius:50%;
+  background:var(--grid);transition:background .5s ease,box-shadow .5s ease;
+}
+.stage.passed{opacity:.7}
+.stage.passed::before{background:var(--c)}
+.stage.active{opacity:1}
+.stage.active::before{background:var(--c);box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--c)}
+.stage .name{display:block;font-size:16px;font-weight:500;margin-bottom:4px}
+.stage .tag{display:block;font-size:13px;font-weight:500;margin-bottom:4px;color:var(--c)}
+.stage .desc{display:block;font-size:14px;line-height:1.55;color:var(--muted)}
+
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+@media (max-width:900px){
+  .top-controls{position:static;justify-content:flex-end;margin-bottom:16px}
+  .layout{grid-template-columns:1fr;gap:28px}
+  .chart-inner{min-width:660px}
+  .stages{border-left:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0 20px}
+  .stage{padding:12px 0}
+  .stage::before{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .stage,.node,.xtick{transition:none}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <nav class="top-links" aria-label="Related pages">
+    
+    <a class="tag-btn" href="https://cybersecuritycompass.github.io/" target="_blank" rel="noopener">CYBERSECURITY COMPASS</a>
+    <a class="tag-btn" href="https://cybersecuritycompass.github.io/cyberriskops/" target="_blank" rel="noopener">CYBER RISK OPS</a>
+    <a class="tag-btn" href="https://cybersecuritycompass.github.io/crml/" target="_blank" rel="noopener">CRML</a>
+    <a class="tag-btn" href="https://cybersecuritycompass.github.io/crq/" target="_blank" rel="noopener">CRQ</a>
+    
+  </nav>
+  <div class="top-controls">
+    <button class="replay replay-icon" id="replay" type="button" aria-label="Replay"><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></button>
+    <button class="replay replay-icon" id="next" type="button" aria-label="Next stage"><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M4 5v14l9-7z M15 5h2.5v14H15z" fill="currentColor"/></svg></button>
+    <div class="lang-wrap" id="langWrap">
+      <button class="lang-btn" id="langToggle" type="button" aria-haspopup="listbox" aria-expanded="false">
+        <span id="langLabel">EN</span><span class="caret">▼</span>
+      </button>
+      <div class="lang-menu" id="langMenu" role="listbox"></div>
+    </div>
+    
+  </div>
+
+  <div class="layout">
+    <section>
+      <header>
+        <h1 data-i18n="title"></h1>
+        <p class="lede" data-i18n="lede"></p>
+      </header>
+
+      <div class="toolbar">
+        <div class="legend">
+          <span><i class="swatch exp"></i><span data-i18n="exposure"></span></span>
+          <span><i class="swatch ops"></i><span data-i18n="ops"></span></span>
+        </div>
+        
+      </div>
+
+      <div class="chart"><div class="chart-inner">
+        <svg id="chart" viewBox="0 30 1020 580" role="img" aria-labelledby="chartTitle chartDesc">
+          <title id="chartTitle" data-i18n="chartTitle"></title>
+          <desc id="chartDesc" data-i18n="chartDesc"></desc>
+          <defs>
+            <clipPath id="reveal"><rect id="revealRect" x="92" y="-60" width="0" height="670"/></clipPath>
+            <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <g id="bands"></g>
+          <g id="frame"></g>
+
+          <g clip-path="url(#reveal)">
+            <path id="opsGlow" class="curve-glow"/>
+            <path id="exp" class="curve-exp"/>
+            <path id="ops" class="curve-ops"/>
+          </g>
+
+          <g id="nodes"></g>
+          <line id="scan" class="scan" x1="110" y1="80" x2="110" y2="520"/>
+          <circle id="cross" cx="0" cy="0" r="5" fill="var(--amber)" opacity="0"/>
+          <circle id="headOps" r="6" fill="var(--ops)" filter="url(#glow)"/>
+          <circle id="headExp" r="6" fill="var(--exp)" filter="url(#glow)"/>
+        </svg>
+      </div></div>
+    </section>
+
+    <aside>
+      <p class="sr-only" id="status" aria-live="polite"></p>
+      <ol class="stages" id="stages"></ol>
+    </aside>
+  </div>
+  <div class="corner corner-left"><span data-i18n="credit"></span><br><a href="https://www.linkedin.com/in/jpcastro/" target="_blank" rel="noopener">Juan Pablo Castro Vilaró</a></div>
+  <div class="corner corner-right"><a class="pub" href="https://www.researchgate.net/publication/390490235" target="_blank" rel="noopener">From Static Risk Mapping to Proactive Cyber Risk Operations.</a><a class="doi" href="https://doi.org/10.13140/RG.2.2.15956.92801" target="_blank" rel="noopener">DOI: 10.13140/RG.2.2.15956.92801</a></div>
+</main>
+
+<script>
+(() => {
+  // Stage colors are shared across languages
+  const C = ["#8793a2", "#ff7b7b", "#ffb44d", "#8fd96b", "#5ab8ff", "#b48cff"];
+
+  // Brand terms (CRQ, CROC, CyberRiskOps, CDL) stay in English in every language
+  const LANGS = {
+    en: {
+      title: "Cyber Risk Operational Model (CROM)",
+      lede: "From static heat maps to proactive cyber risk operations. Each band marks the CROM stage where a capability takes hold.",
+      exposure: "Cyber Risk Exposure",
+      ops: "Cyber Risk Operations Level",
+      replay: "Replay",
+      next: "Next stage",
+      credit: "Created and Designed by:",
+      pub: "The Same Compass, a Different Ocean, Different Storms",
+      high: "HIGH", low: "LOW",
+      xlabel: "CROM maturity level",
+      chartTitle: "Cyber Risk Operational Model",
+      chartDesc: "Cyber risk exposure falls from high to low while the cyber risk operations level rises from low to high across six CROM levels, with colored bands marking each stage.",
+      levels: [
+        { name: "Unaware", a: "Cyber Risk is invisible.", b: "No register, no metrics.", band: null, lines: null },
+        { name: "Aware", a: "Initial Cyber Risk awareness.", b: "Spreadsheets, informal assessments.", band: "Spreadsheet Risk Documentation", lines: ["Spreadsheet Risk", "Documentation"] },
+        { name: "Basic", a: "Mapped Cyber Risks. Foundational CRQ.", b: "Heatmaps, questionnaires. Still static, theoretical.", band: "Heat Maps Risk View", lines: ["Heat Maps", "Risk View"] },
+        { name: "Monitored", a: "Real-time sensors deployed.", b: "Cyber RiskOps begins.", band: "CyberRiskOps Adopted", lines: ["CyberRiskOps", "Adopted"] },
+        { name: "Operationalized", a: "Cyber Risk informs operations.", b: "Operationalized CRQ. Decisions are data-driven.", band: "CROC Enabled", lines: ["CROC", "Enabled"] },
+        { name: "Proactive", a: "Cyber Risk is anticipated.", b: "Proactive, predictive posture. Cyber resilience.", band: "Continuous Defense Loop", lines: ["Continuous", "Defense Loop"] }
+      ]
+    },
+    es: {
+      title: "Modelo Operativo de Ciber Riesgo (CROM)",
+      lede: "De mapas de calor estáticos a las operaciones proactivas de ciber riesgo. Cada banda marca la etapa de CROM en la que una capacidad se consolida.",
+      exposure: "Exposición al ciber riesgo",
+      ops: "Nivel de operaciones de ciber riesgo",
+      replay: "Reproducir",
+      next: "Siguiente etapa",
+      credit: "Creado y Diseñado por:",
+      pub: "La Misma Brújula, un Océano Diferente, Diferentes Tormentas",
+      high: "ALTO", low: "BAJO",
+      xlabel: "Nivel de madurez de CROM",
+      chartTitle: "Modelo Operativo de Ciber Riesgo",
+      chartDesc: "La exposición al ciber riesgo baja de alto a bajo mientras el nivel de operaciones sube de bajo a alto a lo largo de seis niveles de CROM, con bandas de color que marcan cada etapa.",
+      levels: [
+        { name: "Desconocido", a: "El ciber riesgo es invisible.", b: "Sin registro, sin métricas.", band: null, lines: null },
+        { name: "Consciente", a: "Conciencia inicial del ciber riesgo.", b: "Hojas de cálculo, evaluaciones informales.", band: "Documentación de riesgo en hojas de cálculo", lines: ["Documentación en", "hojas de cálculo"] },
+        { name: "Básico", a: "Ciber riesgos mapeados. Foundational CRQ.", b: "Mapas de calor, cuestionarios. Aún estático y teórico.", band: "Vista de riesgo con mapas de calor", lines: ["Mapas de calor", "Vista de riesgo"] },
+        { name: "Monitoreado", a: "Sensores en tiempo real desplegados.", b: "Comienza CyberRiskOps.", band: "CyberRiskOps adoptado", lines: ["CyberRiskOps", "adoptado"] },
+        { name: "Operacionalizado", a: "El ciber riesgo informa las operaciones.", b: "Operationalized CRQ. Decisiones basadas en datos.", band: "CROC implementado", lines: ["CROC", "implementado"] },
+        { name: "Proactivo", a: "El ciber riesgo se anticipa.", b: "Postura proactiva y predictiva. Ciber resiliencia.", band: "Continuous Defense Loop", lines: ["Continuous", "Defense Loop"] }
+      ]
+    },
+    pt: {
+      title: "Modelo Operacional de Ciber Risco (CROM)",
+      lede: "De mapas de calor estáticos às operações proativas de ciber risco. Cada faixa marca a etapa do CROM em que uma capacidade se consolida.",
+      exposure: "Exposição ao ciber risco",
+      ops: "Nível de operações de ciber risco",
+      replay: "Reproduzir",
+      next: "Próxima etapa",
+      credit: "Criado e Projetado por:",
+      pub: "A Mesma Bússola, um Oceano Diferente, Tempestades Diferentes",
+      high: "ALTO", low: "BAIXO",
+      xlabel: "Nível de maturidade do CROM",
+      chartTitle: "Modelo Operacional de Ciber Risco",
+      chartDesc: "A exposição ao ciber risco cai de alto para baixo enquanto o nível de operações sobe de baixo para alto ao longo de seis níveis do CROM, com faixas coloridas marcando cada etapa.",
+      levels: [
+        { name: "Desconhecido", a: "O ciber risco é invisível.", b: "Sem registro, sem métricas.", band: null, lines: null },
+        { name: "Consciente", a: "Conscientização inicial do ciber risco.", b: "Planilhas, avaliações informais.", band: "Registro de risco em planilhas", lines: ["Registro de risco", "em planilhas"] },
+        { name: "Básico", a: "Ciber riscos mapeados. Foundational CRQ.", b: "Mapas de calor, questionários. Ainda estático e teórico.", band: "Visão de risco com mapas de calor", lines: ["Mapas de calor", "Visão de risco"] },
+        { name: "Monitorado", a: "Sensores em tempo real implantados.", b: "CyberRiskOps começa.", band: "CyberRiskOps adotado", lines: ["CyberRiskOps", "adotado"] },
+        { name: "Operacionalizado", a: "O ciber risco orienta as operações.", b: "Operationalized CRQ. Decisões baseadas em dados.", band: "CROC implementado", lines: ["CROC", "implementado"] },
+        { name: "Proativo", a: "O ciber risco é antecipado.", b: "Postura proativa e preditiva. Ciber resiliência.", band: "Continuous Defense Loop", lines: ["Continuous", "Defense Loop"] }
+      ]
+    },
+    ja: {
+      title: "サイバーリスク運用モデル（CROM）",
+      lede: "静的なヒートマップから、プロアクティブなサイバーリスクオペレーションへ。各帯は、機能が定着する CROM の段階を示します。",
+      exposure: "サイバーリスク・エクスポージャー",
+      ops: "サイバーリスク・オペレーションレベル",
+      replay: "再生",
+      next: "次の段階",
+      credit: "企画・デザイン：",
+      pub: "同じコンパス、異なる海、異なる嵐",
+      high: "高", low: "低",
+      xlabel: "CROM 成熟度レベル",
+      chartTitle: "サイバーリスク運用モデル",
+      chartDesc: "サイバーリスクのエクスポージャーは高から低へ下がり、オペレーションレベルは低から高へ上がります。6 つの CROM レベルに沿って、色付きの帯が各段階を示します。",
+      levels: [
+        { name: "未認識", a: "サイバーリスクは見えていません。", b: "台帳もメトリクスもありません。", band: null, lines: null },
+        { name: "認識", a: "サイバーリスクへの初期の認識。", b: "スプレッドシートや非公式な評価。", band: "スプレッドシートによるリスク文書化", lines: ["表計算による", "リスク文書化"] },
+        { name: "基礎", a: "サイバーリスクをマッピング済み。Foundational CRQ。", b: "ヒートマップとアンケート。依然として静的で理論的。", band: "ヒートマップによるリスク表示", lines: ["ヒートマップ", "リスク表示"] },
+        { name: "監視", a: "リアルタイムセンサーを導入。", b: "CyberRiskOps が始動。", band: "CyberRiskOps 導入", lines: ["CyberRiskOps", "導入"] },
+        { name: "運用化", a: "サイバーリスクが運用に反映される。", b: "Operationalized CRQ。データに基づく意思決定。", band: "CROC 有効化", lines: ["CROC", "有効化"] },
+        { name: "プロアクティブ", a: "サイバーリスクが予見される。", b: "プロアクティブで予測的な姿勢。サイバーレジリエンス。", band: "Continuous Defense Loop", lines: ["Continuous", "Defense Loop"] }
+      ]
+    }
+  };
+  const SUPPORTED = Object.keys(LANGS);
+
+  // Auto-select the first supported language from the browser's preferences
+  function detectLang() {
+    const list = (navigator.languages && navigator.languages.length)
+      ? navigator.languages
+      : [navigator.language || "en"];
+    for (const tag of list) {
+      const base = String(tag).toLowerCase().split("-")[0];
+      if (SUPPORTED.includes(base)) return base;
+    }
+    return "en";
+  }
+
+  const N = LANGS.en.levels.length - 1;   // timeline runs 0..N
+  const X0 = 110, STEP = 166;             // first level x, spacing between levels
+  const YT = 80, YB = 520, H = YB - YT;   // top and bottom of the plot
+  const XL = 92, XR = 940;                // plot left and right edges
+  const BAND_W = 0.8 * STEP;
+  const $ = id => document.getElementById(id);
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  // Operations level follows a cosine ease from LOW to HIGH; exposure mirrors it.
+  const xAt  = t => X0 + t * STEP;
+  const lvl  = t => (1 - Math.cos(Math.PI * t / N)) / 2;
+  const yOps = t => YB - lvl(t) * H;
+  const yExp = t => YB - (1 - lvl(t)) * H;
+
+  const toPath = fn => {
+    const S = 240;
+    let d = "";
+    for (let k = 0; k <= S; k++) {
+      const t = N * k / S;
+      d += (k ? "L" : "M") + xAt(t).toFixed(2) + " " + fn(t).toFixed(2);
+    }
+    return d;
+  };
+
+  let lang = detectLang();
+  let L = LANGS[lang];
+  let t = 0;
+  let announced = -1;
+  let nextStarted = false;
+  let zoneEls = [];
+  let tickEls = [];
+  let stageEls = [];
+
+  // Curves and nodes do not depend on language
+  $("exp").setAttribute("d", toPath(yExp));
+  $("ops").setAttribute("d", toPath(yOps));
+  $("opsGlow").setAttribute("d", toPath(yOps));
+
+  let nodeMarkup = "";
+  for (let i = 0; i <= N; i++) {
+    nodeMarkup += `<circle class="node" cx="${xAt(i)}" cy="${yExp(i)}" r="7" fill="var(--exp)" style="opacity:0"/>`;
+    nodeMarkup += `<circle class="node" cx="${xAt(i)}" cy="${yOps(i)}" r="7" fill="var(--ops)" style="opacity:0"/>`;
+  }
+  $("nodes").innerHTML = nodeMarkup;
+  const nodeEls = Array.from({ length: N + 1 }, (_, i) =>
+    [...$("nodes").children].slice(i * 2, i * 2 + 2));
+
+  $("cross").setAttribute("cx", xAt(N / 2));
+  $("cross").setAttribute("cy", yOps(N / 2));
+
+  const rect = $("revealRect");
+  const scan = $("scan");
+  const hOps = $("headOps");
+  const hExp = $("headExp");
+  const cross = $("cross");
+
+  function buildBands() {
+    let m = "";
+    L.levels.forEach((lv, i) => {
+      if (!lv.band) return;
+      const x = xAt(i);
+      const labels = lv.lines.map((ln, k) =>
+        `<text class="band-label" x="${x}" y="${YT - 12 - (lv.lines.length - 1 - k) * 16}" fill="${C[i]}" text-anchor="middle">${ln}</text>`
+      ).join("");
+      m += `<g class="zone" id="zone${i}" style="opacity:0">` +
+        `<rect x="${x - BAND_W / 2}" y="${YT}" width="${BAND_W}" height="${H}" fill="${C[i]}" fill-opacity="0.16" stroke="${C[i]}" stroke-opacity="0.45"/>` +
+        labels + `</g>`;
+    });
+    $("bands").innerHTML = m;
+    zoneEls = L.levels.map((_, i) => $("zone" + i));
+  }
+
+  function buildFrame() {
+    let f = "";
+    for (let i = 0; i <= N; i++) {
+      const x = xAt(i);
+      f += `<line class="grid" x1="${x}" y1="${YT}" x2="${x}" y2="${YB}"/>`;
+    }
+    f += `<line class="grid" x1="${XL}" y1="${YT}" x2="${XR}" y2="${YT}"/>`;
+    f += `<line class="axis" x1="${XL}" y1="${YT}" x2="${XL}" y2="${YB}"/>`;
+    f += `<line class="axis" x1="${XL}" y1="${YB}" x2="${XR}" y2="${YB}"/>`;
+    f += `<text class="ytick" x="${XL - 12}" y="${YT + 6}" text-anchor="end">${L.high}</text>`;
+    f += `<text class="ytick" x="${XL - 12}" y="${YB + 6}" text-anchor="end">${L.low}</text>`;
+    L.levels.forEach((lv, i) => {
+      f += `<text class="xtick" data-i="${i}" x="${xAt(i)}" y="552" text-anchor="middle">${lv.name}</text>`;
+    });
+    f += `<text class="xlabel" x="${(XL + XR) / 2}" y="594" text-anchor="middle">${L.xlabel}</text>`;
+    $("frame").innerHTML = f;
+    tickEls = [...document.querySelectorAll(".xtick")];
+  }
+
+  function buildStages() {
+    $("stages").innerHTML = L.levels.map((lv, i) =>
+      `<li><button class="stage" type="button" data-i="${i}" style="--c:${C[i]}">` +
+      `<span class="name">${lv.name}</span>` +
+      (lv.band ? `<span class="tag">${lv.band}</span>` : "") +
+      `<span class="desc">${lv.a} ${lv.b}</span></button></li>`
+    ).join("");
+    stageEls = [...document.querySelectorAll(".stage")];
+  }
+
+  const LANG_NAMES = { en: "English", es: "Español", pt: "Português", ja: "日本語" };
+
+  function buildLangMenu() {
+    $("langLabel").textContent = lang.toUpperCase();
+    $("langMenu").innerHTML = SUPPORTED.map(code =>
+      `<button type="button" role="option" aria-selected="${code === lang}" aria-label="${LANG_NAMES[code]}" class="lang-item${code === lang ? " selected" : ""}" data-lang="${code}">${code.toUpperCase()}</button>`
+    ).join("");
+  }
+
+  function setMenu(open) {
+    $("langMenu").classList.toggle("open", open);
+    $("langToggle").setAttribute("aria-expanded", String(open));
+  }
+
+  function applyText() {
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      el.textContent = L[el.dataset.i18n];
+    });
+    document.title = L.title;
+    $("replay").setAttribute("aria-label", L.replay);
+    $("next").setAttribute("aria-label", L.next);
+    document.documentElement.lang = lang;
+    buildLangMenu();
+  }
+
+  function applyLang(code) {
+    lang = SUPPORTED.includes(code) ? code : "en";
+    L = LANGS[lang];
+    applyText();
+    buildBands();
+    buildFrame();
+    buildStages();
+    announced = -1;
+    render();
+  }
+
+  // A band fades in as the sweep approaches its level
+  const appear = i => clamp((t - (i - 0.4)) / 0.5, 0, 1);
+
+  function render() {
+    const x = xAt(t);
+    rect.setAttribute("width", Math.max(0, x - XL + 14));
+    scan.setAttribute("x1", x);
+    scan.setAttribute("x2", x);
+    hOps.setAttribute("cx", x);
+    hOps.setAttribute("cy", yOps(t));
+    hExp.setAttribute("cx", x);
+    hExp.setAttribute("cy", yExp(t));
+    cross.setAttribute("opacity", t >= N / 2 - 0.01 ? 1 : 0);
+
+    // Current stage is the last level the timeline has reached
+    const cur = Math.min(N, Math.floor(t + 0.02));
+    if (cur !== announced) {
+      announced = cur;
+      const lv = L.levels[cur];
+      $("status").textContent = `${lv.name}. ${lv.a} ${lv.b}`;
+    }
+
+    for (let i = 0; i <= N; i++) {
+      const reached = i <= cur;
+      nodeEls[i].forEach(el => { el.style.opacity = reached ? 1 : 0; });
+      if (stageEls[i]) {
+        stageEls[i].classList.toggle("passed", i < cur);
+        stageEls[i].classList.toggle("active", i === cur);
+      }
+      if (tickEls[i]) {
+        tickEls[i].classList.toggle("passed", i < cur);
+        tickEls[i].classList.toggle("active", i === cur);
+      }
+      if (zoneEls[i]) {
+        zoneEls[i].style.opacity = appear(i);
+        zoneEls[i].querySelector("rect").setAttribute("fill-opacity", i === cur ? 0.3 : 0.16);
+      }
+    }
+  }
+
+  function setT(v) {
+    t = Math.max(0, Math.min(N, v));
+    render();
+  }
+
+  let raf = 0;
+  function stop() {
+    cancelAnimationFrame(raf);
+  }
+
+  function animateTo(target, dur, fromNext = false) {
+    if (!fromNext) nextStarted = false;
+    stop();
+    const from = t;
+    const start = performance.now();
+    const ease = p => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2);
+    const step = now => {
+      const p = Math.min(1, (now - start) / dur);
+      setT(from + (target - from) * ease(p));
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+  }
+
+  // Build text for the detected language, then wire up controls
+  applyLang(lang);
+
+  $("langToggle").addEventListener("click", e => {
+    e.stopPropagation();
+    setMenu(!$("langMenu").classList.contains("open"));
+  });
+  $("langMenu").addEventListener("click", e => {
+    const item = e.target.closest("[data-lang]");
+    if (!item) return;
+    applyLang(item.dataset.lang);
+    setMenu(false);
+  });
+  document.addEventListener("click", () => setMenu(false));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
+
+  // Click a stage or a level label to scrub to it
+  document.addEventListener("click", e => {
+    const el = e.target.closest(".stage, .xtick");
+    if (!el) return;
+    const i = Number(el.dataset.i);
+    if (el.classList.contains("stage")) { stop(); setT(0); nextStarted = false; return; }
+    animateTo(i, 500 + 800 * Math.abs(i - t));
+  });
+
+  $("next").addEventListener("click", () => {
+    const cur = Math.min(N, Math.floor(t + 0.02));
+    if (!nextStarted) { nextStarted = true; stop(); setT(0); return; }
+    if (cur >= N) return;
+    animateTo(cur + 1, 900, true);
+  });
+
+  $("replay").addEventListener("click", () => {
+    stop();
+    setT(0);
+    animateTo(N, 7200);
+  });
+
+  // Intro: one orchestrated sweep, or the finished state if motion is reduced
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion) {
+    setT(N);
+  } else {
+    setT(0);
+    setTimeout(() => animateTo(N, 7200), 700);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CISA BOD 26-04 — Completed With the Patch Question</title>
+<style>
+  :root{
+    --bg:#ffffff; --bg2:#f7f4f0; --ink:#1c1a18; --mut:#5a5550; --faint:#8a847e;
+    --red:#c0202c; --red-bright:#c0202c; --red-line:#e3c4c7;
+    --blue-bg:#fff; --blue-bg2:#fff; --blue-line:#1f4e79; --blue-ink:#16314d; --blue-mut:#3a6ea5;
+    --green-line:#1f7a4d; --green-ink:#0f4a2e;
+    --link:#c98a90;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:Arial, Helvetica, "Segoe UI", sans-serif; -webkit-font-smoothing:antialiased; padding:0 0 50px}
+  .top{max-width:2200px; margin:0 auto; padding:38px 24px 0 64px}
+  .eyebrow{color:var(--red); font-size:13px; letter-spacing:2px; text-transform:uppercase; margin:0 0 12px}
+  h1{font-size:clamp(24px,3.6vw,38px); margin:0 0 10px; font-weight:700; letter-spacing:-.5px; color:#16314d; max-width:820px}
+  .sub{color:var(--mut); font-style:italic; font-size:clamp(14px,1.8vw,17px); margin:0; max-width:820px; line-height:1.5}
+  .hint{color:var(--faint); font-size:12.5px; font-style:italic; margin:14px 0 0}
+  .rule{height:2px; background:#c0202c; border:0; margin:18px auto 0; max-width:2200px; opacity:.85; box-sizing:border-box}
+
+  .scroll{overflow-x:auto; padding:22px 0 10px}
+  .canvas{position:relative; margin:0 auto}
+  svg.links{position:absolute; inset:0; width:100%; height:100%; pointer-events:none}
+
+  .node{position:absolute; transform:translateY(-50%); border-radius:9px; padding:10px 12px;
+    font-size:12px; font-weight:700; text-align:center; border:1.5px solid; white-space:normal; line-height:1.3; transition:.18s}
+  .n-root{background:#fff; border-color:var(--red); color:#7a1f28; width:180px; padding:13px 12px}
+  .n-dec{background:#fff; border-color:var(--blue-line); color:#16314d; width:160px}
+  .n-impact{background:#fff; border-color:var(--blue-line); color:#16314d; width:180px}
+  .n-patch{background:#fff; border:2px solid var(--red); color:var(--red); font-size:12px; line-height:1.3;
+    width:140px; padding:11px 10px}
+  .n-patch .cal{display:block; font-size:14px; margin-bottom:2px}
+
+  .leaf{position:absolute; transform:translateY(-50%); border-radius:7px; padding:7px 12px; font-size:13px;
+    font-weight:700; text-align:center; border:1.4px solid; width:260px}
+  .l-crit{background:#f4b6bd; border-color:#d98a93; color:#7a1f28}
+  .l-3{background:#f7c5cb; border-color:#d98a93; color:#7a1f28}
+  .l-14{background:#a9c7e0; border-color:#7ba2c4; color:#1f3f5c}
+  .l-60{background:#8fb4d4; border-color:#6a93b8; color:#1f3f5c}
+  .l-up{background:#d2d2d2; border-color:#a8a8a8; color:#333}
+
+  .tag{position:absolute; transform:translate(-50%,-50%); font-size:11px; color:#5a6b7a;
+    background:#fff; border:1.1px solid #9fb4c4; border-radius:5px; padding:2px 9px}
+  .tag.dashed{border-style:dashed}
+
+  .yn{position:absolute; transform:translate(-50%,-50%); font-size:11px; font-weight:700; padding:3px 11px;
+    border-radius:11px; color:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .yn.y{background:#1f7a4d}
+  .yn.n{background:#c0202c}
+
+  .offramp{position:absolute; transform:translateY(-50%); width:210px;
+    border:1.6px solid #1f7a4d; background:#fff; border-radius:9px; padding:11px 13px}
+  .offramp b{display:flex; align-items:flex-start; gap:7px; color:#1f7a4d; font-size:13px; margin:5px 0; line-height:1.25; font-weight:700}
+  .offramp .ic{font-size:13px; flex:0 0 16px}
+  .off-box{position:absolute; transform:translateY(-50%); width:260px;
+    border:1.5px solid; border-radius:6px; padding:8px 12px;
+    font-size:13px; font-weight:700; line-height:1.25; white-space:normal; text-align:center}
+  .ob-amber{background:#f0a854; border-color:#c2702a; color:#5e3410}
+  .ob-grey{background:#9e3a32; border-color:#6e241e; color:#fff}
+  .sg-head{position:absolute; transform:translateY(-50%); width:260px; font-size:11px; font-weight:700;
+    letter-spacing:.8px; text-transform:uppercase; padding-left:2px}
+  .ob-amber-h{color:#b5601a}
+  .ob-grey-h{color:#7a2018}
+  .offramp-card{position:absolute; transform:translateY(-50%); width:248px;
+    background:#eef7f1; border:2px solid #1f7a4d; border-radius:10px; padding:0 0 8px; overflow:hidden;
+    box-shadow:0 2px 8px rgba(31,122,77,.12)}
+  .offramp-card .oh{background:#1f7a4d; color:#fff; font-size:10px; letter-spacing:1px; text-transform:uppercase;
+    font-weight:700; padding:5px 12px}
+  .offramp-card .orow{display:flex; align-items:flex-start; gap:8px; color:#0f4a2e; font-size:11px; font-weight:700;
+    line-height:1.25; padding:6px 12px 0}
+  .offramp-card .orow .ic{font-size:13px; flex:0 0 16px; text-align:center}
+  .offramp-card .oc{color:#1f7a4d; font-size:10px; font-style:italic; padding:6px 12px 0}
+  .no-pill{position:absolute; transform:translate(-50%,-50%); font-size:13px; font-weight:700;
+    color:var(--red); border:1.4px dashed var(--red); border-radius:9px; padding:3px 13px; background:#fff}
+
+  .colhead{position:absolute; top:-4px; transform:translateX(-50%); font-size:12px; letter-spacing:1px;
+    text-transform:uppercase; color:#9a938c; font-weight:700}
+
+  .land{max-width:2200px; margin:30px auto 0; padding:0 24px 0 64px}
+  .land .l1{font-size:clamp(17px,2.2vw,22px); font-weight:700; margin:0 0 6px; color:#16314d}
+  .land .l2{color:var(--mut); font-style:italic; font-size:clamp(14px,1.8vw,17px); margin:0; max-width:820px; line-height:1.5}
+  .land .def{color:#5a5550; font-size:13.5px; line-height:1.5; margin:16px 0 0; max-width:820px}
+  .land .def b{color:#a8202c}
+  .byline{max-width:2200px; margin:20px auto 0; padding:0 24px 0 64px; font-size:12px; color:var(--faint)}
+  .walk{max-width:2200px; margin:50px auto 0; padding:0 24px 0 64px}
+  .wrule{height:2px; background:var(--red-line); border:0; margin:0 0 24px}
+  .weyebrow{color:var(--red); font-size:12px; letter-spacing:2px; text-transform:uppercase; margin:0 0 8px; font-weight:700}
+  .wtitle{font-size:clamp(20px,2.6vw,28px); color:#16314d; margin:0 0 22px; font-weight:700}
+  .wgrid{display:grid; gap:14px}
+  .wfield{border:1.4px solid #d8e0e8; border-radius:12px; padding:15px 18px; background:#fbfcfd}
+  .wfield .wq{font-size:13px; font-weight:700; color:#16314d; margin:0 0 3px}
+  .wfield .wd{font-size:12.5px; color:#5a5550; font-style:italic; margin:0 0 12px}
+  .wseg{display:flex; gap:10px; flex-wrap:wrap}
+  .wseg button{flex:1 1 200px; border:1.6px solid var(--blue-line); background:#fff; color:#16314d;
+    font-family:inherit; font-size:14px; font-weight:700; padding:12px 16px; border-radius:9px; cursor:pointer; transition:.15s; text-align:left}
+  .wseg button small{display:block; font-weight:400; font-size:11.5px; color:#7a8a99; margin-top:3px}
+  .wseg button:hover{border-color:var(--red); background:#fff8f8}
+  .wseg button.sel{background:var(--red); border-color:var(--red); color:#fff}
+  .wseg button.sel small{color:#f3d6d8}
+  .wout{margin-top:24px; border-radius:14px; border:2px solid #d8e0e8; background:#fbfcfd;
+    padding:24px 26px; min-height:90px; display:flex; flex-direction:column; justify-content:center; transition:.2s}
+  .wout.set{animation:wrise .3s ease}
+  @keyframes wrise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .wout .wk{font-size:11px; letter-spacing:1.5px; text-transform:uppercase; margin:0 0 8px; font-weight:700}
+  .wout .wv{font-size:clamp(22px,3.4vw,32px); font-weight:700; margin:0; line-height:1.15}
+  .wout .wsub{font-size:13px; margin:12px 0 0; line-height:1.5}
+  .wout .wpath{font-size:12.5px; margin:14px 0 0; opacity:.85}
+  .wout .wwait{color:#7a8a99; font-style:italic; font-size:15px; margin:0}
+  .wout.r-crit{background:#fbeaec; border-color:#c0202c}
+  .wout.r-crit .wk{color:#a8202c} .wout.r-crit .wv{color:#7a1f28}
+  .wout.r-pink{background:#fdf0f2; border-color:#d98a93}
+  .wout.r-pink .wk{color:#a8202c} .wout.r-pink .wv{color:#7a1f28}
+  .wout.r-blue{background:#eef4fa; border-color:#7ba2c4}
+  .wout.r-blue .wk{color:#3a6ea5} .wout.r-blue .wv{color:#1f3f5c}
+  .wout.r-grey{background:#f0f0f0; border-color:#a8a8a8}
+  .wout.r-grey .wk{color:#666} .wout.r-grey .wv{color:#333}
+  .wout.r-orange{background:#fdf2e4; border-color:#c2702a}
+  .wout.r-orange .wk{color:#b5601a} .wout.r-orange .wv{color:#5e3410}
+  .wout.r-brick{background:#fbecea; border-color:#9e3a32}
+  .wout.r-brick .wk{color:#9e3a32} .wout.r-brick .wv{color:#6e241e}
+  .srclink{color:#c0202c; font-weight:700; text-decoration:none; border-bottom:1px solid rgba(192,32,44,.4)}
+  .srclink:hover{border-bottom-color:#c0202c}
+  .wback{margin:22px 0 0; font-size:13px}
+  .wback a{color:#3a6ea5; font-weight:700; text-decoration:none; border-bottom:1px solid rgba(58,110,165,.4)}
+  .wback a:hover{border-bottom-color:#3a6ea5}
+  /* path highlight from the interactive walker */
+  .hl{ }
+  div.node.hl, div.leaf.hl, div.off-box.hl, div.tag.hl, div.no-pill.hl{
+    box-shadow:0 0 0 3px rgba(192,32,44,.55), 0 2px 10px rgba(192,32,44,.25); z-index:5; position:absolute}
+  div.yn.hl{box-shadow:0 0 0 3px rgba(255,255,255,.9), 0 0 0 5px rgba(192,32,44,.6); z-index:6}
+  path.hl{stroke-width:3.4 !important; opacity:1 !important; filter:drop-shadow(0 0 3px rgba(192,32,44,.5))}
+  div.node.hl{background:#dbe9f7 !important; border-color:#3a6ea5 !important}
+  div.leaf.hl{background:#cfe0f2 !important; border-color:#3a6ea5 !important; color:#16314d !important}
+  div.off-box.hl{background:#f6cdd1 !important; border-color:#c0202c !important; color:#7a1f28 !important}
+  div.tag.hl{background:#f6cdd1 !important; border-color:#c0202c !important; color:#7a1f28 !important}
+  .wtools{display:flex; justify-content:flex-end; gap:10px; margin:0 0 14px}
+  .wresetbtn{font-family:inherit; font-size:13px; font-weight:700; color:#c0202c; background:#fff;
+    border:1.6px solid #c0202c; border-radius:9px; padding:8px 18px; cursor:pointer; transition:.15s}
+  .wresetbtn:hover{background:#c0202c; color:#fff}
+  .wfocusbtn{font-family:inherit; font-size:13px; font-weight:700; color:#16314d; background:#fff;
+    border:1.6px solid #1f4e79; border-radius:9px; padding:8px 18px; cursor:pointer; transition:.15s}
+  .wfocusbtn:hover{background:#1f4e79; color:#fff}
+  .wfocusbtn.on{background:#1f4e79; color:#fff}
+  /* focus mode: dim everything not on the path */
+  .focusmode .dimmed{opacity:.08 !important; transition:.25s}
+  .focusmode path.dimmed{opacity:.05 !important}
+  /* isolate mode: fully hide everything not on the path */
+  .isolatemode .hidden{display:none !important}
+  .isolatemode path.hidden{display:none !important}
+  .isolatemode .sg-head{display:none !important}
+  .isolatemode .sg-head.iso-show{display:block !important}
+
+  .lang-sel{position:fixed; top:12px; right:16px; z-index:999; display:flex; gap:4px;
+    background:rgba(255,255,255,.92); border:1.5px solid #ccc; border-radius:8px; padding:4px 6px; backdrop-filter:blur(6px)}
+  .lang-btn{font-family:inherit; font-size:11px; font-weight:700; border:1.4px solid #bbb; border-radius:5px;
+    padding:4px 10px; cursor:pointer; background:#fff; color:#333; transition:.15s}
+  .lang-btn:hover{background:#eee}
+  .lang-btn.active{background:#1f4e79; color:#fff; border-color:#1f4e79}
+</style>
+</head>
+<body>
+<div class="lang-sel">
+  <button class="lang-btn active" onclick="switchLang('en')">EN</button>
+  <button class="lang-btn" onclick="switchLang('es')">ES</button>
+  <button class="lang-btn" onclick="switchLang('pt')">PT</button>
+</div>
+<div class="top">
+  <p class="eyebrow">Expanding BOD 26-04: Beyond the Patch</p>
+  <h1>Rethinking the CISA BOD 26-04 Directive in the Age of Frontier AI Models</h1>
+  <p class="sub" data-sub="1">Frontier models have crossed a line that changes the math of vulnerability research. Mythos class systems now discover zero days at machine speed, surfacing flaws in code that survived years of expert review. In a single evaluation run, a frontier model found hundreds of vulnerabilities in a widely used codebase, built scores of working exploits, and uncovered a remote code execution flaw, more than a decade old, granting root to unauthenticated attackers. <b>Over 99 percent of those discoveries remain unpatched.</b> This is the vulnpocalypse made manifest, and it is no longer a forecast.</p>
+  <p class="sub" data-sub="2" style="margin-top:14px"><b>Finding flaws at scale is only good news if the world can fix them at the same speed, and it cannot.</b> Vendor cycles run on weeks. Enterprise deployment runs slower, blocked by operational constraints, legacy systems that cannot be touched, and change freeze periods that lock environments for weeks. When discovery accelerates and remediation does not, the gap becomes pure attack surface. CISA BOD 26-04 started the clock on risk, which is right. But every path it draws still ends in a patch. So we add the question the directive assumes away. On every Total and Partial branch, does a patch exist in time? Yes keeps CISA's timeline. No routes to the off-ramp, where the risk is mitigated by decision, not repair.</p>
+  <p class="hint">Scroll sideways to follow any path through to its outcome, or <a class="srclink" href="#walker">try the interactive version</a>. Read the directive at <a class="srclink" href="https://www.cisa.gov/news-events/directives/bod-26-04-prioritizing-security-updates-based-risk" target="_blank" rel="noopener">CISA BOD 26-04</a>.</p>
+</div>
+<hr class="rule">
+
+<div class="scroll" id="fullpicture">
+  <div class="canvas" id="canvas">
+    <svg class="links" id="links" preserveAspectRatio="none"></svg>
+  </div>
+</div>
+
+<div class="land">
+  <p class="l1">When the Patch Never Comes</p>
+  <p class="l2">A remediation deadline assumes a remedy exists. Frontier models now discover vulnerabilities at machine speed, surfacing flaws faster than vendors can fix them. When the patch is not coming, every branch needs the exit the directive never drew.</p>
+  <p class="def"><b>Vulnpocalypse. A rapid, structural increase in the volume of exploitable software vulnerabilities, driven by frontier AI discovery and compounded by remediation friction, producing risk at a scale defenders cannot absorb.</b></p>
+</div>
+
+<div class="walk" id="walker">
+  <hr class="wrule">
+  <p class="weyebrow">Walk one vulnerability through the expanded directive</p>
+  <h2 class="wtitle">Answer five questions. See where it lands.</h2>
+  <div class="wtools"><button id="wfocus" class="wfocusbtn" type="button">Dim everything else</button><button id="wisolate" class="wfocusbtn" type="button">Show only the path</button><button id="wreset" class="wresetbtn" type="button">Reset</button></div>
+  <div class="wgrid" id="wgrid"></div>
+  <div class="wout" id="wout"><p class="wwait">Answer all five to see the outcome.</p></div>
+  <p class="wback"><a href="#fullpicture">↑ Back to the full picture</a></p>
+</div>
+
+<p class="byline">Logic extends <a class="srclink" href="https://www.cisa.gov/news-events/directives/bod-26-04-prioritizing-security-updates-based-risk" target="_blank" rel="noopener">CISA Binding Operational Directive 26-04</a>. Juan Pablo Castro · The Cybersecurity Compass</p>
+
+<script>
+const canvas=document.getElementById('canvas');
+const svg=document.getElementById('links');
+
+// 8 technical-impact nodes. Each has a Total leaf and a Partial leaf.
+// Each Total and each Partial passes through its own "patch?" gate.
+// YES -> timeline outcome. NO -> the local off-ramp shared within the Automatable pair.
+const imps=[
+ {g:["yes","yes","yes"], total:["3 Calendar Days to Apply Patch & Forensic Triage","l-crit"], partial:["3 Calendar Days to Apply Patch","l-3"]},
+ {g:["yes","yes","no"],  total:["3 Calendar Days to Apply Patch & Forensic Triage","l-crit"], partial:["14 Calendar Days to Apply Patch","l-14"]},
+ {g:["yes","no","yes"],  total:["3 Calendar Days to Apply Patch","l-3"],                       partial:["14 Calendar Days to Apply Patch","l-14"]},
+ {g:["yes","no","no"],   total:["14 Calendar Days to Apply Patch","l-14"],                     partial:["60 Calendar Days to Apply Patch","l-60"]},
+ {g:["no","yes","yes"],  total:["3 Calendar Days to Apply Patch & Forensic Triage","l-crit"], partial:["14 Calendar Days to Apply Patch","l-14"]},
+ {g:["no","yes","no"],   total:["14 Calendar Days to Apply Patch","l-14"],                     partial:["14 Calendar Days to Apply Patch","l-14"]},
+ {g:["no","no","yes"],   total:["60 Calendar Days to Apply Patch","l-60"],                     partial:["60 Calendar Days to Apply Patch","l-60"]},
+ {g:["no","no","no"],    total:["Fix on System Upgrade","l-up"],       partial:["Fix on System Upgrade","l-up"]},
+];
+
+const W=2200, H=3300;
+const X={root:30, kev:250, auto:460, impact:700, tag1:940, patch:1040, no:1230, total2:1380, leaf:1520, ramp:1260};
+canvas.style.width=W+'px'; canvas.style.height=H+'px';
+svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+
+// 8 impact nodes spread evenly; each owns a Total row (above) and Partial row (below)
+const yT=50, yB=H-50;
+const slot=(yB-yT)/8;
+const impY = i => yT + slot*i + slot/2;
+const rowTot = i => impY(i) - 44;
+const rowPar = i => impY(i) + 44;
+
+const nodes=[];
+const addNode=(x,y,cls,label)=>{const n={x,y,cls,label}; nodes.push(n); return n;};
+const avg=arr=>arr.reduce((a,b)=>a+b,0)/arr.length;
+
+const root=addNode(X.root,H/2,"n-root","Is the vulnerable<br>asset publicly<br>exposed?");
+const kev={};
+kev.yes=addNode(X.kev,avg([impY(0),impY(1),impY(2),impY(3)]),"n-dec","Vulnerability<br>listed on KEV?");
+kev.no =addNode(X.kev,avg([impY(4),impY(5),impY(6),impY(7)]),"n-dec","Vulnerability<br>listed on KEV?");
+const auto={};
+auto.yy=addNode(X.auto,avg([impY(0),impY(1)]),"n-dec","Can an adversary<br>automate all steps<br>to exploit?");
+auto.yn=addNode(X.auto,avg([impY(2),impY(3)]),"n-dec","Can an adversary<br>automate all steps<br>to exploit?");
+auto.ny=addNode(X.auto,avg([impY(4),impY(5)]),"n-dec","Can an adversary<br>automate all steps<br>to exploit?");
+auto.nn=addNode(X.auto,avg([impY(6),impY(7)]),"n-dec","Can an adversary<br>automate all steps<br>to exploit?");
+const impNode=[], patchT=[], patchP=[];
+imps.forEach((m,i)=>{
+  impNode[i]=addNode(X.impact,impY(i),"n-impact","Total or partial<br>control after<br>exploitation?");
+  patchT[i]=addNode(X.patch,rowTot(i),"n-patch","Does a patch exist in time?");
+  patchP[i]=addNode(X.patch,rowPar(i),"n-patch","Does a patch exist in time?");
+});
+
+// off-ramps: one per Automatable pair, centered between the two impact nodes -> 4 ramps
+const rampPairs=[[0,1],[2,3],[4,5],[6,7]];
+const rampY = rampPairs.map(pr => avg([impY(pr[0]),impY(pr[1])]));
+
+const links=[];
+function L(a,b,kind,lab,lt){links.push({a,b,kind,lab,lt});}
+L(root,kev.yes,"dec","YES","y"); L(root,kev.no,"dec","NO","n");
+L(kev.yes,auto.yy,"dec","YES","y"); L(kev.yes,auto.yn,"dec","NO","n");
+L(kev.no, auto.ny,"dec","YES","y"); L(kev.no, auto.nn,"dec","NO","n");
+L(auto.yy,impNode[0],"dec","YES","y"); L(auto.yy,impNode[1],"dec","NO","n");
+L(auto.yn,impNode[2],"dec","YES","y"); L(auto.yn,impNode[3],"dec","NO","n");
+L(auto.ny,impNode[4],"dec","YES","y"); L(auto.ny,impNode[5],"dec","NO","n");
+L(auto.nn,impNode[6],"dec","YES","y"); L(auto.nn,impNode[7],"dec","NO","n");
+
+function curve(x1,y1,x2,y2){const mx=(x1+x2)/2; return `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;}
+
+// ===== highlight registry: map every element to the impact-group(s) and stage it belongs to =====
+// stage tags: 'root', 'kev:yes'/'kev:no', 'auto', 'impact', 'tagrow', 'patch', 'pill:yes'/'pill:no', 'leaf', 'offramp'
+const HL=[]; // {el, grp:Set or null, stage, row:'total'|'partial'|null, branch:{exposed,kev,auto}|null}
+function hl(el,opts){ HL.push(Object.assign({el},opts)); return el; }
+// resolve which imps index a branch [exposed,kev,auto] maps to
+function gidx(exp,kev,aut){
+  for(let i=0;i<imps.length;i++){const g=imps[i].g; if(g[0]===exp&&g[1]===kev&&g[2]===aut) return i;}
+  return -1;
+}
+// branch signature for each impact index
+const branchOf = imps.map(m=>({exposed:m.g[0],kev:m.g[1],auto:m.g[2]}));
+
+// node DOM references, filled at node render
+const nodeDOM=new Map();
+
+// helper: downstream impact indices for a node
+function dgroups(node){
+  if(node.cls==="n-impact"){const i=impNode.indexOf(node); return i>=0?[i]:[];}
+  if(node===auto.yy) return [0,1]; if(node===auto.yn) return [2,3];
+  if(node===auto.ny) return [4,5]; if(node===auto.nn) return [6,7];
+  if(node===kev.yes) return [0,1,2,3]; if(node===kev.no) return [4,5,6,7];
+  return [];
+}
+
+// render decision links first
+links.forEach(lk=>{
+  const x1=lk.a.x+(lk.a.cls==="n-root"?175:lk.a.cls==="n-impact"?175:155);
+  const y1=lk.a.y, x2=lk.b.x-2, y2=lk.b.y;
+  const p=document.createElementNS("http://www.w3.org/2000/svg","path");
+  p.setAttribute("d",curve(x1,y1,x2,y2)); p.setAttribute("fill","none");
+  p.setAttribute("stroke","var(--link)"); p.setAttribute("stroke-width","1.6");
+  svg.appendChild(p);
+  const g=new Set(dgroups(lk.b));
+  hl(p,{grp:g,stage:"declink"});
+  if(lk.lab){
+    const d=document.createElement("div"); d.className="yn "+lk.lt; d.textContent=lk.lab;
+    d.style.left=((x1+x2)/2)+"px"; d.style.top=((y1+y2)/2)+"px"; canvas.appendChild(d);
+    hl(d,{grp:g,stage:"declink"});
+  }
+});
+
+let CTX=null; // {grp:Set, stage, row}
+function tagEl(el){ if(CTX) hl(el, Object.assign({el}, CTX)); }
+function path(x1,y1,x2,y2,stroke,w,dash,op){
+  const p=document.createElementNS("http://www.w3.org/2000/svg","path");
+  p.setAttribute("d",curve(x1,y1,x2,y2)); p.setAttribute("fill","none");
+  p.setAttribute("stroke",stroke); p.setAttribute("stroke-width",w||"1.5");
+  if(dash) p.setAttribute("stroke-dasharray",dash);
+  if(op) p.setAttribute("opacity",op);
+  svg.appendChild(p); tagEl(p); return p;
+}
+function hline(x1,y,x2,stroke,dash){
+  const p=document.createElementNS("http://www.w3.org/2000/svg","path");
+  p.setAttribute("d",`M${x1},${y} L${x2},${y}`); p.setAttribute("fill","none");
+  p.setAttribute("stroke",stroke); p.setAttribute("stroke-width","1.5");
+  if(dash) p.setAttribute("stroke-dasharray",dash);
+  svg.appendChild(p); tagEl(p); return p;
+}
+
+// per impact: impact -> Total tag (solid) + Partial tag (dashed) -> patch boxes
+imps.forEach((m,i)=>{
+  const ix=X.impact+175, iy=impY(i);
+  CTX={grp:new Set([i]),stage:"row",row:"total"};
+  path(ix,iy-8,X.tag1,rowTot(i),"var(--link)","1.5");
+  hline(X.tag1+26,rowTot(i),X.patch-2,"var(--link)");
+  CTX={grp:new Set([i]),stage:"row",row:"partial"};
+  path(ix,iy+8,X.tag1,rowPar(i),"var(--link)","1.5","5 4");
+  hline(X.tag1+26,rowPar(i),X.patch-2,"var(--link)","5 4");
+  CTX=null;
+});
+
+// Total/Partial first-stage tags
+imps.forEach((m,i)=>{
+  CTX={grp:new Set([i]),stage:"row",row:"total"}; mkTag(X.tag1,rowTot(i),"Total",false);
+  CTX={grp:new Set([i]),stage:"row",row:"partial"}; mkTag(X.tag1,rowPar(i),"Partial",true);
+  CTX=null;
+});
+function mkTag(x,y,txt,dash){
+  const t=document.createElement("div"); t.className="tag"+(dash?" dashed":""); t.textContent=txt;
+  t.style.left=x+"px"; t.style.top=y+"px"; canvas.appendChild(t); tagEl(t);
+}
+
+// from each patch box: YES -> SLA timeline ; NO -> shared off-ramp group
+function patchOut(pnode, isPartial, m, i){
+  const py=pnode.y;
+  const edgeX=pnode.x+140;
+  const outcome = isPartial ? m.partial : m.total;
+  const ty = py;
+  const row = isPartial?"partial":"total";
+  // YES branch: stub, pill, connector, leaf
+  CTX={grp:new Set([i]),stage:"yes",row};
+  path(edgeX, py-7, edgeX+44, py-30, "#1f7a4d", "1.5");
+  yn(edgeX+64, py-30, "YES", "y");
+  path(edgeX+82, py-30, X.total2, ty, "#1f7a4d", "1.6");
+  mkTag2(X.total2,ty,isPartial?"Partial":"Total",isPartial);
+  hline(X.total2+30,ty,X.leaf-2,outcome[1]==="l-14"||outcome[1]==="l-60"?"#7ba2c4":"#d98a93",isPartial?"5 4":null);
+  leaf(X.leaf,ty,outcome[0],outcome[1]);
+  // NO branch: stub, pill, connector to off-ramp
+  CTX={grp:new Set([i]),stage:"no",row};
+  path(edgeX, py+7, edgeX+44, py+30, "var(--red)", "1.4", "5 4", ".7");
+  yn(edgeX+64, py+30, "NO", "n");
+  const ramp = Math.floor(i/2);
+  path(edgeX+82, py+30, X.total2-14, rampY[ramp], "var(--red)", "1.4", "5 4", ".7");
+  CTX=null;
+}
+function mkTag2(x,y,txt,dash){
+  const t=document.createElement("div"); t.className="tag"+(dash?" dashed":""); t.textContent=txt;
+  t.style.left=x+"px"; t.style.top=y+"px"; canvas.appendChild(t); tagEl(t);
+}
+function yn(x,y,txt,lt){
+  const d=document.createElement("div"); d.className="yn "+lt; d.textContent=txt;
+  d.style.left=x+"px"; d.style.top=y+"px"; canvas.appendChild(d); tagEl(d);
+}
+function leaf(x,y,t,c){
+  const d=document.createElement("div"); d.className="leaf "+c; d.textContent=t;
+  d.style.left=x+"px"; d.style.top=y+"px"; canvas.appendChild(d); tagEl(d);
+}
+
+imps.forEach((m,i)=>{ patchOut(patchT[i],false,m,i); patchOut(patchP[i],true,m,i); });
+
+// nodes (draw over connectors)
+nodes.forEach(n=>{
+  const d=document.createElement("div"); d.className="node "+n.cls; d.innerHTML=n.label;
+  d.style.left=n.x+"px"; d.style.top=n.y+"px"; canvas.appendChild(d);
+  nodeDOM.set(n,d);
+  // tag node with its downstream groups and stage
+  if(n===root) hl(d,{el:d,grp:new Set([0,1,2,3,4,5,6,7]),stage:"node-root"});
+  else if(n===kev.yes) hl(d,{el:d,grp:new Set([0,1,2,3]),stage:"node-kev",kevVal:"yes",expVal:"yes"});
+  else if(n===kev.no) hl(d,{el:d,grp:new Set([4,5,6,7]),stage:"node-kev",kevVal:"no",expVal:"no"});
+  else if(n===auto.yy) hl(d,{el:d,grp:new Set([0,1]),stage:"node-auto"});
+  else if(n===auto.yn) hl(d,{el:d,grp:new Set([2,3]),stage:"node-auto"});
+  else if(n===auto.ny) hl(d,{el:d,grp:new Set([4,5]),stage:"node-auto"});
+  else if(n===auto.nn) hl(d,{el:d,grp:new Set([6,7]),stage:"node-auto"});
+  else if(n.cls==="n-impact"){const i=impNode.indexOf(n); hl(d,{el:d,grp:new Set([i]),stage:"node-impact"});}
+  else if(n.cls==="n-patch"){const i=patchT.indexOf(n); const j=patchP.indexOf(n);
+    if(i>=0) hl(d,{el:d,grp:new Set([i]),stage:"node-patch",row:"total"});
+    else if(j>=0) hl(d,{el:d,grp:new Set([j]),stage:"node-patch",row:"partial"});}
+});
+
+// local off-ramps (4 groups): NO hub, then two labeled sub-groups of boxes
+rampPairs.forEach((pr,ri)=>{
+  const cy=rampY[ri];
+  const pairGrp=new Set(pr);
+  CTX={grp:pairGrp,stage:"offramp"};
+  // NO hub pill aligned at the Total/Partial tag column
+  const np=document.createElement("div"); np.className="no-pill"; np.textContent="NO";
+  np.style.left=X.total2+"px"; np.style.top=cy+"px"; canvas.appendChild(np); tagEl(np);
+
+  // two sub-groups, each with a small header and its boxes
+  const subgroups=[
+    {head:"Patch coming · missed SLA", cls:"ob-amber", items:[
+      "Isolate until patch available",
+      "Apply compensating control until patch available"
+    ]},
+    {head:"No patch ever · legacy / EOL", cls:"ob-grey", items:[
+      "Decommission / remove from service",
+      "Compensating control for out-of-support legacy systems"
+    ]}
+  ];
+
+  const boxH=46, headH=26, sgGap=18;
+  const totalH = subgroups.reduce((s,g)=>s+headH+g.items.length*boxH,0) + sgGap*(subgroups.length-1);
+  let y = cy - totalH/2;
+
+  subgroups.forEach(sg=>{
+    const hd=document.createElement("div"); hd.className="sg-head "+sg.cls+"-h";
+    hd.textContent=sg.head; hd.style.left=X.leaf+"px"; hd.style.top=(y+headH/2)+"px";
+    canvas.appendChild(hd); tagEl(hd);
+    y += headH;
+    sg.items.forEach(label=>{
+      const by=y+boxH/2;
+      path(X.total2+30, cy, X.leaf-2, by, "var(--red)", "1.3", "5 4", ".75");
+      const d=document.createElement("div"); d.className="off-box "+sg.cls;
+      d.style.left=X.leaf+"px"; d.style.top=by+"px";
+      d.textContent=label;
+      canvas.appendChild(d); tagEl(d);
+      y += boxH;
+    });
+    y += sgGap;
+  });
+  CTX=null;
+});
+
+// column headers
+[["root","Exposed?"],["kev","KEV?"],["auto","Automatable?"],["impact","Impact?"],["patch","Patch in time?"],["leaf","Outcome"]]
+.forEach(([k,t])=>{
+  const h=document.createElement("div"); h.className="colhead"; h.textContent=t;
+  const widths={root:180, kev:160, auto:160, impact:180, patch:140, leaf:260};
+  const cx = X[k] + (widths[k]||80)/2;
+  h.style.left=cx+"px"; canvas.appendChild(h);
+});
+
+/* ============ INTERACTIVE WALKER ============ */
+// SLA lookup keyed exposed_kev_auto_impact -> [label, colorclass]
+const SLA={
+ "yes_yes_yes_total":["3 Calendar Days to Apply Patch & Forensic Triage","r-crit"], "yes_yes_yes_partial":["3 Calendar Days to Apply Patch","r-pink"],
+ "yes_yes_no_total":["3 Calendar Days to Apply Patch & Forensic Triage","r-crit"],  "yes_yes_no_partial":["14 Calendar Days to Apply Patch","r-blue"],
+ "yes_no_yes_total":["3 Calendar Days to Apply Patch","r-pink"],                    "yes_no_yes_partial":["14 Calendar Days to Apply Patch","r-blue"],
+ "yes_no_no_total":["14 Calendar Days to Apply Patch","r-blue"],                    "yes_no_no_partial":["60 Calendar Days to Apply Patch","r-blue"],
+ "no_yes_yes_total":["3 Calendar Days to Apply Patch & Forensic Triage","r-crit"],  "no_yes_yes_partial":["14 Calendar Days to Apply Patch","r-blue"],
+ "no_yes_no_total":["14 Calendar Days to Apply Patch","r-blue"],                    "no_yes_no_partial":["14 Calendar Days to Apply Patch","r-blue"],
+ "no_no_yes_total":["60 Calendar Days to Apply Patch","r-blue"],                    "no_no_yes_partial":["60 Calendar Days to Apply Patch","r-blue"],
+ "no_no_no_total":["Fix on System Upgrade","r-grey"],       "no_no_no_partial":["Fix on System Upgrade","r-grey"]
+};
+
+const Q=[
+ {id:"exposed", q:"1 · Is the vulnerable asset publicly exposed?", d:"Accessible to unauthenticated or untrusted entities via the internet.",
+  opts:[["yes","Yes","internet-facing"],["no","No","internal only"]]},
+ {id:"kev", q:"2 · Vulnerability listed on KEV?", d:"Is the CVE on CISA's Known Exploited Vulnerabilities catalog?",
+  opts:[["yes","Yes","active exploitation"],["no","No","not listed"]]},
+ {id:"auto", q:"3 · Can an adversary automate exploitation?", d:"Is an adversary able to automate all the steps necessary to exploit the vulnerability?",
+  opts:[["yes","Yes","scriptable"],["no","No","manual"]]},
+ {id:"impact", q:"4 · Total or partial control?", d:"Does an adversary gain partial control or total control of the vulnerable asset after exploitation?",
+  opts:[["total","Total","full control"],["partial","Partial","limited"]]},
+ {id:"patch", q:"5 · Does a patch exist in time?", d:"Can a fix be applied within the assigned window?",
+  opts:[["yes","Yes","patch available now"],["no","No","no patch in time"]]}
+];
+const wsel={exposed:null,kev:null,auto:null,impact:null,patch:null};
+
+const wgrid=document.getElementById('wgrid');
+Q.forEach(f=>{
+  const fd=document.createElement('div'); fd.className='wfield';
+  fd.innerHTML=`<p class="wq">${f.q}</p><p class="wd">${f.d}</p>`;
+  const seg=document.createElement('div'); seg.className='wseg';
+  f.opts.forEach(o=>{
+    const btn=document.createElement('button');
+    btn.setAttribute('data-v', o[0]);
+    btn.innerHTML=`${o[1]}<small>${o[2]}</small>`;
+    btn.onclick=()=>{ seg.querySelectorAll('button').forEach(b=>b.classList.remove('sel')); btn.classList.add('sel'); wsel[f.id]=o[0]; wupdate(); };
+    seg.appendChild(btn);
+  });
+  fd.appendChild(seg); wgrid.appendChild(fd);
+});
+
+function wupdate(){
+  highlightPath();
+  const out=document.getElementById('wout');
+  const t=T[curLang];
+  if(Q.some(f=>!wsel[f.id])){ out.className='wout'; out.innerHTML=`<p class="wwait">${t.wo_wait}</p>`; return; }
+  const slaKey=[wsel.exposed,wsel.kev,wsel.auto,wsel.impact].join('_');
+  const [sla,slaCls]=SLA[slaKey];
+  const pathStr=`${wsel.exposed==='yes'?t.wo_exposed:t.wo_internal} \u00b7 ${wsel.kev==='yes'?t.wo_onkev:t.wo_notkev} \u00b7 ${wsel.auto==='yes'?t.wo_automatable:t.wo_manual} \u00b7 ${wsel.impact} ${t.wo_impact_s}`;
+  if(wsel.patch==='yes'){
+    out.className='wout set '+slaCls;
+    out.innerHTML=`<p class="wk">${t.wo_yes_k}</p>
+      <p class="wv">${sla}</p>
+      <p class="wpath">${t.wo_path} ${pathStr} \u00b7 ${t.wo_patch_yes}</p>`;
+  } else {
+    out.className='wout set r-brick';
+    out.innerHTML=`<p class="wk">${t.wo_no_k}</p>
+      <p class="wv">${t.wo_no_v}</p>
+      <p class="wsub"><b style="color:#b5601a">${t.wo_no_amber}</b> ${t.wo_no_amber_d}<br>
+      <b style="color:#9e3a32">${t.wo_no_grey}</b> ${t.wo_no_grey_d}</p>
+      <p class="wpath">${t.wo_path} ${pathStr} \u00b7 ${t.wo_patch_no}. ${t.wo_unmeet} ${sla}, ${t.wo_unmeet2}</p>`;
+  }
+}
+
+// reset: clear selections, button states, output panel, and the highlighted path
+document.getElementById('wreset').onclick=()=>{
+  Object.keys(wsel).forEach(k=>wsel[k]=null);
+  document.querySelectorAll('.wseg button.sel').forEach(b=>b.classList.remove('sel'));
+  const out=document.getElementById('wout'); out.className='wout';
+  out.innerHTML='<p class="wwait">Answer all five to see the outcome.</p>';
+  // restore positions before clearing classes
+  restoreLayout();
+  HL.forEach(h=>{h.el.classList.remove('hl'); h.el.classList.remove('dimmed'); h.el.classList.remove('hidden');});
+  document.querySelectorAll('.sg-head, .colhead').forEach(e=>{e.classList.remove('dimmed'); e.classList.remove('hidden');});
+  focusOn=false; isolateOn=false;
+  const fb=document.getElementById('wfocus'); fb.classList.remove('on'); fb.textContent='Dim everything else';
+  const ib=document.getElementById('wisolate'); ib.classList.remove('on'); ib.textContent='Show only the path';
+  canvas.classList.remove('focusmode'); canvas.classList.remove('isolatemode');
+};
+
+// view modes: dim (focus) vs fully hide (isolate). Mutually exclusive.
+let focusOn=false, isolateOn=false;
+document.getElementById('wfocus').onclick=()=>{
+  focusOn=!focusOn;
+  if(focusOn){ isolateOn=false; }
+  syncModeButtons(); applyViewMode();
+};
+document.getElementById('wisolate').onclick=()=>{
+  isolateOn=!isolateOn;
+  if(isolateOn){ focusOn=false; }
+  syncModeButtons(); applyViewMode();
+};
+function syncModeButtons(){
+  const fb=document.getElementById('wfocus'); fb.classList.toggle('on',focusOn);
+  fb.textContent = focusOn ? "Show the full diagram" : "Dim everything else";
+  const ib=document.getElementById('wisolate'); ib.classList.toggle('on',isolateOn);
+  ib.textContent = isolateOn ? "Show the full diagram" : "Show only the path";
+}
+function applyViewMode(){
+  const extra=document.querySelectorAll('.sg-head, .colhead');
+  // clear both first
+  canvas.classList.remove('focusmode','isolatemode');
+  HL.forEach(h=>{h.el.classList.remove('dimmed'); h.el.classList.remove('hidden');});
+  extra.forEach(e=>{e.classList.remove('dimmed'); e.classList.remove('hidden');});
+  restoreLayout();
+  if(focusOn){
+    canvas.classList.add('focusmode');
+    HL.forEach(h=>{ if(!h.el.classList.contains('hl')) h.el.classList.add('dimmed'); });
+    extra.forEach(e=>{ if(!e.classList.contains('hl')) e.classList.add('dimmed'); });
+  } else if(isolateOn){
+    canvas.classList.add('isolatemode');
+    HL.forEach(h=>{ if(!h.el.classList.contains('hl')) h.el.classList.add('hidden'); });
+    extra.forEach(e=>{ if(!e.classList.contains('hl')) e.classList.add('hidden'); });
+    reflowPath();
+    scrollEl=document.querySelector('.scroll'); if(scrollEl) scrollEl.scrollLeft=0;
+  }
+}
+function applyFocus(){ applyViewMode(); }
+
+// ===== isolate-mode reflow: align the kept path to one horizontal row =====
+let savedH=null, savedLayout=[];
+function reflowPath(){
+  savedLayout=[];
+  const scrollEl=document.querySelector('.scroll');
+  const viewW=Math.min(scrollEl.clientWidth, window.innerWidth) - 16;
+
+  // ---- classify: anchors (nodes + leaves), connectors (pills + tags), off-boxes ----
+  const anchors=[], connectors=[], offBoxInfo=[];
+  HL.forEach(h=>{
+    const el=h.el;
+    if(!el.classList.contains('hl') || el.tagName!=='DIV') return;
+    if(el.classList.contains('off-box'))
+      offBoxInfo.push({el, origX:parseFloat(el.style.left), origY:parseFloat(el.style.top)});
+    else if(el.classList.contains('node') || el.classList.contains('leaf'))
+      anchors.push({el, origX:parseFloat(el.style.left)||0});
+    else
+      connectors.push({el, origX:parseFloat(el.style.left)||0, stage:h.stage});
+  });
+  anchors.sort((a,b)=>a.origX-b.origX);
+  connectors.sort((a,b)=>a.origX-b.origX);
+
+  // dedup NO: hide off-ramp hub pill
+  let hasNoYn=false, noHub=null;
+  HL.forEach(h=>{
+    if(!h.el.classList.contains('hl')||h.el.tagName!=='DIV') return;
+    if(h.stage==='no' && h.el.classList.contains('yn')) hasNoYn=true;
+    if(h.stage==='offramp' && h.el.classList.contains('no-pill')) noHub=h.el;
+  });
+  if(hasNoYn && noHub){
+    savedLayout.push({el:noHub, display:noHub.style.display||''});
+    noHub.style.display='none';
+    const idx=connectors.findIndex(c=>c.el===noHub);
+    if(idx>=0) connectors.splice(idx,1);
+  }
+
+  // ---- STAIRCASE LAYOUT: each node above and slightly right of the previous ----
+  const maxAnchorW = anchors.length ? Math.max(...anchors.map(a=>a.el.offsetWidth||160)) : 160;
+  const maxAnchorH = anchors.length ? Math.max(...anchors.map(a=>a.el.offsetHeight||60)) : 60;
+  const deltaX = 240;                          // right shift per step - wide enough for S-curves
+  const connGap = 55;                         // space for the connector between boxes
+  const deltaY = maxAnchorH + connGap;        // vertical step
+  const pad = 40;
+  const topPad = 80;                          // extra space at top so nothing clips
+
+  // start position: bottom, build upward; ensure topmost node has room
+  const startX = pad;
+  const totalRise = (anchors.length-1) * deltaY;
+  const startY = totalRise + topPad + maxAnchorH;
+
+  // position anchors in staircase
+  anchors.forEach((a,i)=>{
+    savedLayout.push({el:a.el, top:a.el.style.top, left:a.el.style.left});
+    a.nx = startX + i * deltaX;
+    a.ny = startY - i * deltaY;
+    a.w = a.el.offsetWidth || maxAnchorW;
+    a.h = a.el.offsetHeight || maxAnchorH;
+    a.el.style.left = a.nx+"px";
+    a.el.style.top = a.ny+"px";
+  });
+
+  // ---- position connectors (pills/tags) centered on vertical connector between boxes ----
+  connectors.forEach(c=>{
+    savedLayout.push({el:c.el, top:c.el.style.top, left:c.el.style.left});
+    let prev=null, next=null;
+    for(let i=anchors.length-1;i>=0;i--) if(anchors[i].origX<=c.origX){prev=anchors[i]; break;}
+    for(let i=0;i<anchors.length;i++) if(anchors[i].origX>c.origX){next=anchors[i]; break;}
+    if(prev && next){
+      // pill at center of S-curve (top of prev to bottom of next)
+      const x1 = prev.nx + prev.w/2, y1 = prev.ny - prev.h/2;
+      const x2 = next.nx + next.w/2, y2 = next.ny + next.h/2;
+      c.nx = (x1 + x2) / 2;
+      c.ny = (y1 + y2) / 2;
+    } else if(prev){
+      // trailing: between last anchor right edge and off-ramp
+      c.nx = prev.nx + prev.w + 50;
+      c.ny = prev.ny - 10;
+    } else {
+      c.nx = pad; c.ny = startY;
+    }
+    c.el.style.left = c.nx+"px"; c.el.style.top = c.ny+"px";
+  });
+
+  // ---- hide ALL existing highlighted SVG paths ----
+  HL.forEach(h=>{
+    const el=h.el;
+    if(el.classList.contains('hl') && el.tagName.toLowerCase()==='path'){
+      savedLayout.push({el, d:el.getAttribute('d')});
+      el.setAttribute('d','');
+    }
+  });
+
+  // ---- draw NEW S-curves from top-center of each box to bottom-center of the next ----
+  const newPaths=[];
+  function addP(d, stroke, w, dash, op){
+    const p=document.createElementNS("http://www.w3.org/2000/svg","path");
+    p.setAttribute("d",d); p.setAttribute("fill","none");
+    p.setAttribute("stroke",stroke||"var(--link)"); p.setAttribute("stroke-width",w||"1.6");
+    if(dash) p.setAttribute("stroke-dasharray",dash);
+    if(op) p.setAttribute("opacity",op);
+    p.classList.add('hl');
+    svg.appendChild(p); newPaths.push(p);
+  }
+
+  for(let i=0;i<anchors.length-1;i++){
+    const a=anchors[i], b=anchors[i+1];
+    // from top-center of a to bottom-center of b
+    const x1 = a.nx + a.w/2, y1 = a.ny - a.h/2;
+    const x2 = b.nx + b.w/2, y2 = b.ny + b.h/2;
+    const gapConns=connectors.filter(c=> c.origX>a.origX && (c.origX<b.origX || c.origX===b.origX));
+    const dash = gapConns.some(c=>c.el.classList.contains('dashed')) ? "5 4" : null;
+    // S-curve: exits upward, curves across, enters from below
+    addP(`M${x1},${y1} C${x1},${y2} ${x2},${y1} ${x2},${y2}`, "var(--link)", "1.6", dash);
+  }
+
+  // ---- trailing: line from last anchor to trailing connector (NO pill) ----
+  const trailing=connectors.filter(c=> !anchors.some(a=>a.origX>c.origX));
+  if(trailing.length && anchors.length){
+    const lastA=anchors[anchors.length-1];
+    const tc=trailing[trailing.length-1];
+    const x1=lastA.nx+lastA.w, y1=lastA.ny;
+    const third=(tc.nx-x1)/3;
+    addP(`M${x1},${y1} C${x1+third},${y1} ${tc.nx-third},${tc.ny} ${tc.nx},${tc.ny}`, "var(--red)","1.4","5 4",".7");
+  }
+
+  // ---- off-ramp boxes + sg-head titles + fan lines ----
+  const offBoxes=offBoxInfo.map(o=>o.el);
+  // position off-ramp to the right of the staircase
+  // position off-ramp well clear of the staircase
+  const lastAnchor = anchors[anchors.length-1];
+  const stairRightEdge = lastAnchor ? lastAnchor.nx + maxAnchorW + 80 : pad + 300;
+  const offX = stairRightEdge + (offBoxInfo.length ? 100 : 0);
+
+  // hide ALL sg-heads via CSS, then show only the 2 we need via iso-show class
+  const sgHeads=[];
+  if(offBoxes.length){
+    let bestAmber=null, bestGrey=null, bestADist=Infinity, bestGDist=Infinity;
+    document.querySelectorAll('.sg-head.ob-amber-h').forEach(el=>{
+      const elY=parseFloat(el.style.top)||0;
+      const d=Math.min(...offBoxInfo.map(o=>Math.abs(o.origY-elY)));
+      if(d<bestADist){bestADist=d; bestAmber=el;}
+    });
+    document.querySelectorAll('.sg-head.ob-grey-h').forEach(el=>{
+      const elY=parseFloat(el.style.top)||0;
+      const d=Math.min(...offBoxInfo.map(o=>Math.abs(o.origY-elY)));
+      if(d<bestGDist){bestGDist=d; bestGrey=el;}
+    });
+    if(bestAmber){ bestAmber.classList.add('iso-show'); sgHeads.push(bestAmber); }
+    if(bestGrey){ bestGrey.classList.add('iso-show'); sgHeads.push(bestGrey); }
+  }
+
+  // fan anchor
+  let fanX, fanY;
+  if(trailing.length){
+    const t=trailing[trailing.length-1];
+    fanX=t.nx; fanY=t.ny;
+  } else if(lastAnchor){
+    fanX=lastAnchor.nx+lastAnchor.w; fanY=lastAnchor.ny;
+  } else { fanX=pad; fanY=startY; }
+
+  if(offBoxes.length){
+    const boxH=56, headH=22, sgGap=28;
+    const nBoxes=offBoxes.length;
+    const totalH = nBoxes*boxH + 2*headH + sgGap;
+    const centerY = lastAnchor ? lastAnchor.ny : startY/2;
+    let y = centerY - totalH/2;
+
+    // first sub-group header: "Patch coming · missed SLA"
+    const hd1=sgHeads.find(el=>el.classList.contains('ob-amber-h'));
+    if(hd1){
+      savedLayout.push({el:hd1, top:hd1.style.top, left:hd1.style.left});
+      hd1.style.left=offX+"px"; hd1.style.top=(y+headH/2)+"px";
+      y+=headH;
+    }
+    // first 2 off-boxes (amber)
+    offBoxes.slice(0,2).forEach((el)=>{
+      savedLayout.push({el, top:el.style.top, left:el.style.left});
+      const newY=y+boxH/2;
+      el.style.left=offX+"px"; el.style.top=newY+"px";
+      const mx=(fanX+offX)/2;
+      addP(`M${fanX},${fanY} C${mx},${fanY} ${mx},${newY} ${offX},${newY}`, "var(--red)","1.3","5 4",".75");
+      y+=boxH;
+    });
+    y+=sgGap;
+    // second sub-group header: "No patch ever · legacy / EOL"
+    const hd2=sgHeads.find(el=>el.classList.contains('ob-grey-h'));
+    if(hd2){
+      savedLayout.push({el:hd2, top:hd2.style.top, left:hd2.style.left});
+      hd2.style.left=offX+"px"; hd2.style.top=(y+headH/2)+"px";
+      y+=headH;
+    }
+    // last 2 off-boxes (dark)
+    offBoxes.slice(2).forEach((el)=>{
+      savedLayout.push({el, top:el.style.top, left:el.style.left});
+      const newY=y+boxH/2;
+      el.style.left=offX+"px"; el.style.top=newY+"px";
+      const mx=(fanX+offX)/2;
+      addP(`M${fanX},${fanY} C${mx},${fanY} ${mx},${newY} ${offX},${newY}`, "var(--red)","1.3","5 4",".75");
+      y+=boxH;
+    });
+  }
+
+  // store new paths for cleanup
+  savedLayout.push({newPaths});
+
+  // resize canvas to contain everything
+  savedH=canvas.style.height;
+  savedLayout.push({el:canvas, width:canvas.style.width});
+  const rightEdge = offBoxes.length ? offX + 280 : stairRightEdge;
+  const canvasW = Math.max(viewW, rightEdge + pad);
+  canvas.style.width=canvasW+"px";
+  // height: from topmost element to bottommost + padding
+  let minY=topPad, maxY=startY+maxAnchorH;
+  offBoxes.forEach(e=>{const t=parseFloat(e.style.top); minY=Math.min(minY,t-40); maxY=Math.max(maxY,t+60);});
+  sgHeads.forEach(e=>{const t=parseFloat(e.style.top); minY=Math.min(minY,t-20); maxY=Math.max(maxY,t+20);});
+  anchors.forEach(a=>{minY=Math.min(minY,a.ny-a.h/2-20); maxY=Math.max(maxY,a.ny+a.h/2+20);});
+  const newH=maxY+pad;
+  canvas.style.height=newH+"px";
+  svg.setAttribute('viewBox',`0 0 ${canvasW} ${newH}`);
+}
+function restoreLayout(){
+  if(!savedLayout.length && savedH===null) return;
+  document.querySelectorAll('.iso-show').forEach(el=>el.classList.remove('iso-show'));
+  savedLayout.forEach(s=>{
+    if(s.newPaths){ s.newPaths.forEach(p=>p.remove()); return; }
+    if(s.top!==undefined) s.el.style.top=s.top;
+    if(s.left!==undefined) s.el.style.left=s.left;
+    if(s.width!==undefined) s.el.style.width=s.width;
+    if(s.display!==undefined) s.el.style.display=s.display;
+    if(s.d!==undefined) s.el.setAttribute('d', s.d);
+  });
+  savedLayout=[];
+  if(savedH!==null){ canvas.style.height=savedH; svg.setAttribute('viewBox',`0 0 ${W} ${parseInt(savedH)||H}`); savedH=null; }
+}
+
+// progressively highlight the matching path in the full picture above
+function highlightPath(){
+  // clear
+  HL.forEach(h=>h.el.classList.remove("hl"));
+  // need at least exposed chosen to begin
+  const {exposed,kev,auto,impact,patch}=wsel;
+  // target group index once exposed+kev+auto known
+  let gi=-1;
+  if(exposed&&kev&&auto) gi=gidx(exposed,kev,auto);
+  const giSet = gi>=0 ? gi : null;
+
+  HL.forEach(h=>{
+    const g=h.grp; let on=false;
+    switch(h.stage){
+      case "node-root": on = !!exposed; break;
+      case "node-kev":
+        // light the kev node on the chosen exposed side, once exposed chosen
+        on = exposed && h.expVal===exposed; break;
+      case "declink":
+        // a decision link is on if its downstream groups include the target and the partial path so far matches
+        if(giSet!==null) on = g.has(gi);
+        else if(exposed){
+          // before full branch known, light links consistent with chosen prefix
+          on = [...g].some(idx=>{
+            const b=branchOf[idx];
+            if(b.exposed!==exposed) return false;
+            if(kev && b.kev!==kev) return false;
+            if(auto && b.auto!==auto) return false;
+            return true;
+          });
+        }
+        break;
+      case "node-auto":
+        if(giSet!==null) on = g.has(gi);
+        else on = exposed&&kev && [...g].some(idx=>branchOf[idx].exposed===exposed&&branchOf[idx].kev===kev);
+        break;
+      case "node-impact": on = giSet!==null && g.has(gi); break;
+      case "row": on = giSet!==null && g.has(gi) && (!impact || h.row===impact); break;
+      case "node-patch": on = giSet!==null && g.has(gi) && (!impact || h.row===impact); break;
+      case "yes": on = giSet!==null && g.has(gi) && impact && h.row===impact && patch==="yes"; break;
+      case "no":  on = giSet!==null && g.has(gi) && impact && h.row===impact && patch==="no"; break;
+      case "offramp": on = giSet!==null && g.has(gi) && patch==="no"; break;
+    }
+    if(on) h.el.classList.add("hl");
+  });
+  // keep focus mode in sync with the updated path
+  if(typeof applyFocus==="function") applyFocus();
+}
+
+
+// ============ INTERNATIONALIZATION ============
+const T = {
+  en: {
+    eyebrow: "Expanding BOD 26-04: Beyond the Patch",
+    title: "Rethinking the CISA BOD 26-04 Directive in the Age of Frontier AI Models",
+    sub1: 'Frontier models have crossed a line that changes the math of vulnerability research. Mythos class systems now discover zero days at machine speed, surfacing flaws in code that survived years of expert review. In a single evaluation run, a frontier model found hundreds of vulnerabilities in a widely used codebase, built scores of working exploits, and uncovered a remote code execution flaw, more than a decade old, granting root to unauthenticated attackers. <b>Over 99 percent of those discoveries remain unpatched.</b> This is the vulnpocalypse made manifest, and it is no longer a forecast.',
+    sub2: '<b>Finding flaws at scale is only good news if the world can fix them at the same speed, and it cannot.</b> Vendor cycles run on weeks. Enterprise deployment runs slower, blocked by operational constraints, legacy systems that cannot be touched, and change freeze periods that lock environments for weeks. When discovery accelerates and remediation does not, the gap becomes pure attack surface. CISA BOD 26-04 started the clock on risk, which is right. But every path it draws still ends in a patch. So we add the question the directive assumes away. On every Total and Partial branch, does a patch exist in time? Yes keeps CISA\u2019s timeline. No routes to the off-ramp, where the risk is mitigated by decision, not repair.',
+    hint: 'Scroll sideways to follow any path through to its outcome, or <a class="srclink" href="#walker">try the interactive version</a>. Read the directive at <a class="srclink" href="https://www.cisa.gov/news-events/directives/bod-26-04-prioritizing-security-updates-based-risk" target="_blank" rel="noopener">CISA BOD 26-04</a>.',
+    l1: "When the Patch Never Comes",
+    l2: "A remediation deadline assumes a remedy exists. Frontier models now discover vulnerabilities at machine speed, surfacing flaws faster than vendors can fix them. When the patch is not coming, every branch needs the exit the directive never drew.",
+    def: "<b>Vulnpocalypse. A rapid, structural increase in the volume of exploitable software vulnerabilities, driven by frontier AI discovery and compounded by remediation friction, producing risk at a scale defenders cannot absorb.</b>",
+    weyebrow: "Walk one vulnerability through the expanded directive",
+    node_root: "Is the vulnerable<br>asset publicly<br>exposed?",
+    node_kev: "Vulnerability<br>listed on KEV?",
+    node_auto: "Can an adversary<br>automate all steps<br>to exploit?",
+    node_impact: "Total or partial<br>control after<br>exploitation?",
+    node_patch: "Does a patch<br>exist in time?",
+    col_root: "Exposed?", col_kev: "KEV?", col_auto: "Automatable?", col_impact: "Impact?", col_patch: "Patch in time?", col_leaf: "Outcome",
+    wq1: "1 \u00b7 Is the vulnerable asset publicly exposed?",
+    wd1: "Accessible to unauthenticated or untrusted entities via the internet.",
+    wq2: "2 \u00b7 Vulnerability listed on KEV?",
+    wd2: "Is the CVE on CISA\u2019s Known Exploited Vulnerabilities catalog?",
+    wq3: "3 \u00b7 Can an adversary automate exploitation?",
+    wd3: "Is an adversary able to automate all the steps necessary to exploit the vulnerability?",
+    wq4: "4 \u00b7 Total or partial control?",
+    wd4: "Does an adversary gain partial control or total control of the vulnerable asset after exploitation?",
+    wq5: "5 \u00b7 Does a patch exist in time?",
+    wd5: "Is a vendor fix available within the remediation window?",
+    total: "Total", partial: "Partial",
+    btn_yes: "YES", btn_no: "NO",
+    btn_dim: "Dim everything else", btn_isolate: "Show only the path", btn_reset: "Reset",
+    wait_msg: "Answer all five to see the outcome.",
+    off1: "Isolate until patch available",
+    off2: "Apply compensating control until patch available",
+    off3: "Decommission / remove from service",
+    off4: "Compensating control for out-of-support legacy systems",
+    sg1: "Patch coming \u00b7 missed SLA",
+    sg2: "No patch ever \u00b7 legacy / EOL",
+    leaf1: "3 Calendar Days to Apply Patch & Forensic Triage",
+    leaf2: "3 Calendar Days to Apply Patch",
+    leaf3: "14 Calendar Days to Apply Patch",
+    leaf4: "60 Calendar Days to Apply Patch",
+    leaf5: "Fix on System Upgrade",
+    wo_wait: "Answer all five to see the outcome.",
+    wo_yes_k: "Patch exists in time \u2192 CISA remediation timeline",
+    wo_no_k: "No patch in time \u2192 off-ramp (the directive\u2019s missing exit)",
+    wo_no_v: "Mitigate the risk by decision, not repair",
+    wo_no_amber: "If a patch is coming, just late:",
+    wo_no_amber_d: "isolate until patch available, or apply a compensating control until patch available.",
+    wo_no_grey: "If no patch will ever come (legacy / EOL):",
+    wo_no_grey_d: "decommission and remove from service, or apply a compensating control for out-of-support systems.",
+    wo_path: "Path:",
+    wo_patch_yes: "patch in time",
+    wo_patch_no: "no patch in time",
+    wo_unmeet: "CISA would have assigned",
+    wo_unmeet2: "but that timeline is unmeetable.",
+    wo_exposed: "exposed", wo_internal: "internal",
+    wo_onkev: "on KEV", wo_notkev: "not on KEV",
+    wo_automatable: "automatable", wo_manual: "manual",
+    wo_impact_s: "impact",
+    wtitle: "Answer five questions. See where it lands.",
+    wback: "\u2191 Back to the full picture",
+  },
+  es: {
+    eyebrow: "Ampliando la BOD 26-04: M\u00e1s All\u00e1 del Parche",
+    title: "Repensando la Directiva CISA BOD 26-04 en la Era de los Modelos de IA de Frontera",
+    sub1: 'Los modelos de frontera han cruzado una l\u00ednea que cambia la matem\u00e1tica de la investigaci\u00f3n de vulnerabilidades. Sistemas de clase Mythos ahora descubren zero days a velocidad de m\u00e1quina, revelando fallos en c\u00f3digo que sobrevivi\u00f3 a\u00f1os de revisi\u00f3n experta. En una sola ejecuci\u00f3n de evaluaci\u00f3n, un modelo de frontera encontr\u00f3 cientos de vulnerabilidades en una base de c\u00f3digo ampliamente utilizada, construy\u00f3 decenas de exploits funcionales y descubri\u00f3 una falla de ejecuci\u00f3n remota de c\u00f3digo, con m\u00e1s de una d\u00e9cada de antig\u00fcedad, otorgando acceso root a atacantes no autenticados. <b>M\u00e1s del 99 por ciento de esos descubrimientos permanecen sin parche.</b> Esto es el vulnpocalypse hecho realidad, y ya no es un pron\u00f3stico.',
+    sub2: '<b>Encontrar fallos a escala solo es buena noticia si el mundo puede corregirlos a la misma velocidad, y no puede.</b> Los ciclos de los proveedores se miden en semanas. El despliegue empresarial es a\u00fan m\u00e1s lento, bloqueado por restricciones operativas, sistemas legados que no se pueden tocar y per\u00edodos de congelaci\u00f3n de cambios que bloquean entornos durante semanas. Cuando el descubrimiento se acelera y la remediaci\u00f3n no, la brecha se convierte en superficie de ataque pura. CISA BOD 26-04 inici\u00f3 el reloj del riesgo, lo cual es correcto. Pero cada ruta que dibuja termina en un parche. As\u00ed que agregamos la pregunta que la directiva asume como resuelta. En cada rama Total y Parcial, \u00bfexiste un parche a tiempo? S\u00ed mantiene el cronograma de CISA. No dirige a la salida, donde el riesgo se mitiga por decisi\u00f3n, no por reparaci\u00f3n.',
+    hint: 'Despl\u00e1cese lateralmente para seguir cualquier ruta hasta su resultado, o <a class="srclink" href="#walker">pruebe la versi\u00f3n interactiva</a>. Lea la directiva en <a class="srclink" href="https://www.cisa.gov/news-events/directives/bod-26-04-prioritizing-security-updates-based-risk" target="_blank" rel="noopener">CISA BOD 26-04</a>.',
+    l1: "Cuando el Parche Nunca Llega",
+    l2: "Un plazo de remediaci\u00f3n asume que existe un remedio. Los modelos de frontera ahora descubren vulnerabilidades a velocidad de m\u00e1quina, revelando fallos m\u00e1s r\u00e1pido de lo que los proveedores pueden corregirlos. Cuando el parche no va a llegar, cada rama necesita la salida que la directiva nunca dibuj\u00f3.",
+    def: "<b>Vulnpocalypse. Un aumento r\u00e1pido y estructural en el volumen de vulnerabilidades de software explotables, impulsado por el descubrimiento mediante IA de frontera y agravado por la fricci\u00f3n en la remediaci\u00f3n, produciendo riesgo a una escala que los defensores no pueden absorber.</b>",
+    weyebrow: "Recorra una vulnerabilidad a trav\u00e9s de la directiva ampliada",
+    node_root: "\u00bfEl activo vulnerable<br>est\u00e1 expuesto<br>p\u00fablicamente?",
+    node_kev: "\u00bfVulnerabilidad<br>listada en KEV?",
+    node_auto: "\u00bfPuede un adversario<br>automatizar todos<br>los pasos para explotar?",
+    node_impact: "\u00bfControl total o parcial<br>despu\u00e9s de<br>la explotaci\u00f3n?",
+    node_patch: "\u00bfExiste un parche<br>a tiempo?",
+    col_root: "\u00bfExpuesto?", col_kev: "\u00bfKEV?", col_auto: "\u00bfAutomatizable?", col_impact: "\u00bfImpacto?", col_patch: "\u00bfParche a tiempo?", col_leaf: "Resultado",
+    wq1: "1 \u00b7 \u00bfEl activo vulnerable est\u00e1 expuesto p\u00fablicamente?",
+    wd1: "Accesible para entidades no autenticadas o no confiables a trav\u00e9s de internet.",
+    wq2: "2 \u00b7 \u00bfVulnerabilidad listada en KEV?",
+    wd2: "\u00bfEst\u00e1 el CVE en el cat\u00e1logo de Vulnerabilidades Explotadas Conocidas de CISA?",
+    wq3: "3 \u00b7 \u00bfPuede un adversario automatizar la explotaci\u00f3n?",
+    wd3: "\u00bfPuede un adversario automatizar todos los pasos necesarios para explotar la vulnerabilidad?",
+    wq4: "4 \u00b7 \u00bfControl total o parcial?",
+    wd4: "\u00bfObtiene un adversario control parcial o total del activo vulnerable despu\u00e9s de la explotaci\u00f3n?",
+    wq5: "5 \u00b7 \u00bfExiste un parche a tiempo?",
+    wd5: "\u00bfHay una correcci\u00f3n del proveedor disponible dentro de la ventana de remediaci\u00f3n?",
+    total: "Total", partial: "Parcial",
+    btn_yes: "S\u00cd", btn_no: "NO",
+    btn_dim: "Atenuar lo dem\u00e1s", btn_isolate: "Mostrar solo la ruta", btn_reset: "Reiniciar",
+    wait_msg: "Responda las cinco preguntas para ver el resultado.",
+    off1: "Aislar hasta que el parche est\u00e9 disponible",
+    off2: "Aplicar control compensatorio hasta que el parche est\u00e9 disponible",
+    off3: "Dar de baja / retirar del servicio",
+    off4: "Control compensatorio para sistemas legados sin soporte",
+    sg1: "Parche en camino \u00b7 SLA incumplido",
+    sg2: "Sin parche \u00b7 legado / fin de vida",
+    leaf1: "3 D\u00edas Calendario para Aplicar Parche y Triaje Forense",
+    leaf2: "3 D\u00edas Calendario para Aplicar Parche",
+    leaf3: "14 D\u00edas Calendario para Aplicar Parche",
+    leaf4: "60 D\u00edas Calendario para Aplicar Parche",
+    leaf5: "Corregir en Actualizaci\u00f3n del Sistema",
+    wo_wait: "Responda las cinco preguntas para ver el resultado.",
+    wo_yes_k: "El parche existe a tiempo \u2192 cronograma de remediaci\u00f3n CISA",
+    wo_no_k: "Sin parche a tiempo \u2192 salida (la salida que falta en la directiva)",
+    wo_no_v: "Mitigar el riesgo por decisi\u00f3n, no por reparaci\u00f3n",
+    wo_no_amber: "Si el parche viene, solo tarde:",
+    wo_no_amber_d: "aislar hasta que el parche est\u00e9 disponible, o aplicar un control compensatorio hasta que el parche est\u00e9 disponible.",
+    wo_no_grey: "Si nunca habr\u00e1 parche (legado / fin de vida):",
+    wo_no_grey_d: "dar de baja y retirar del servicio, o aplicar un control compensatorio para sistemas sin soporte.",
+    wo_path: "Ruta:",
+    wo_patch_yes: "parche a tiempo",
+    wo_patch_no: "sin parche a tiempo",
+    wo_unmeet: "CISA habr\u00eda asignado",
+    wo_unmeet2: "pero ese plazo es inalcanzable.",
+    wo_exposed: "expuesto", wo_internal: "interno",
+    wo_onkev: "en KEV", wo_notkev: "no en KEV",
+    wo_automatable: "automatizable", wo_manual: "manual",
+    wo_impact_s: "impacto",
+    wtitle: "Responda cinco preguntas. Vea d\u00f3nde cae.",
+    wback: "\u2191 Volver al diagrama completo",
+  },
+  pt: {
+    eyebrow: "Ampliando a BOD 26-04: Al\u00e9m do Patch",
+    title: "Repensando a Diretiva CISA BOD 26-04 na Era dos Modelos de IA de Fronteira",
+    sub1: 'Os modelos de fronteira cruzaram uma linha que muda a matem\u00e1tica da pesquisa de vulnerabilidades. Sistemas de classe Mythos agora descobrem zero days na velocidade da m\u00e1quina, revelando falhas em c\u00f3digo que sobreviveu a anos de revis\u00e3o especializada. Em uma \u00fanica execu\u00e7\u00e3o de avalia\u00e7\u00e3o, um modelo de fronteira encontrou centenas de vulnerabilidades em uma base de c\u00f3digo amplamente utilizada, construiu dezenas de exploits funcionais e descobriu uma falha de execu\u00e7\u00e3o remota de c\u00f3digo, com mais de uma d\u00e9cada de exist\u00eancia, concedendo acesso root a atacantes n\u00e3o autenticados. <b>Mais de 99 por cento dessas descobertas permanecem sem patch.</b> Este \u00e9 o vulnpocalypse tornado realidade, e n\u00e3o \u00e9 mais uma previs\u00e3o.',
+    sub2: '<b>Encontrar falhas em escala s\u00f3 \u00e9 boa not\u00edcia se o mundo puder corrigi-las na mesma velocidade, e n\u00e3o pode.</b> Os ciclos dos fornecedores s\u00e3o medidos em semanas. A implanta\u00e7\u00e3o empresarial \u00e9 ainda mais lenta, bloqueada por restri\u00e7\u00f5es operacionais, sistemas legados que n\u00e3o podem ser tocados e per\u00edodos de congelamento de mudan\u00e7as que travam ambientes por semanas. Quando a descoberta acelera e a remedia\u00e7\u00e3o n\u00e3o, a lacuna se torna superf\u00edcie de ataque pura. CISA BOD 26-04 iniciou o rel\u00f3gio do risco, o que \u00e9 correto. Mas cada caminho que desenha ainda termina em um patch. Ent\u00e3o adicionamos a pergunta que a diretiva assume como resolvida. Em cada ramo Total e Parcial, existe um patch a tempo? Sim mant\u00e9m o cronograma da CISA. N\u00e3o direciona para a sa\u00edda, onde o risco \u00e9 mitigado por decis\u00e3o, n\u00e3o por reparo.',
+    hint: 'Role lateralmente para seguir qualquer caminho at\u00e9 seu resultado, ou <a class="srclink" href="#walker">experimente a vers\u00e3o interativa</a>. Leia a diretiva em <a class="srclink" href="https://www.cisa.gov/news-events/directives/bod-26-04-prioritizing-security-updates-based-risk" target="_blank" rel="noopener">CISA BOD 26-04</a>.',
+    l1: "Quando o Patch Nunca Chega",
+    l2: "Um prazo de remedia\u00e7\u00e3o assume que existe um rem\u00e9dio. Os modelos de fronteira agora descobrem vulnerabilidades na velocidade da m\u00e1quina, revelando falhas mais r\u00e1pido do que os fornecedores conseguem corrigi-las. Quando o patch n\u00e3o vai chegar, cada ramo precisa da sa\u00edda que a diretiva nunca desenhou.",
+    def: "<b>Vulnpocalypse. Um aumento r\u00e1pido e estrutural no volume de vulnerabilidades de software explor\u00e1veis, impulsionado pela descoberta via IA de fronteira e agravado pela fric\u00e7\u00e3o na remedia\u00e7\u00e3o, produzindo risco em uma escala que os defensores n\u00e3o conseguem absorver.</b>",
+    weyebrow: "Percorra uma vulnerabilidade atrav\u00e9s da diretiva ampliada",
+    node_root: "O ativo vulner\u00e1vel<br>est\u00e1 publicamente<br>exposto?",
+    node_kev: "Vulnerabilidade<br>listada no KEV?",
+    node_auto: "Um advers\u00e1rio pode<br>automatizar todos os<br>passos para explorar?",
+    node_impact: "Controle total ou parcial<br>ap\u00f3s a<br>explora\u00e7\u00e3o?",
+    node_patch: "Existe um patch<br>a tempo?",
+    col_root: "Exposto?", col_kev: "KEV?", col_auto: "Automatiz\u00e1vel?", col_impact: "Impacto?", col_patch: "Patch a tempo?", col_leaf: "Resultado",
+    wq1: "1 \u00b7 O ativo vulner\u00e1vel est\u00e1 publicamente exposto?",
+    wd1: "Acess\u00edvel a entidades n\u00e3o autenticadas ou n\u00e3o confi\u00e1veis pela internet.",
+    wq2: "2 \u00b7 Vulnerabilidade listada no KEV?",
+    wd2: "O CVE est\u00e1 no cat\u00e1logo de Vulnerabilidades Exploradas Conhecidas da CISA?",
+    wq3: "3 \u00b7 Um advers\u00e1rio pode automatizar a explora\u00e7\u00e3o?",
+    wd3: "Um advers\u00e1rio \u00e9 capaz de automatizar todos os passos necess\u00e1rios para explorar a vulnerabilidade?",
+    wq4: "4 \u00b7 Controle total ou parcial?",
+    wd4: "Um advers\u00e1rio obt\u00e9m controle parcial ou total do ativo vulner\u00e1vel ap\u00f3s a explora\u00e7\u00e3o?",
+    wq5: "5 \u00b7 Existe um patch a tempo?",
+    wd5: "H\u00e1 uma corre\u00e7\u00e3o do fornecedor dispon\u00edvel dentro da janela de remedia\u00e7\u00e3o?",
+    total: "Total", partial: "Parcial",
+    btn_yes: "SIM", btn_no: "N\u00c3O",
+    btn_dim: "Atenuar o restante", btn_isolate: "Mostrar apenas o caminho", btn_reset: "Reiniciar",
+    wait_msg: "Responda as cinco perguntas para ver o resultado.",
+    off1: "Isolar at\u00e9 que o patch esteja dispon\u00edvel",
+    off2: "Aplicar controle compensat\u00f3rio at\u00e9 que o patch esteja dispon\u00edvel",
+    off3: "Descomissionar / retirar de servi\u00e7o",
+    off4: "Controle compensat\u00f3rio para sistemas legados sem suporte",
+    sg1: "Patch a caminho \u00b7 SLA descumprido",
+    sg2: "Sem patch \u00b7 legado / fim de vida",
+    leaf1: "3 Dias Corridos para Aplicar Patch e Triagem Forense",
+    leaf2: "3 Dias Corridos para Aplicar Patch",
+    leaf3: "14 Dias Corridos para Aplicar Patch",
+    leaf4: "60 Dias Corridos para Aplicar Patch",
+    leaf5: "Corrigir na Atualiza\u00e7\u00e3o do Sistema",
+    wo_wait: "Responda as cinco perguntas para ver o resultado.",
+    wo_yes_k: "O patch existe a tempo \u2192 cronograma de remedia\u00e7\u00e3o CISA",
+    wo_no_k: "Sem patch a tempo \u2192 sa\u00edda (a sa\u00edda que falta na diretiva)",
+    wo_no_v: "Mitigar o risco por decis\u00e3o, n\u00e3o por reparo",
+    wo_no_amber: "Se o patch est\u00e1 vindo, apenas atrasado:",
+    wo_no_amber_d: "isolar at\u00e9 que o patch esteja dispon\u00edvel, ou aplicar um controle compensat\u00f3rio at\u00e9 que o patch esteja dispon\u00edvel.",
+    wo_no_grey: "Se nunca haver\u00e1 patch (legado / fim de vida):",
+    wo_no_grey_d: "descomissionar e retirar de servi\u00e7o, ou aplicar um controle compensat\u00f3rio para sistemas sem suporte.",
+    wo_path: "Caminho:",
+    wo_patch_yes: "patch a tempo",
+    wo_patch_no: "sem patch a tempo",
+    wo_unmeet: "CISA teria atribu\u00eddo",
+    wo_unmeet2: "mas esse prazo \u00e9 inalcan\u00e7\u00e1vel.",
+    wo_exposed: "exposto", wo_internal: "interno",
+    wo_onkev: "no KEV", wo_notkev: "fora do KEV",
+    wo_automatable: "automatiz\u00e1vel", wo_manual: "manual",
+    wo_impact_s: "impacto",
+    wtitle: "Responda cinco perguntas. Veja onde chega.",
+    wback: "\u2191 Voltar ao diagrama completo",
+  }
+};
+
+let curLang='en';
+function switchLang(lang){
+  if(lang===curLang) return;
+  curLang=lang;
+  const t=T[lang];
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active', b.textContent===lang.toUpperCase()));
+  // static text by selector
+  const q=s=>document.querySelector(s);
+  const h1=q('h1'); if(h1) h1.innerHTML=t.title;
+  const ey=q('.eyebrow'); if(ey) ey.textContent=t.eyebrow;
+  const s1=q('[data-sub="1"]'); if(s1) s1.innerHTML=t.sub1;
+  const s2=q('[data-sub="2"]'); if(s2) s2.innerHTML=t.sub2;
+  const hi=q('.hint'); if(hi) hi.innerHTML=t.hint;
+  const l1=q('.land .l1'); if(l1) l1.innerHTML=t.l1;
+  const l2=q('.land .l2'); if(l2) l2.innerHTML=t.l2;
+  const df=q('.land .def'); if(df) df.innerHTML=t.def;
+  const we=q('.weyebrow'); if(we) we.textContent=t.weyebrow;
+  const wt=q('.wtitle'); if(wt) wt.textContent=t.wtitle;
+  const wb=q('.wback a'); if(wb) wb.textContent=t.wback;
+  // diagram nodes by class
+  document.querySelectorAll('.n-root').forEach(el=>el.innerHTML=t.node_root);
+  document.querySelectorAll('.n-dec').forEach(el=>{
+    const txt=el.textContent;
+    if(txt.includes('KEV')) el.innerHTML=t.node_kev;
+    else el.innerHTML=t.node_auto;
+  });
+  document.querySelectorAll('.n-impact').forEach(el=>el.innerHTML=t.node_impact);
+  document.querySelectorAll('.n-patch').forEach(el=>el.innerHTML=t.node_patch);
+  // YES/NO pills in the diagram
+  document.querySelectorAll('.yn.y').forEach(el=>el.textContent=t.btn_yes);
+  document.querySelectorAll('.yn.n').forEach(el=>el.textContent=t.btn_no);
+  document.querySelectorAll('.no-pill').forEach(el=>el.textContent=t.btn_no);
+  // column headers
+  const colKeys=['col_root','col_kev','col_auto','col_impact','col_patch','col_leaf'];
+  document.querySelectorAll('.colhead').forEach((el,i)=>{ if(t[colKeys[i]]) el.textContent=t[colKeys[i]]; });
+  // tags
+  document.querySelectorAll('.tag').forEach(el=>{
+    const txt=el.textContent.trim().toLowerCase();
+    if(txt==='total') el.textContent=t.total;
+    else if(txt==='partial'||txt==='parcial') el.textContent=t.partial;
+  });
+  // leaves
+  const leafKeys=[t.leaf1,t.leaf2,t.leaf3,t.leaf4,t.leaf5];
+  const leafEN=[T.en.leaf1,T.en.leaf2,T.en.leaf3,T.en.leaf4,T.en.leaf5];
+  const leafES=[T.es.leaf1,T.es.leaf2,T.es.leaf3,T.es.leaf4,T.es.leaf5];
+  const leafPT=[T.pt.leaf1,T.pt.leaf2,T.pt.leaf3,T.pt.leaf4,T.pt.leaf5];
+  document.querySelectorAll('.leaf').forEach(el=>{
+    const txt=el.textContent.trim();
+    for(let i=0;i<5;i++){
+      if(txt===leafEN[i]||txt===leafES[i]||txt===leafPT[i]){ el.textContent=leafKeys[i]; break; }
+    }
+  });
+  // off-ramp boxes
+  const offKeys=[t.off1,t.off2,t.off3,t.off4];
+  const offEN=[T.en.off1,T.en.off2,T.en.off3,T.en.off4];
+  const offES=[T.es.off1,T.es.off2,T.es.off3,T.es.off4];
+  const offPT=[T.pt.off1,T.pt.off2,T.pt.off3,T.pt.off4];
+  document.querySelectorAll('.off-box').forEach(el=>{
+    const txt=el.textContent.trim();
+    for(let i=0;i<4;i++){
+      if(txt===offEN[i]||txt===offES[i]||txt===offPT[i]){ el.textContent=offKeys[i]; break; }
+    }
+  });
+  // sub-group headers
+  // sub-group headers (CSS text-transform:uppercase, but textContent is lowercase)
+  document.querySelectorAll('.sg-head').forEach(el=>{
+    const txt=el.textContent.trim().toLowerCase();
+    const isSg1 = [T.en.sg1,T.es.sg1,T.pt.sg1].some(s=>s.toLowerCase()===txt);
+    el.textContent = isSg1 ? t.sg1 : t.sg2;
+  });
+  // walker
+  const segs=document.querySelectorAll('.wseg');
+  segs.forEach((seg,i)=>{
+    const qi=i+1;
+    const qEl=seg.parentElement.querySelector('.wq'); if(qEl) qEl.textContent=t['wq'+qi];
+    const dEl=seg.parentElement.querySelector('.wd'); if(dEl) dEl.textContent=t['wd'+qi];
+  });
+  const dimB=document.getElementById('wfocus');
+  const isoB=document.getElementById('wisolate');
+  const resB=document.getElementById('wreset');
+  if(dimB&&!dimB.classList.contains('on')) dimB.textContent=t.btn_dim;
+  if(isoB&&!isoB.classList.contains('on')) isoB.textContent=t.btn_isolate;
+  if(resB) resB.textContent=t.btn_reset;
+  const wwait=document.querySelector('.wwait');
+  if(wwait) wwait.textContent=t.wait_msg;
+  document.querySelectorAll('.wseg button').forEach(btn=>{
+    const v=btn.getAttribute('data-v');
+    if(v==='yes') btn.innerHTML=t.btn_yes+'<small></small>';
+    if(v==='no') btn.innerHTML=t.btn_no+'<small></small>';
+    if(v==='total') btn.innerHTML=t.total+'<small></small>';
+    if(v==='partial') btn.innerHTML=t.partial+'<small></small>';
+  });
+  // refresh walker output with new language
+  if(typeof wupdate==='function') wupdate();
+}
+
+// Auto-detect browser language and switch on load
+(function(){
+  const lang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+  let target = 'en';
+  if(lang.startsWith('es')) target = 'es';
+  else if(lang.startsWith('pt')) target = 'pt';
+  if(target !== 'en') setTimeout(()=>switchLang(target), 100);
+})();
+</script>
+</body>
+</html>
