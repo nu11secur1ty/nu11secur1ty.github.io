@@ -1,0 +1,40 @@
+name: MS Patch & ZDI Auto Updater
+
+on:
+  schedule:
+    # Пуска се всеки вторник и сряда в 00:00 UTC (перфектно за Patch Tuesday)
+    - cron: '0 0 * * 2,3'
+  workflow_dispatch: # Позволява и ръчно пускане през бутона в GitHub Actions UI
+
+permissions:
+  contents: write
+
+jobs:
+  update-dashboard:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-python-version: '3.x'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Fetch Latest Patch Data & Update Index
+        run: |
+          # Тук извикваш твоя Python/Node скрипт, който генерира/обновява index.html
+          python update_data.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.io'
+          git add index.html
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update MS Patch & ZDI index [$(date -u +'%Y-%m-%d')]" && git push)
