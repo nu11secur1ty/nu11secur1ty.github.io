@@ -28,5 +28,9 @@ is not working at this moment...
 
 ![](https://raw.githubusercontent.com/nu11secur1ty/nu11secur1ty.github.io/refs/heads/master/docs/compass.png)
 
+### Patch checking:
+
+![MS](https://nu11secur1ty.github.io/ControlCompass/mspatchzdi/)
+
 ### WARNING!
 - If you use this software for malicious purposes, you will be responsible for this action! 
